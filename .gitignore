@@ -1,24 +1,12 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Ignore everything by default
+/*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Un-ignore dist folder so it gets tracked
+!/dist
+!/dist/**
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Keep gitignore itself tracked
+!.gitignore
+
+# (old rules below are now redundant since /* already covers them,
+# but harmless to keep for clarity if you ever flip this back)
