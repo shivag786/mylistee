@@ -1,0 +1,1 @@
+import{c as e}from"./dist-DJsn2bn9.js";import{t}from"./proxy-jiYIKG2f.js";import{q as n,st as r}from"./index-BCgOYvUV.js";var i=e();function a({children:e,className:a}){return r()?(0,i.jsx)(`div`,{className:a,children:e}):(0,i.jsx)(t.div,{className:a,variants:n,initial:`hidden`,whileInView:`visible`,viewport:{once:!0,margin:`-40px`},children:e})}export{a as t};
