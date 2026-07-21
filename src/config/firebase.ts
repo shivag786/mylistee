@@ -22,6 +22,7 @@ export function getFirebaseApp(): FirebaseApp | null {
       appId: env.firebase.appId,
     })
   }
+  console.log(app);
   return app
 }
 
