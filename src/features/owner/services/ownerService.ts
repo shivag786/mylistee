@@ -7,6 +7,30 @@
 import { apiClient } from '@/services/apiClient'
 import type { BusinessFormValues, BusinessQr, DashboardData, GalleryImage, OwnerBusiness } from '../types'
 
+export interface OwnerReview {
+  id: string
+  rating: number
+  comment: string | null
+  reply: string | null
+  repliedAt: string | null
+  customerName: string | null
+  createdAt: string | null
+}
+
+export interface OfferSuggestion {
+  title: string
+  type: string
+  rewardValue: string | null
+  reason: string
+  /** 'template' | 'analytics' | 'ai' */
+  source: string
+}
+
+export interface OfferSuggestions {
+  suggestions: OfferSuggestion[]
+  aiEnabled: boolean
+}
+
 /** Append only defined, non-empty form fields to a FormData payload. */
 function appendField(form: FormData, key: string, value: unknown): void {
   if (value === undefined || value === null || value === '') return
@@ -61,5 +85,17 @@ export const ownerService = {
 
   async removeGalleryImage(id: string): Promise<void> {
     await apiClient.delete(`business/gallery/${id}`)
+  },
+
+  async getReviews(): Promise<OwnerReview[]> {
+    return apiClient.get<OwnerReview[]>('business/reviews')
+  },
+
+  async getOfferSuggestions(): Promise<OfferSuggestions> {
+    return apiClient.get<OfferSuggestions>('business/offers/suggestions')
+  },
+
+  async replyToReview(id: string, reply: string): Promise<OwnerReview> {
+    return apiClient.post<OwnerReview>(`business/reviews/${id}/reply`, { reply })
   },
 }

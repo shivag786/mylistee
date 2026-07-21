@@ -6,6 +6,8 @@ import {
   ScanLine,
   QrCode,
   Store,
+  MessageSquare,
+  Coins,
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
@@ -28,7 +30,9 @@ export interface OwnerNavItem {
 export const OWNER_NAV: OwnerNavItem[] = [
   { to: ROUTES.owner.dashboard, label: 'Dashboard', shortLabel: 'Home', icon: LayoutDashboard },
   { to: ROUTES.owner.offers, label: 'Offers', shortLabel: 'Offers', icon: Tag },
-  { to: ROUTES.owner.analytics, label: 'Analytics', shortLabel: 'Stats', icon: BarChart3 },
+  { to: ROUTES.owner.loyalty, label: 'Loyalty', shortLabel: 'Coins', icon: Coins },
+  { to: ROUTES.owner.analytics, label: 'Analytics', shortLabel: 'Stats', icon: BarChart3, desktopOnly: true },
+  { to: ROUTES.owner.reviews, label: 'Reviews', shortLabel: 'Reviews', icon: MessageSquare, desktopOnly: true },
   { to: ROUTES.owner.subscription, label: 'Plan & billing', shortLabel: 'Plan', icon: CreditCard, desktopOnly: true },
   { to: ROUTES.owner.redeem, label: 'Redeem', shortLabel: 'Redeem', icon: ScanLine },
   { to: ROUTES.owner.qr, label: 'QR code', shortLabel: 'QR', icon: QrCode },

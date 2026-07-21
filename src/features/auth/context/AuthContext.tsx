@@ -5,6 +5,7 @@
  * wallet) lives in TanStack Query, not here.
  */
 import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { getAuthToken, setAuthToken, setUnauthorizedHandler } from '@/services/apiClient'
 import type { UserRole } from '@/types/common'
 import { authService } from '../services/authService'
@@ -17,6 +18,7 @@ interface AuthContextValue {
   signInWithGoogle: () => Promise<AuthUser>
   pinLogin: (identifier: string, pin: string) => Promise<AuthUser>
   registerOwner: (name: string, mobile: string, pin: string) => Promise<AuthUser>
+  becomeOwner: () => Promise<AuthUser>
   devLogin: (email: string, name?: string, role?: UserRole) => Promise<AuthUser>
   signOut: () => Promise<void>
 }
@@ -25,6 +27,7 @@ interface AuthContextValue {
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient()
   const [user, setUser] = useState<AuthUser | null>(null)
   const [status, setStatus] = useState<AuthStatus>('initializing')
 
@@ -73,15 +76,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUnauthorizedHandler(() => {
       setUser(null)
       setStatus('unauthenticated')
+      queryClient.clear()
     })
     return () => setUnauthorizedHandler(null)
-  }, [])
+  }, [queryClient])
 
-  const applySession = useCallback((session: AuthSession) => {
-    setUser(session.user)
-    setStatus('authenticated')
-    return session.user
-  }, [])
+  const applySession = useCallback(
+    (session: AuthSession) => {
+      // Drop any cached server state from a previous session/user so the new
+      // user always fetches fresh data (fixes e.g. a stale "no business" result
+      // sending a real owner to registration).
+      queryClient.clear()
+      setUser(session.user)
+      setStatus('authenticated')
+      return session.user
+    },
+    [queryClient],
+  )
 
   const signInWithGoogle = useCallback(
     async () => applySession(await authService.signInWithGoogle()),
@@ -100,6 +111,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession],
   )
 
+  const becomeOwner = useCallback(async () => {
+    const updated = await authService.becomeOwner()
+    // Role changed — drop cached customer-scoped queries so owner data is fresh.
+    queryClient.clear()
+    setUser(updated)
+    return updated
+  }, [queryClient])
+
   const devLogin = useCallback(
     async (email: string, name?: string, role?: UserRole) =>
       applySession(await authService.devLogin(email, name, role)),
@@ -110,7 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authService.signOut()
     setUser(null)
     setStatus('unauthenticated')
-  }, [])
+    queryClient.clear()
+  }, [queryClient])
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -120,10 +140,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithGoogle,
       pinLogin,
       registerOwner,
+      becomeOwner,
       devLogin,
       signOut,
     }),
-    [user, status, signInWithGoogle, pinLogin, registerOwner, devLogin, signOut],
+    [user, status, signInWithGoogle, pinLogin, registerOwner, becomeOwner, devLogin, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

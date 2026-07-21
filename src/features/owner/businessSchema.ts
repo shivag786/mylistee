@@ -28,8 +28,9 @@ export const businessSchema = z.object({
   longitude: optionalCoord,
   openingTime: z.string().optional().or(z.literal('')),
   closingTime: z.string().optional().or(z.literal('')),
-  facebook: optionalUrl,
-  instagram: optionalUrl,
+  // Social links accept any handle or URL — no strict URL validation.
+  facebook: optionalText(255),
+  instagram: optionalText(255),
   whatsapp: optionalText(32),
   gst: optionalText(32),
 })

@@ -22,7 +22,11 @@ export function RequireAuth() {
   }
 
   if (status === 'unauthenticated') {
-    return <Navigate to={ROUTES.login} state={{ from: location }} replace />
+    // Staff (owners + admins) share one sign-in link; customers use Google.
+    const isStaffArea =
+      location.pathname.startsWith('/admin') || location.pathname.startsWith('/business')
+    const loginPath = isStaffArea ? ROUTES.ownerLogin : ROUTES.login
+    return <Navigate to={loginPath} state={{ from: location }} replace />
   }
 
   return <Outlet />

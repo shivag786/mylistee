@@ -30,7 +30,7 @@ export function ProfilePage() {
     try {
       await signOut()
       toast.success('Signed out')
-      navigate(ROUTES.login, { replace: true })
+      navigate(ROUTES.home, { replace: true })
     } finally {
       setSigningOut(false)
     }

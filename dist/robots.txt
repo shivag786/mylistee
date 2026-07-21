@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+# Private / authenticated areas — no SEO value, keep out of the index.
+Disallow: /admin
+Disallow: /business
+Disallow: /wallet
+Disallow: /notifications
+Disallow: /profile
+Disallow: /favorites
+Disallow: /login
+
+Sitemap: /sitemap.xml

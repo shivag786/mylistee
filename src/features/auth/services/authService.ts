@@ -74,6 +74,14 @@ export const authService = {
     return session
   },
 
+  /**
+   * Upgrade the signed-in customer into a business owner ("list your business").
+   * Same session — the server returns the updated user, no new token.
+   */
+  async becomeOwner(): Promise<AuthUser> {
+    return apiClient.post<AuthUser>('auth/become-owner')
+  },
+
   async fetchMe(): Promise<AuthUser> {
     return apiClient.get<AuthUser>('auth/me')
   },

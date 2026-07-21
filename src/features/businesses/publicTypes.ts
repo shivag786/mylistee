@@ -69,4 +69,5 @@ export interface WonReward {
 export interface SpinResult {
   reward: WonReward
   offer: PublicOffer
+  coinsEarned: number
 }

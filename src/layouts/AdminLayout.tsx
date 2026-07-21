@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, LogOut, ShieldCheck } from 'lucide-react'
 import { Logo } from '@/components/icons/Logo'
 import { IconButton } from '@/components/ui/icon-button'
@@ -17,13 +17,19 @@ import { cn } from '@/utils/cn'
  */
 export function AdminLayout() {
   const { user, signOut } = useAuth()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+
+  async function handleSignOut() {
+    await signOut()
+    navigate(ROUTES.home, { replace: true })
+  }
 
   return (
     <div className="min-h-dvh bg-background lg:pl-60">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-border bg-surface lg:flex">
-        <SidebarContent onNavigate={() => {}} onSignOut={() => void signOut()} userName={user?.name} />
+        <SidebarContent onNavigate={() => {}} onSignOut={() => void handleSignOut()} userName={user?.name} />
       </aside>
 
       {/* Mobile top bar */}
@@ -38,7 +44,7 @@ export function AdminLayout() {
             <SheetTitle className="sr-only">Admin navigation</SheetTitle>
             <SidebarContent
               onNavigate={() => setOpen(false)}
-              onSignOut={() => void signOut()}
+              onSignOut={() => void handleSignOut()}
               userName={user?.name}
             />
           </SheetContent>

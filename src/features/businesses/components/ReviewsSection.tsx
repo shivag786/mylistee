@@ -78,6 +78,12 @@ export function ReviewsSection({ slug }: { slug: string }) {
               {review.createdAt && (
                 <p className="text-small text-text-muted">{formatDate(review.createdAt)}</p>
               )}
+              {review.reply && (
+                <div className="mt-1 rounded-lg bg-surface-muted p-2.5">
+                  <p className="text-small font-semibold text-foreground">Owner replied</p>
+                  <p className="text-caption text-text-secondary">{review.reply}</p>
+                </div>
+              )}
             </Card>
           ))}
         </div>

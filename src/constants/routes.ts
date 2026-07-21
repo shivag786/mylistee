@@ -12,6 +12,10 @@ export const ROUTES = {
   favorites: '/favorites',
   search: '/search',
   login: '/login',
+  /** Business-owner login (mobile + PIN) — link shared privately with owners. */
+  ownerLogin: '/business/login',
+  /** Admin login (mobile + PIN) — link shared privately with admins. */
+  adminLogin: '/admin/login',
   /** Public business-owner sign-up (mobile + PIN). */
   ownerSignup: '/get-started',
   /** Business profile opened from a QR scan. */
@@ -24,6 +28,8 @@ export const ROUTES = {
     dashboard: '/business/dashboard',
     offers: '/business/offers',
     analytics: '/business/analytics',
+    reviews: '/business/reviews',
+    loyalty: '/business/loyalty',
     redeem: '/business/redeem',
     qr: '/business/qr',
     profile: '/business/profile',

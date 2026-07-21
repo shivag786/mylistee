@@ -6,6 +6,7 @@ import { Logo } from '@/components/icons/Logo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PasswordInput } from '@/components/forms/PasswordInput'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ROUTES } from '@/constants/routes'
 import { toast } from '@/utils/toast'
@@ -33,7 +34,7 @@ export function OwnerSignupPage() {
     setError(null)
 
     if (name.trim().length < 2) return setError('Please enter your name.')
-    if (!/^\d{6,15}$/.test(mobile.trim())) return setError('Enter a valid mobile number.')
+    if (!/^\d{10}$/.test(mobile.trim())) return setError('Enter a valid 10-digit mobile number.')
     if (!/^\d{4,8}$/.test(pin)) return setError('Your PIN must be 4–8 digits.')
     if (pin !== confirmPin) return setError('The PINs do not match.')
 
@@ -43,7 +44,14 @@ export function OwnerSignupPage() {
       toast.success('Account created! Let’s set up your business.')
       navigate(ROUTES.owner.register, { replace: true })
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not create your account.')
+      // Prefer the field-specific message (e.g. "…mobile number already
+      // exists…") over the generic "The given data was invalid."
+      const msg =
+        err instanceof ApiError
+          ? ((err.errors && Object.values(err.errors)[0]?.[0]) ?? err.message)
+          : 'Could not create your account.'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -80,16 +88,16 @@ export function OwnerSignupPage() {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="su-mobile">Mobile number</Label>
-          <Input id="su-mobile" inputMode="tel" autoComplete="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} placeholder="10-digit mobile" />
+          <Input id="su-mobile" inputMode="numeric" autoComplete="tel" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))} placeholder="10-digit mobile" maxLength={10} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label htmlFor="su-pin">Create PIN</Label>
-            <Input id="su-pin" type="password" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="4–8 digits" maxLength={8} />
+            <PasswordInput id="su-pin" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="4–8 digits" maxLength={8} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="su-pin2">Confirm PIN</Label>
-            <Input id="su-pin2" type="password" inputMode="numeric" value={confirmPin} onChange={(e) => setConfirmPin(e.target.value)} placeholder="Repeat PIN" maxLength={8} />
+            <PasswordInput id="su-pin2" inputMode="numeric" value={confirmPin} onChange={(e) => setConfirmPin(e.target.value)} placeholder="Repeat PIN" maxLength={8} />
           </div>
         </div>
 

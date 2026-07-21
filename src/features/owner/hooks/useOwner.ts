@@ -7,7 +7,7 @@ import { ApiError } from '@/types/api'
 import { analyticsService } from '../services/analyticsService'
 import { categoryService } from '../services/categoryService'
 import { offerService } from '../services/offerService'
-import { ownerService } from '../services/ownerService'
+import { ownerService, type OwnerReview, type OfferSuggestions } from '../services/ownerService'
 import { subscriptionService } from '../services/subscriptionService'
 import type {
   AnalyticsData,
@@ -29,6 +29,8 @@ export const ownerKeys = {
   subscription: ['owner', 'subscription'] as const,
   plans: ['plans'] as const,
   invoices: ['owner', 'invoices'] as const,
+  reviews: ['owner', 'reviews'] as const,
+  offerSuggestions: ['owner', 'offer-suggestions'] as const,
   categories: ['categories'] as const,
 }
 
@@ -224,5 +226,33 @@ export function useDeleteOffer() {
   return useMutation({
     mutationFn: (id: string) => offerService.remove(id),
     onSuccess: () => invalidateOffers(qc),
+  })
+}
+
+/** Offer ideas — templates + analytics nudges (+ AI when configured). Lazy: only fetched on demand. */
+export function useOfferSuggestions(enabled: boolean) {
+  return useQuery<OfferSuggestions>({
+    queryKey: ownerKeys.offerSuggestions,
+    queryFn: () => ownerService.getOfferSuggestions(),
+    enabled,
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
+export function useOwnerReviews() {
+  return useQuery<OwnerReview[]>({
+    queryKey: ownerKeys.reviews,
+    queryFn: () => ownerService.getReviews(),
+  })
+}
+
+export function useReplyToReview() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, reply }: { id: string; reply: string }) =>
+      ownerService.replyToReview(id, reply),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ownerKeys.reviews })
+    },
   })
 }

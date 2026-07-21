@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { ROUTES } from '@/constants/routes'
 import { lazyPage } from '@/app/lazyPage'
 import { SuspenseOutlet } from '@/app/PageLoader'
@@ -25,7 +25,9 @@ const FavoritesPage = lazyPage(() => import('@/pages/customer/FavoritesPage'), '
 const BusinessRegistrationPage = lazyPage(() => import('@/pages/owner/BusinessRegistrationPage'), 'BusinessRegistrationPage')
 const OwnerDashboardPage = lazyPage(() => import('@/pages/owner/OwnerDashboardPage'), 'OwnerDashboardPage')
 const OffersPage = lazyPage(() => import('@/pages/owner/OffersPage'), 'OffersPage')
+const LoyaltyPage = lazyPage(() => import('@/pages/owner/LoyaltyPage'), 'LoyaltyPage')
 const AnalyticsPage = lazyPage(() => import('@/pages/owner/AnalyticsPage'), 'AnalyticsPage')
+const OwnerReviewsPage = lazyPage(() => import('@/pages/owner/OwnerReviewsPage'), 'OwnerReviewsPage')
 const SubscriptionPage = lazyPage(() => import('@/pages/owner/SubscriptionPage'), 'SubscriptionPage')
 const RedeemPage = lazyPage(() => import('@/pages/owner/RedeemPage'), 'RedeemPage')
 const QrPage = lazyPage(() => import('@/pages/owner/QrPage'), 'QrPage')
@@ -46,12 +48,23 @@ const AdminReportsPage = lazyPage(() => import('@/pages/admin/AdminReportsPage')
 const AdminSettingsPage = lazyPage(() => import('@/pages/admin/AdminSettingsPage'), 'AdminSettingsPage')
 
 const OwnerSignupPage = lazyPage(() => import('@/pages/auth/OwnerSignupPage'), 'OwnerSignupPage')
+const OwnerLoginPage = lazyPage(() => import('@/pages/auth/OwnerLoginPage'), 'OwnerLoginPage')
 const UiShowcasePage = lazyPage(() => import('@/pages/dev/UiShowcasePage'), 'UiShowcasePage')
 
 export function AppRouter() {
   return (
     <Routes>
       <Route path={ROUTES.login} element={<LoginPage />} />
+      <Route
+        path={ROUTES.ownerLogin}
+        element={
+          <SuspenseOutlet>
+            <OwnerLoginPage />
+          </SuspenseOutlet>
+        }
+      />
+      {/* Admins share the single staff sign-in link with business owners. */}
+      <Route path={ROUTES.adminLogin} element={<Navigate to={ROUTES.ownerLogin} replace />} />
       <Route
         path={ROUTES.ownerSignup}
         element={
@@ -87,7 +100,9 @@ export function AppRouter() {
           <Route element={<OwnerLayout />}>
             <Route path={ROUTES.owner.dashboard} element={<OwnerDashboardPage />} />
             <Route path={ROUTES.owner.offers} element={<OffersPage />} />
+            <Route path={ROUTES.owner.loyalty} element={<LoyaltyPage />} />
             <Route path={ROUTES.owner.analytics} element={<AnalyticsPage />} />
+            <Route path={ROUTES.owner.reviews} element={<OwnerReviewsPage />} />
             <Route path={ROUTES.owner.subscription} element={<SubscriptionPage />} />
             <Route path={ROUTES.owner.redeem} element={<RedeemPage />} />
             <Route path={ROUTES.owner.qr} element={<QrPage />} />

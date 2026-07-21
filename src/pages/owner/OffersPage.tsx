@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Plus, Tag, Pencil, Trash2, Archive, RotateCcw, Ticket } from 'lucide-react'
+import { Plus, Tag, Pencil, Trash2, Archive, RotateCcw, Ticket, Sparkles, Lightbulb } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { IconButton } from '@/components/ui/icon-button'
 import {
   Sheet,
@@ -23,10 +24,12 @@ import {
   useUpdateOffer,
   useDeleteOffer,
   useSetOfferStatus,
+  useOfferSuggestions,
 } from '@/features/owner/hooks/useOwner'
-import { OfferForm } from '@/features/owner/components/OfferForm'
+import { OfferForm, type OfferSeed } from '@/features/owner/components/OfferForm'
 import { OfferStatusBadge } from '@/features/owner/components/OfferStatusBadge'
-import type { Offer, OfferFormValues } from '@/features/owner/types'
+import type { Offer, OfferFormValues, OfferType } from '@/features/owner/types'
+import type { OfferSuggestion } from '@/features/owner/services/ownerService'
 
 export function OffersPage() {
   const { data: offers, isLoading, isError, refetch } = useOffers()
@@ -37,7 +40,16 @@ export function OffersPage() {
 
   const [editing, setEditing] = useState<Offer | null>(null)
   const [creating, setCreating] = useState(false)
+  const [seed, setSeed] = useState<OfferSeed | undefined>(undefined)
   const [deleting, setDeleting] = useState<Offer | null>(null)
+  const [showIdeas, setShowIdeas] = useState(false)
+  const suggestions = useOfferSuggestions(showIdeas)
+
+  function applySuggestion(s: OfferSuggestion) {
+    setSeed({ title: s.title, type: s.type as OfferType, rewardValue: s.rewardValue ?? '' })
+    setShowIdeas(false)
+    setCreating(true)
+  }
 
   const activeCount = offers?.filter((o) => o.status === 'active').length ?? 0
 
@@ -87,9 +99,19 @@ export function OffersPage() {
           <h1 className="text-title font-bold text-foreground">Offers</h1>
           <p className="text-caption text-text-secondary">{activeCount}/3 active on the free plan</p>
         </div>
-        <Button size="md" leftIcon={<Plus className="size-4" />} onClick={() => setCreating(true)}>
-          New offer
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="md"
+            variant="outline"
+            leftIcon={<Lightbulb className="size-4" />}
+            onClick={() => setShowIdeas(true)}
+          >
+            Need ideas?
+          </Button>
+          <Button size="md" leftIcon={<Plus className="size-4" />} onClick={() => setCreating(true)}>
+            New offer
+          </Button>
+        </div>
       </div>
 
       {offers.length === 0 ? (
@@ -154,14 +176,75 @@ export function OffersPage() {
       )}
 
       {/* Create */}
-      <Sheet open={creating} onOpenChange={setCreating}>
+      <Sheet
+        open={creating}
+        onOpenChange={(open) => {
+          setCreating(open)
+          if (!open) setSeed(undefined)
+        }}
+      >
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
           <SheetHeader>
             <SheetTitle>New offer</SheetTitle>
             <SheetDescription>This becomes a reward on your spinner.</SheetDescription>
           </SheetHeader>
           <div className="p-4">
-            <OfferForm onSubmit={handleCreate} onDone={() => setCreating(false)} submitting={create.isPending} />
+            <OfferForm
+              key={seed?.title ?? 'blank'}
+              seed={seed}
+              onSubmit={handleCreate}
+              onDone={() => setCreating(false)}
+              submitting={create.isPending}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Suggestions */}
+      <Sheet open={showIdeas} onOpenChange={setShowIdeas}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Lightbulb className="size-5 text-premium" aria-hidden />
+              Offer ideas
+            </SheetTitle>
+            <SheetDescription>
+              Tailored to your business. Tap one to prefill a new offer.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="space-y-3 p-4">
+            {suggestions.isLoading ? (
+              <div className="flex justify-center py-10">
+                <Spinner size={28} label="Thinking of ideas" />
+              </div>
+            ) : suggestions.isError ? (
+              <ErrorState onRetry={() => void suggestions.refetch()} />
+            ) : (
+              <>
+                {suggestions.data?.aiEnabled && (
+                  <p className="flex items-center gap-1.5 text-caption text-premium">
+                    <Sparkles className="size-4" aria-hidden /> Includes AI-tailored ideas
+                  </p>
+                )}
+                {suggestions.data?.suggestions.map((s, i) => (
+                  <Card key={`${s.title}-${i}`} className="space-y-2" padding="md">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-body font-semibold text-foreground">{s.title}</p>
+                      <SuggestionSourceBadge source={s.source} />
+                    </div>
+                    <p className="text-caption text-text-secondary">{s.reason}</p>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-caption text-text-muted">
+                        {s.rewardValue ? `Reward: ${s.rewardValue}` : ''}
+                      </span>
+                      <Button size="sm" onClick={() => applySuggestion(s)}>
+                        Use this
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </>
+            )}
           </div>
         </SheetContent>
       </Sheet>
@@ -198,4 +281,10 @@ export function OffersPage() {
       />
     </div>
   )
+}
+
+function SuggestionSourceBadge({ source }: { source: string }) {
+  if (source === 'ai') return <Badge tone="premium">AI</Badge>
+  if (source === 'analytics') return <Badge tone="info">For you</Badge>
+  return <Badge tone="neutral">Template</Badge>
 }

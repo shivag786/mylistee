@@ -11,6 +11,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { usePublicBusiness, useSpin } from '@/features/businesses/hooks/usePublicBusiness'
 import { SpinnerWheel } from '@/features/spinner/components/SpinnerWheel'
 import { RewardModal } from '@/features/spinner/components/RewardModal'
+import { LoyaltyRewardsSection } from '@/features/wallet/components/LoyaltyRewardsSection'
 import { ReviewsSection } from '@/features/businesses/components/ReviewsSection'
 import { ROUTES } from '@/constants/routes'
 import { MESSAGES } from '@/constants/messages'
@@ -31,7 +32,9 @@ export function BusinessProfilePage() {
 
   const [resultIndex, setResultIndex] = useState<number | null>(null)
   const [pendingReward, setPendingReward] = useState<WonReward | null>(null)
+  const [pendingCoins, setPendingCoins] = useState(0)
   const [wonReward, setWonReward] = useState<WonReward | null>(null)
+  const [wonCoins, setWonCoins] = useState(0)
 
   if (isLoading) {
     return (
@@ -69,6 +72,7 @@ export function BusinessProfilePage() {
       const result = await spin.mutateAsync()
       const idx = business.offers.findIndex((o) => o.id === result.offer.id)
       setPendingReward(result.reward)
+      setPendingCoins(result.coinsEarned)
       setResultIndex(idx >= 0 ? idx : 0)
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic)
@@ -145,6 +149,7 @@ export function BusinessProfilePage() {
               onRest={() => {
                 if (pendingReward) {
                   setWonReward(pendingReward)
+                  setWonCoins(pendingCoins)
                   setPendingReward(null)
                 }
               }}
@@ -209,9 +214,19 @@ export function BusinessProfilePage() {
         </section>
       )}
 
+      {/* Spend your Listee Coins */}
+      {isAuthenticated && <LoyaltyRewardsSection slug={slug} />}
+
       <ReviewsSection slug={slug} />
 
-      <RewardModal reward={wonReward} onClose={() => setWonReward(null)} />
+      <RewardModal
+        reward={wonReward}
+        coinsEarned={wonCoins}
+        onClose={() => {
+          setWonReward(null)
+          setWonCoins(0)
+        }}
+      />
     </div>
   )
 }

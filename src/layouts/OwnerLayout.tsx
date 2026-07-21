@@ -1,4 +1,4 @@
-import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { LogOut, Store } from 'lucide-react'
 import { Logo } from '@/components/icons/Logo'
@@ -21,8 +21,14 @@ import { cn } from '@/utils/cn'
  */
 export function OwnerLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const { data: business, isLoading, isError } = useOwnerBusiness()
+
+  async function handleSignOut() {
+    await signOut()
+    navigate(ROUTES.home, { replace: true })
+  }
 
   if (isLoading) {
     return (
@@ -41,14 +47,14 @@ export function OwnerLayout() {
   const businessName = business?.name ?? 'My Business'
 
   return (
-    <div className="min-h-dvh bg-background lg:pl-64">
+    <div className="flex min-h-dvh flex-col bg-background lg:pl-64">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-surface lg:flex">
         <OwnerSidebar
           businessName={businessName}
           businessLogo={business?.logoUrl}
           userName={user?.name}
-          onSignOut={() => void signOut()}
+          onSignOut={() => void handleSignOut()}
         />
       </aside>
 
@@ -62,7 +68,7 @@ export function OwnerLayout() {
             </span>
           </Link>
           <div className="flex items-center gap-2">
-            <IconButton aria-label="Sign out" onClick={() => void signOut()}>
+            <IconButton aria-label="Sign out" onClick={() => void handleSignOut()}>
               <LogOut aria-hidden />
             </IconButton>
             <Avatar name={user?.name ?? 'Owner'} src={user?.photoUrl} size="md" />

@@ -1,19 +1,21 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Gift, PartyPopper } from 'lucide-react'
+import { Gift, PartyPopper, Coins } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { VisuallyHidden } from '@/components/a11y/VisuallyHidden'
+import { CoinBurst } from '@/features/wallet/components/CoinBurst'
 import { ROUTES } from '@/constants/routes'
 import type { WonReward } from '@/features/businesses/publicTypes'
 
 interface RewardModalProps {
   reward: WonReward | null
+  coinsEarned?: number
   onClose: () => void
 }
 
 /** Celebratory reward reveal after a spin (document/phase/06 §Reward Popup). */
-export function RewardModal({ reward, onClose }: RewardModalProps) {
+export function RewardModal({ reward, coinsEarned = 0, onClose }: RewardModalProps) {
   const navigate = useNavigate()
   const open = reward !== null
 
@@ -26,14 +28,17 @@ export function RewardModal({ reward, onClose }: RewardModalProps) {
 
         {reward && (
           <div className="flex flex-col items-center gap-4 py-2">
-            <motion.div
-              initial={{ scale: 0, rotate: -20 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 14 }}
-              className="grid size-20 place-items-center rounded-full bg-premium-soft text-premium-foreground"
-            >
-              <Gift className="size-10" aria-hidden />
-            </motion.div>
+            <div className="relative grid size-20 place-items-center">
+              <CoinBurst show={coinsEarned > 0} size={112} />
+              <motion.div
+                initial={{ scale: 0, rotate: -20 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 14 }}
+                className="grid size-20 place-items-center rounded-full bg-premium-soft text-premium-foreground"
+              >
+                <Gift className="size-10" aria-hidden />
+              </motion.div>
+            </div>
 
             <div className="space-y-1">
               <p className="flex items-center justify-center gap-2 text-caption font-medium uppercase tracking-wide text-primary">
@@ -44,6 +49,16 @@ export function RewardModal({ reward, onClose }: RewardModalProps) {
               </h2>
               {reward.rewardValue && reward.title !== reward.rewardValue && (
                 <p className="text-body text-text-secondary">{reward.title}</p>
+              )}
+              {coinsEarned > 0 && (
+                <motion.p
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex items-center justify-center gap-1.5 pt-1 text-body font-semibold text-premium"
+                >
+                  <Coins className="size-4" aria-hidden /> +{coinsEarned} coins
+                </motion.p>
               )}
             </div>
 

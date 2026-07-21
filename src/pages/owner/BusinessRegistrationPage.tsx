@@ -20,6 +20,7 @@ import {
   type BusinessSchema,
 } from '@/features/owner/businessSchema'
 import { useOwnerBusiness, useRegisterBusiness } from '@/features/owner/hooks/useOwner'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   BasicsFields,
   ContactLocationFields,
@@ -30,6 +31,7 @@ const STEPS = ['Basics', 'Contact', 'Media', 'Finish']
 
 export function BusinessRegistrationPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { data: existing, isLoading } = useOwnerBusiness()
   const register = useRegisterBusiness()
 
@@ -39,7 +41,9 @@ export function BusinessRegistrationPage() {
 
   const form = useForm<BusinessSchema>({
     resolver: zodResolver(businessSchema),
-    defaultValues: businessFormDefaults,
+    // Prefill the business phone with the owner's account mobile so it's never
+    // asked twice (they entered it at sign-up). Still editable if it differs.
+    defaultValues: { ...businessFormDefaults, phone: user?.phone ?? '' },
     mode: 'onTouched',
   })
 
@@ -99,7 +103,11 @@ export function BusinessRegistrationPage() {
                 />
               )}
               {step === 1 && (
-                <ContactLocationFields register={form.register} errors={form.formState.errors} />
+                <ContactLocationFields
+                  register={form.register}
+                  errors={form.formState.errors}
+                  setValue={form.setValue}
+                />
               )}
               {step === 2 && (
                 <div className="space-y-6">

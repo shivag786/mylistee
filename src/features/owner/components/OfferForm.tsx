@@ -17,19 +17,24 @@ import { ApiError } from '@/types/api'
 import { OFFER_TYPE_OPTIONS, defaultOfferDates, offerSchema, type OfferSchema } from '../offerSchema'
 import type { Offer, OfferFormValues } from '../types'
 
+/** Prefill values for a brand-new offer (e.g. from a suggestion). */
+export type OfferSeed = Partial<Pick<OfferFormValues, 'title' | 'type' | 'rewardValue'>>
+
 interface OfferFormProps {
   offer?: Offer
+  /** Prefill a *new* offer without switching to edit mode. */
+  seed?: OfferSeed
   onSubmit: (values: OfferFormValues) => Promise<unknown>
   onDone: () => void
   submitting: boolean
 }
 
-function initialValues(offer?: Offer): OfferSchema {
+function initialValues(offer?: Offer, seed?: OfferSeed): OfferSchema {
   const dates = defaultOfferDates()
   return {
-    title: offer?.title ?? '',
-    type: offer?.type ?? 'percentage',
-    rewardValue: offer?.rewardValue ?? '',
+    title: offer?.title ?? seed?.title ?? '',
+    type: offer?.type ?? seed?.type ?? 'percentage',
+    rewardValue: offer?.rewardValue ?? seed?.rewardValue ?? '',
     description: offer?.description ?? '',
     startsAt: offer?.startsAt ?? dates.startsAt,
     endsAt: offer?.endsAt ?? dates.endsAt,
@@ -38,11 +43,11 @@ function initialValues(offer?: Offer): OfferSchema {
 }
 
 /** Create/edit form shared by the "New offer" and "Edit offer" sheets. */
-export function OfferForm({ offer, onSubmit, onDone, submitting }: OfferFormProps) {
+export function OfferForm({ offer, seed, onSubmit, onDone, submitting }: OfferFormProps) {
   const [image, setImage] = useState<File | null>(null)
   const form = useForm<OfferSchema>({
     resolver: zodResolver(offerSchema),
-    defaultValues: initialValues(offer),
+    defaultValues: initialValues(offer, seed),
     mode: 'onTouched',
   })
 

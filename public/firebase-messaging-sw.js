@@ -12,12 +12,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js')
 
 const firebaseConfig = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
+  apiKey: 'AIzaSyCLPAdrTtDZZRDAwvuZWqDKCw8k9HLqTq8',
+  authDomain: 'shammtech-415b8.firebaseapp.com',
+  projectId: 'shammtech-415b8',
+  storageBucket: 'shammtech-415b8.firebasestorage.app',
+  messagingSenderId: '824904723551',
+  appId: '1:824904723551:web:9f7afd702bad3c4ddaffea',
 }
 
 if (firebaseConfig.apiKey && firebaseConfig.projectId) {

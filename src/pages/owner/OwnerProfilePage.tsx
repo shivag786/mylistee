@@ -129,7 +129,11 @@ function ProfileForm({ business }: { business: OwnerBusiness }) {
 
       <Card className="space-y-4">
         <h2 className="text-body-lg font-semibold text-foreground">Contact & location</h2>
-        <ContactLocationFields register={form.register} errors={form.formState.errors} />
+        <ContactLocationFields
+          register={form.register}
+          errors={form.formState.errors}
+          setValue={form.setValue}
+        />
       </Card>
 
       <Card className="space-y-4">
