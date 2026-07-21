@@ -25,7 +25,8 @@ import { ApiError } from '@/types/api'
 export const REDIRECT_IN_PROGRESS = 'redirect-in-progress'
 
 function assertConfigured(): Auth {
-  const auth = getFirebaseAuth()
+  const auth = getFirebaseAuth();
+  console.log(auth);
   if (!auth || !isFirebaseConfigured) {
     throw new ApiError('Sign-in is not configured yet. Please add Firebase credentials.', 503)
   }
