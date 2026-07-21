@@ -64,7 +64,7 @@ export function AppRouter() {
         }
       />
       {/* Admins share the single staff sign-in link with business owners. */}
-      <Route path={ROUTES.adminLogin} element={<Navigate to={ROUTES.ownerLogin} replace />} />
+      <Route path={ROUTES.adminLogin} element={<Navigate to={ROUTES.adminLogin} replace />} />
       <Route
         path={ROUTES.ownerSignup}
         element={
