@@ -7,7 +7,12 @@ import { ApiError } from '@/types/api'
 import { analyticsService } from '../services/analyticsService'
 import { categoryService } from '../services/categoryService'
 import { offerService } from '../services/offerService'
-import { ownerService, type OwnerReview, type OfferSuggestions } from '../services/ownerService'
+import {
+  ownerService,
+  type OwnerReview,
+  type OfferSuggestions,
+  type OwnerCategoryRequest,
+} from '../services/ownerService'
 import { subscriptionService } from '../services/subscriptionService'
 import type {
   AnalyticsData,
@@ -32,6 +37,7 @@ export const ownerKeys = {
   reviews: ['owner', 'reviews'] as const,
   offerSuggestions: ['owner', 'offer-suggestions'] as const,
   categories: ['categories'] as const,
+  categoryRequests: ['owner', 'category-requests'] as const,
 }
 
 export function useCategories() {
@@ -253,6 +259,24 @@ export function useReplyToReview() {
       ownerService.replyToReview(id, reply),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ownerKeys.reviews })
+    },
+  })
+}
+
+export function useOwnerCategoryRequests() {
+  return useQuery<OwnerCategoryRequest[]>({
+    queryKey: ownerKeys.categoryRequests,
+    queryFn: () => ownerService.getCategoryRequests(),
+  })
+}
+
+export function useRequestCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ name, sampleImage }: { name: string; sampleImage?: File | null }) =>
+      ownerService.requestCategory(name, sampleImage),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ownerKeys.categoryRequests })
     },
   })
 }

@@ -36,8 +36,6 @@ export const env: AppEnv = {
   },
 }
 
-console.log('Firebase env:', env.firebase);
-
 /** True when Firebase has enough config to initialize (avoids crashes in dev). */
 export const isFirebaseConfigured = Boolean(
   env.firebase.apiKey && env.firebase.projectId && env.firebase.appId,

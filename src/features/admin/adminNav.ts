@@ -12,6 +12,8 @@ import {
   ScrollText,
   Settings,
   Download,
+  Grid3x3,
+  Inbox,
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
@@ -26,6 +28,8 @@ export interface AdminNavItem {
 export const ADMIN_NAV: AdminNavItem[] = [
   { to: ROUTES.admin.dashboard, label: 'Dashboard', icon: LayoutDashboard },
   { to: ROUTES.admin.businesses, label: 'Businesses', icon: Store },
+  { to: ROUTES.admin.categories, label: 'Categories', icon: Grid3x3 },
+  { to: ROUTES.admin.categoryRequests, label: 'Category requests', icon: Inbox },
   { to: ROUTES.admin.customers, label: 'Customers', icon: Users },
   { to: ROUTES.admin.offers, label: 'Offers', icon: Tag },
   { to: ROUTES.admin.reviews, label: 'Reviews', icon: Star },

@@ -13,7 +13,9 @@ import { NotificationItem } from '@/features/notifications/components/Notificati
 export function NotificationsPage() {
   const { data: notifications, isLoading, isError, refetch } = useNotifications()
   const markAll = useMarkAllRead()
-  const { permission, enable } = usePushRegistration()
+  // Effects (silent register + foreground messages) run app-wide in PushRegistrar;
+  // here we only need the permission state + the enable action for the toggle.
+  const { permission, enable } = usePushRegistration({ registerEffects: false })
 
   const hasUnread = notifications?.some((n) => !n.isRead) ?? false
 

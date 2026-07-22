@@ -4,6 +4,7 @@ import { AppBar } from '@/components/navigation/AppBar'
 import { BottomNav } from '@/components/navigation/BottomNav'
 import { PageTransition } from '@/components/motion/PageTransition'
 import { SuspenseOutlet } from '@/app/PageLoader'
+import { WalletTokenChip } from '@/features/wallet/components/WalletTokenChip'
 
 /**
  * Shell for the customer-facing app: fixed app bar, scrollable content with
@@ -24,6 +25,7 @@ export function CustomerLayout() {
           </PageTransition>
         </AnimatePresence>
       </main>
+      <WalletTokenChip />
       <BottomNav />
     </div>
   )

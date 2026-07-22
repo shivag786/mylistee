@@ -15,10 +15,11 @@ export const coinKeys = {
   business: (slug: string) => ['businesses', slug, 'loyalty'] as const,
 }
 
-export function useCoinSummary() {
+export function useCoinSummary(enabled = true) {
   return useQuery<CoinSummary>({
     queryKey: coinKeys.summary,
     queryFn: () => coinsService.summary(),
+    enabled,
   })
 }
 

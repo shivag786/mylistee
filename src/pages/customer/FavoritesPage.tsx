@@ -7,7 +7,7 @@ import { Stagger, StaggerItem } from '@/components/motion/Stagger'
 import { ROUTES } from '@/constants/routes'
 import { MESSAGES } from '@/constants/messages'
 import { useFavorites } from '@/features/businesses/hooks/useFavorites'
-import { BusinessCard } from '@/features/businesses/components/BusinessCard'
+import { ShopCard } from '@/features/businesses/components/ShopCard'
 
 export function FavoritesPage() {
   const navigate = useNavigate()
@@ -32,10 +32,10 @@ export function FavoritesPage() {
           onAction={() => navigate(ROUTES.nearby)}
         />
       ) : (
-        <Stagger className="space-y-4">
+        <Stagger className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {businesses.map((business) => (
             <StaggerItem key={business.id}>
-              <BusinessCard business={business} />
+              <ShopCard business={business} />
             </StaggerItem>
           ))}
         </Stagger>
