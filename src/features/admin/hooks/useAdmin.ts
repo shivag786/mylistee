@@ -4,7 +4,7 @@
  */
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { adminService } from '../services/adminService'
-import type { ListFilters, PlatformSettings } from '../types'
+import type { CategoryInput, ListFilters, PlatformSettings } from '../types'
 
 export const adminKeys = {
   dashboard: ['admin', 'dashboard'] as const,
@@ -18,6 +18,8 @@ export const adminKeys = {
   settings: ['admin', 'settings'] as const,
   cms: ['admin', 'cms'] as const,
   auditLogs: (f: ListFilters) => ['admin', 'audit-logs', f] as const,
+  categories: ['admin', 'categories'] as const,
+  categoryRequests: (status?: string) => ['admin', 'category-requests', status ?? 'all'] as const,
 }
 
 function invalidate(qc: ReturnType<typeof useQueryClient>, key: string) {
@@ -157,3 +159,53 @@ export const useAuditLogs = (filters: ListFilters) =>
     queryFn: () => adminService.auditLogs(filters),
     placeholderData: keepPreviousData,
   })
+
+// ---- Master categories (Phase 7.1) ----
+export const useAdminCategories = () =>
+  useQuery({ queryKey: adminKeys.categories, queryFn: () => adminService.categories() })
+
+export function useCategoryActions() {
+  const qc = useQueryClient()
+  const done = () => invalidate(qc, 'categories')
+  return {
+    create: useMutation({
+      mutationFn: (input: CategoryInput) => adminService.createCategory(input),
+      onSuccess: done,
+    }),
+    update: useMutation({
+      mutationFn: (v: { id: string; input: CategoryInput }) => adminService.updateCategory(v.id, v.input),
+      onSuccess: done,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => adminService.deleteCategory(id),
+      onSuccess: done,
+    }),
+    reorder: useMutation({
+      mutationFn: (order: string[]) => adminService.reorderCategories(order),
+      onSuccess: done,
+    }),
+  }
+}
+
+export const useCategoryRequests = (status?: string) =>
+  useQuery({
+    queryKey: adminKeys.categoryRequests(status),
+    queryFn: () => adminService.categoryRequests(status),
+    placeholderData: keepPreviousData,
+  })
+
+export function useCategoryRequestActions() {
+  const qc = useQueryClient()
+  const done = () => {
+    void qc.invalidateQueries({ queryKey: ['admin', 'category-requests'] })
+    void qc.invalidateQueries({ queryKey: adminKeys.categories })
+    void qc.invalidateQueries({ queryKey: adminKeys.dashboard })
+  }
+  return {
+    approve: useMutation({ mutationFn: (id: string) => adminService.approveCategoryRequest(id), onSuccess: done }),
+    reject: useMutation({
+      mutationFn: (v: { id: string; note?: string }) => adminService.rejectCategoryRequest(v.id, v.note),
+      onSuccess: done,
+    }),
+  }
+}

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { TextField } from '@/components/forms/TextField'
 import { EmptyState } from '@/components/feedback/EmptyState'
-import { BusinessCard } from '@/features/businesses/components/BusinessCard'
+import { ShopCard } from '@/features/businesses/components/ShopCard'
 import { useNearbyBusinesses } from '@/features/businesses/hooks/useNearbyBusinesses'
 import { MESSAGES } from '@/constants/messages'
 
@@ -38,9 +38,9 @@ export function SearchPage() {
           description={MESSAGES.empty.search.description}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {results.map((b) => (
-            <BusinessCard key={b.id} business={b} />
+            <ShopCard key={b.id} business={b} />
           ))}
         </div>
       )}

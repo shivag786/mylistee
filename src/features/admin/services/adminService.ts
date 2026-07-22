@@ -8,11 +8,14 @@ import { apiConfig } from '@/config/api.config'
 import type { Paginated } from '@/types/api'
 import type {
   AdminBusiness,
+  AdminCategory,
   AdminCustomer,
   AdminDashboard,
   AdminOffer,
   AdminReview,
   AuditLog,
+  CategoryInput,
+  CategoryRequestItem,
   CmsPage,
   FeatureFlag,
   FraudSignals,
@@ -32,6 +35,22 @@ function toQuery(f: ListFilters = {}): Query {
   }
 }
 
+/** Build multipart FormData for a category (image upload). */
+function categoryFormData(input: CategoryInput): FormData {
+  const form = new FormData()
+  form.append('name', input.name)
+  if (input.description !== undefined) form.append('description', input.description)
+  if (input.altText !== undefined) form.append('alt_text', input.altText)
+  if (input.icon !== undefined) form.append('icon', input.icon)
+  if (input.status !== undefined) form.append('status', input.status)
+  if (input.showOnHomepage !== undefined)
+    form.append('show_on_homepage', input.showOnHomepage ? '1' : '0')
+  if (input.showInSearch !== undefined)
+    form.append('show_in_search', input.showInSearch ? '1' : '0')
+  if (input.image) form.append('image', input.image)
+  return form
+}
+
 export const adminService = {
   dashboard: () => apiClient.get<AdminDashboard>('admin/dashboard'),
   fraud: () => apiClient.get<FraudSignals>('admin/fraud'),
@@ -42,6 +61,28 @@ export const adminService = {
     apiClient.patch<AdminBusiness>(`admin/businesses/${id}/status`, { status }),
   verifyBusiness: (id: string) => apiClient.patch<AdminBusiness>(`admin/businesses/${id}/verify`),
   featureBusiness: (id: string) => apiClient.patch<AdminBusiness>(`admin/businesses/${id}/feature`),
+
+  // ---- Master categories (Phase 7.1) ----
+  categories: () => apiClient.get<AdminCategory[]>('admin/categories'),
+  createCategory: (input: CategoryInput) =>
+    apiClient.post<AdminCategory>('admin/categories', categoryFormData(input)),
+  updateCategory: (id: string, input: CategoryInput) => {
+    const form = categoryFormData(input)
+    form.append('_method', 'PUT') // method spoofing for multipart
+    return apiClient.post<AdminCategory>(`admin/categories/${id}`, form)
+  },
+  deleteCategory: (id: string) => apiClient.delete<null>(`admin/categories/${id}`),
+  reorderCategories: (order: string[]) =>
+    apiClient.patch<AdminCategory[]>('admin/categories/reorder', { order }),
+
+  categoryRequests: (status?: string): Promise<Paginated<CategoryRequestItem>> =>
+    apiClient.getPage<CategoryRequestItem>('admin/category-requests', {
+      query: { status: status || undefined },
+    }),
+  approveCategoryRequest: (id: string) =>
+    apiClient.patch<CategoryRequestItem>(`admin/category-requests/${id}/approve`),
+  rejectCategoryRequest: (id: string, note?: string) =>
+    apiClient.patch<CategoryRequestItem>(`admin/category-requests/${id}/reject`, { note }),
 
   customers: (f?: ListFilters): Promise<Paginated<AdminCustomer>> =>
     apiClient.getPage<AdminCustomer>('admin/customers', { query: toQuery(f) }),

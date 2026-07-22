@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { IconButton } from '@/components/ui/icon-button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useUnreadCount } from '@/features/notifications/hooks/useNotifications'
+import { CoinsPill } from '@/features/wallet/components/CoinsPill'
 
 /** Top app bar: logo left, actions right, height 64 (document-00A §18). */
 export function AppBar() {
@@ -19,6 +20,7 @@ export function AppBar() {
           <Logo size={32} showWordmark />
         </Link>
         <div className="flex items-center gap-2">
+          <CoinsPill />
           <IconButton
             aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
             asChild

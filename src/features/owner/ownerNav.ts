@@ -8,6 +8,8 @@ import {
   Store,
   MessageSquare,
   Coins,
+  Package,
+  Megaphone,
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
@@ -29,7 +31,9 @@ export interface OwnerNavItem {
  */
 export const OWNER_NAV: OwnerNavItem[] = [
   { to: ROUTES.owner.dashboard, label: 'Dashboard', shortLabel: 'Home', icon: LayoutDashboard },
-  { to: ROUTES.owner.offers, label: 'Offers', shortLabel: 'Offers', icon: Tag },
+  { to: ROUTES.owner.products, label: 'Products', shortLabel: 'Menu', icon: Package },
+  { to: ROUTES.owner.growSales, label: 'Grow sales', shortLabel: 'Grow', icon: Megaphone },
+  { to: ROUTES.owner.offers, label: 'Spin rewards', shortLabel: 'Rewards', icon: Tag, desktopOnly: true },
   { to: ROUTES.owner.loyalty, label: 'Loyalty', shortLabel: 'Coins', icon: Coins },
   { to: ROUTES.owner.analytics, label: 'Analytics', shortLabel: 'Stats', icon: BarChart3, desktopOnly: true },
   { to: ROUTES.owner.reviews, label: 'Reviews', shortLabel: 'Reviews', icon: MessageSquare, desktopOnly: true },

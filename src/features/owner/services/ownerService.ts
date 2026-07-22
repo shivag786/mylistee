@@ -31,6 +31,14 @@ export interface OfferSuggestions {
   aiEnabled: boolean
 }
 
+export interface OwnerCategoryRequest {
+  id: string
+  name: string
+  status: 'pending' | 'approved' | 'rejected'
+  reviewNote: string | null
+  createdAt: string | null
+}
+
 /** Append only defined, non-empty form fields to a FormData payload. */
 function appendField(form: FormData, key: string, value: unknown): void {
   if (value === undefined || value === null || value === '') return
@@ -97,5 +105,16 @@ export const ownerService = {
 
   async replyToReview(id: string, reply: string): Promise<OwnerReview> {
     return apiClient.post<OwnerReview>(`business/reviews/${id}/reply`, { reply })
+  },
+
+  async getCategoryRequests(): Promise<OwnerCategoryRequest[]> {
+    return apiClient.get<OwnerCategoryRequest[]>('business/category-requests')
+  },
+
+  async requestCategory(name: string, sampleImage?: File | null): Promise<OwnerCategoryRequest> {
+    const form = new FormData()
+    form.append('name', name)
+    if (sampleImage) form.append('sample_image', sampleImage)
+    return apiClient.post<OwnerCategoryRequest>('business/category-requests', form)
   },
 }

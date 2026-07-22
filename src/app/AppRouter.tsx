@@ -24,6 +24,8 @@ const FavoritesPage = lazyPage(() => import('@/pages/customer/FavoritesPage'), '
 
 const BusinessRegistrationPage = lazyPage(() => import('@/pages/owner/BusinessRegistrationPage'), 'BusinessRegistrationPage')
 const OwnerDashboardPage = lazyPage(() => import('@/pages/owner/OwnerDashboardPage'), 'OwnerDashboardPage')
+const ProductsPage = lazyPage(() => import('@/pages/owner/ProductsPage'), 'ProductsPage')
+const GrowSalesPage = lazyPage(() => import('@/pages/owner/GrowSalesPage'), 'GrowSalesPage')
 const OffersPage = lazyPage(() => import('@/pages/owner/OffersPage'), 'OffersPage')
 const LoyaltyPage = lazyPage(() => import('@/pages/owner/LoyaltyPage'), 'LoyaltyPage')
 const AnalyticsPage = lazyPage(() => import('@/pages/owner/AnalyticsPage'), 'AnalyticsPage')
@@ -35,6 +37,8 @@ const OwnerProfilePage = lazyPage(() => import('@/pages/owner/OwnerProfilePage')
 
 const AdminDashboardPage = lazyPage(() => import('@/pages/admin/AdminDashboardPage'), 'AdminDashboardPage')
 const AdminBusinessesPage = lazyPage(() => import('@/pages/admin/AdminBusinessesPage'), 'AdminBusinessesPage')
+const AdminCategoriesPage = lazyPage(() => import('@/pages/admin/AdminCategoriesPage'), 'AdminCategoriesPage')
+const AdminCategoryRequestsPage = lazyPage(() => import('@/pages/admin/AdminCategoryRequestsPage'), 'AdminCategoryRequestsPage')
 const AdminCustomersPage = lazyPage(() => import('@/pages/admin/AdminCustomersPage'), 'AdminCustomersPage')
 const AdminOffersPage = lazyPage(() => import('@/pages/admin/AdminOffersPage'), 'AdminOffersPage')
 const AdminReviewsPage = lazyPage(() => import('@/pages/admin/AdminReviewsPage'), 'AdminReviewsPage')
@@ -99,6 +103,8 @@ export function AppRouter() {
           <Route path={ROUTES.owner.register} element={<BusinessRegistrationPage />} />
           <Route element={<OwnerLayout />}>
             <Route path={ROUTES.owner.dashboard} element={<OwnerDashboardPage />} />
+            <Route path={ROUTES.owner.products} element={<ProductsPage />} />
+            <Route path={ROUTES.owner.growSales} element={<GrowSalesPage />} />
             <Route path={ROUTES.owner.offers} element={<OffersPage />} />
             <Route path={ROUTES.owner.loyalty} element={<LoyaltyPage />} />
             <Route path={ROUTES.owner.analytics} element={<AnalyticsPage />} />
@@ -118,6 +124,8 @@ export function AppRouter() {
             <Route path={ROUTES.admin.root} element={<AdminDashboardPage />} />
             <Route path={ROUTES.admin.dashboard} element={<AdminDashboardPage />} />
             <Route path={ROUTES.admin.businesses} element={<AdminBusinessesPage />} />
+            <Route path={ROUTES.admin.categories} element={<AdminCategoriesPage />} />
+            <Route path={ROUTES.admin.categoryRequests} element={<AdminCategoryRequestsPage />} />
             <Route path={ROUTES.admin.customers} element={<AdminCustomersPage />} />
             <Route path={ROUTES.admin.offers} element={<AdminOffersPage />} />
             <Route path={ROUTES.admin.reviews} element={<AdminReviewsPage />} />

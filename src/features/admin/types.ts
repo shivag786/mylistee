@@ -135,3 +135,46 @@ export interface ListFilters {
   page?: number
   perPage?: number
 }
+
+// ---- Master categories (Phase 7.1) ----
+
+export interface AdminCategory {
+  id: string
+  name: string
+  slug: string
+  icon: string | null
+  imageUrl: string | null
+  description: string | null
+  altText: string | null
+  position: number
+  status: string
+  showOnHomepage: boolean
+  showInSearch: boolean
+  businessCount: number
+  createdAt: string | null
+  updatedAt: string | null
+}
+
+/** Fields the admin form edits; `image` is the freshly cropped file, if any. */
+export interface CategoryInput {
+  name: string
+  description?: string
+  altText?: string
+  icon?: string
+  status?: string
+  showOnHomepage?: boolean
+  showInSearch?: boolean
+  image?: File | null
+}
+
+export interface CategoryRequestItem {
+  id: string
+  name: string
+  sampleImageUrl: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  reviewNote: string | null
+  requestedBy: string | null
+  businessName: string | null
+  reviewedAt: string | null
+  createdAt: string | null
+}

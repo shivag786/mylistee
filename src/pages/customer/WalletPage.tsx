@@ -17,6 +17,7 @@ import { MESSAGES } from '@/constants/messages'
 import { useWalletSummary, useWalletRewards } from '@/features/wallet/hooks/useWallet'
 import { useCoinSummary, useCoinTransactions } from '@/features/wallet/hooks/useCoins'
 import { CoinsHero } from '@/features/wallet/components/CoinsHero'
+import { WalletTokenCard } from '@/features/wallet/components/WalletTokenCard'
 import { RewardCard } from '@/features/wallet/components/RewardCard'
 import type { WalletRewardStatus } from '@/features/wallet/services/walletService'
 import type { CoinTransaction } from '@/features/wallet/services/coinsService'
@@ -30,6 +31,8 @@ export function WalletPage() {
       <h1 className="text-title font-bold text-foreground">Wallet</h1>
 
       {coins && <CoinsHero summary={coins} />}
+
+      <WalletTokenCard />
 
       <Tabs defaultValue="rewards">
         <TabsList className="w-full">

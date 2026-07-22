@@ -14,5 +14,11 @@ export interface Business {
   isOpen: boolean
   area: string | null
   isFavorite: boolean
+  /** Admin-verified shop (Recommended row). */
+  verified: boolean
+  /** Active shop with a live offer — the spinner has something to award. */
+  spinAvailable: boolean
+  /** Onboarded within the last 14 days. */
+  isNew: boolean
   status: BusinessStatus
 }
