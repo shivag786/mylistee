@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Plus, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/feedback/Spinner'
@@ -9,23 +9,44 @@ import { Stagger, StaggerItem } from '@/components/motion/Stagger'
 import { ProductCard } from './ProductCard'
 import { ProductForm } from './ProductForm'
 import { PromotionForm } from './PromotionForm'
+import { useProgressiveReveal } from '@/hooks/useProgressiveReveal'
 import { useProducts, useProductActions } from '../hooks/useProducts'
+import { usePromotions } from '../hooks/usePromotions'
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { MESSAGES } from '@/constants/messages'
 import type { Product } from '../productTypes'
+import type { Promotion } from '../promotionTypes'
 
 /** Products tab on the Products page (Phase 7.2a). */
 export function ProductsPanel() {
   const { data, isLoading, isError, refetch } = useProducts()
   const { remove, toggle } = useProductActions()
+  const { data: promotions } = usePromotions()
 
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
   const [deleting, setDeleting] = useState<Product | null>(null)
   const [offerFor, setOfferFor] = useState<Product | null>(null)
+  const [editingPromo, setEditingPromo] = useState<Promotion | null>(null)
 
   const products = data ?? []
+  const { visible, hasMore, sentinelRef } = useProgressiveReveal(products, 12)
+
+  // One promotion per product for the card badge — prefer the one running now.
+  const promoByProduct = useMemo(() => {
+    const map = new Map<string, Promotion>()
+    for (const promo of promotions ?? []) {
+      if (!promo.productId) continue
+      const existing = map.get(promo.productId)
+      if (!existing || (promo.isActiveNow && !existing.isActiveNow)) map.set(promo.productId, promo)
+    }
+    return map
+  }, [promotions])
+
+  const promoOpen = offerFor !== null || editingPromo !== null
+  const promoProduct =
+    offerFor ?? products.find((p) => p.id === editingPromo?.productId) ?? null
 
   function openCreate() {
     setEditing(null)
@@ -80,30 +101,43 @@ export function ProductsPanel() {
           onAction={openCreate}
         />
       ) : (
-        <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {products.map((product) => (
-            <StaggerItem key={product.id}>
-              <ProductCard
-                product={product}
-                onEdit={openEdit}
-                onDelete={setDeleting}
-                onToggleVisible={toggleVisible}
-                onSmartOffer={setOfferFor}
-                busy={toggle.isPending}
-              />
-            </StaggerItem>
-          ))}
-        </Stagger>
+        <>
+          <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+            {visible.map((product) => (
+              <StaggerItem key={product.id}>
+                <ProductCard
+                  product={product}
+                  onEdit={openEdit}
+                  onDelete={setDeleting}
+                  onToggleVisible={toggleVisible}
+                  onSmartOffer={setOfferFor}
+                  promotion={promoByProduct.get(product.id) ?? null}
+                  onEditOffer={setEditingPromo}
+                  busy={toggle.isPending}
+                />
+              </StaggerItem>
+            ))}
+          </Stagger>
+          {hasMore && (
+            <div ref={sentinelRef} className="flex justify-center py-6">
+              <Spinner size={22} label="Loading more products" />
+            </div>
+          )}
+        </>
       )}
 
       <ProductForm open={formOpen} onOpenChange={setFormOpen} product={editing} />
 
       <PromotionForm
-        open={offerFor !== null}
-        onOpenChange={(open) => !open && setOfferFor(null)}
-        promotion={null}
-        presetProductId={offerFor?.id ?? null}
-        presetProductName={offerFor?.name ?? null}
+        open={promoOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setOfferFor(null)
+            setEditingPromo(null)
+          }
+        }}
+        promotion={editingPromo}
+        product={promoProduct}
       />
 
       <ConfirmationDialog

@@ -8,6 +8,7 @@ import { apiConfig } from '@/config/api.config'
 import type { Paginated } from '@/types/api'
 import type {
   AdminBusiness,
+  BusinessUpdateInput,
   AdminCategory,
   AdminCustomer,
   AdminDashboard,
@@ -19,6 +20,10 @@ import type {
   CmsPage,
   FeatureFlag,
   FraudSignals,
+  ImportApplyInput,
+  ImportApplyResult,
+  ImportLog,
+  ImportPreviewResult,
   ListFilters,
   Plan,
   PlatformSettings,
@@ -59,8 +64,48 @@ export const adminService = {
     apiClient.getPage<AdminBusiness>('admin/businesses', { query: toQuery(f) }),
   setBusinessStatus: (id: string, status: string) =>
     apiClient.patch<AdminBusiness>(`admin/businesses/${id}/status`, { status }),
+  updateBusiness: (id: string, input: BusinessUpdateInput) =>
+    apiClient.put<AdminBusiness>(`admin/businesses/${id}`, {
+      name: input.name,
+      category_id: input.categoryId ?? null,
+      description: input.description ?? null,
+      address: input.address ?? null,
+      phone: input.phone ?? null,
+      email: input.email ?? null,
+      website: input.website ?? null,
+      facebook: input.facebook ?? null,
+      instagram: input.instagram ?? null,
+      whatsapp: input.whatsapp ?? null,
+      gst: input.gst ?? null,
+      opening_time: input.openingTime || null,
+      closing_time: input.closingTime || null,
+      status: input.status,
+    }),
+  uploadBusinessImage: (id: string, type: 'logo' | 'cover', image: File) => {
+    const form = new FormData()
+    form.append('type', type)
+    form.append('image', image)
+    return apiClient.post<AdminBusiness>(`admin/businesses/${id}/image`, form)
+  },
   verifyBusiness: (id: string) => apiClient.patch<AdminBusiness>(`admin/businesses/${id}/verify`),
   featureBusiness: (id: string) => apiClient.patch<AdminBusiness>(`admin/businesses/${id}/feature`),
+
+  // ---- Business Import Engine (SPEC-011) ----
+  importPreview: (url: string, source = 'google') =>
+    apiClient.post<ImportPreviewResult>('admin/businesses/import/preview', { url, source }),
+  importApply: (input: ImportApplyInput) =>
+    apiClient.post<ImportApplyResult>('admin/businesses/import', {
+      source: input.source ?? 'google',
+      url: input.url,
+      placeId: input.placeId ?? null,
+      mode: input.mode,
+      businessId: input.businessId ?? null,
+      fields: input.fields ?? {},
+    }),
+  importLogs: (f?: ListFilters): Promise<Paginated<ImportLog>> =>
+    apiClient.getPage<ImportLog>('admin/businesses/import/logs', {
+      query: { status: f?.status || undefined, page: f?.page, perPage: f?.perPage },
+    }),
 
   // ---- Master categories (Phase 7.1) ----
   categories: () => apiClient.get<AdminCategory[]>('admin/categories'),
@@ -74,6 +119,15 @@ export const adminService = {
   deleteCategory: (id: string) => apiClient.delete<null>(`admin/categories/${id}`),
   reorderCategories: (order: string[]) =>
     apiClient.patch<AdminCategory[]>('admin/categories/reorder', { order }),
+  setCategoryVisibility: (
+    id: string,
+    payload: { showOnHomepage?: boolean; showInSearch?: boolean },
+  ) => {
+    const body: Record<string, boolean> = {}
+    if (payload.showOnHomepage !== undefined) body.show_on_homepage = payload.showOnHomepage
+    if (payload.showInSearch !== undefined) body.show_in_search = payload.showInSearch
+    return apiClient.patch<AdminCategory>(`admin/categories/${id}/visibility`, body)
+  },
 
   categoryRequests: (status?: string): Promise<Paginated<CategoryRequestItem>> =>
     apiClient.getPage<CategoryRequestItem>('admin/category-requests', {

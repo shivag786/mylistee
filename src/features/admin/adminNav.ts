@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   Store,
+  DownloadCloud,
   Users,
   Tag,
   Star,
@@ -28,6 +29,7 @@ export interface AdminNavItem {
 export const ADMIN_NAV: AdminNavItem[] = [
   { to: ROUTES.admin.dashboard, label: 'Dashboard', icon: LayoutDashboard },
   { to: ROUTES.admin.businesses, label: 'Businesses', icon: Store },
+  { to: ROUTES.admin.businessImport, label: 'Business import', icon: DownloadCloud },
   { to: ROUTES.admin.categories, label: 'Categories', icon: Grid3x3 },
   { to: ROUTES.admin.categoryRequests, label: 'Category requests', icon: Inbox },
   { to: ROUTES.admin.customers, label: 'Customers', icon: Users },

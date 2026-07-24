@@ -18,7 +18,13 @@ export function useCombos() {
 
 export function useComboActions() {
   const qc = useQueryClient()
-  const done = () => void qc.invalidateQueries({ queryKey: comboKeys.all })
+  // Return the promise + force an active refetch so a freshly added/edited combo
+  // always shows up immediately (also invalidates products in case prices moved).
+  const done = () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: comboKeys.all, refetchType: 'active' }),
+      qc.invalidateQueries({ queryKey: ['owner', 'products'], refetchType: 'active' }),
+    ])
 
   return {
     create: useMutation({

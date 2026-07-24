@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Plus, X, Check, Utensils, ShoppingBasket } from 'lucide-react'
+import { Plus, Minus, X, Check, Utensils, ShoppingBasket } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { ImageCropField } from '@/components/forms/ImageCropField'
+import { Spinner } from '@/components/feedback/Spinner'
+import { useProgressiveReveal } from '@/hooks/useProgressiveReveal'
 import { useProducts, useProductCategories } from '../hooks/useProducts'
 import { useComboActions } from '../hooks/useCombos'
 import { toast } from '@/utils/toast'
@@ -52,11 +54,13 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
   const isEdit = combo !== null
 
   const [sectionId, setSectionId] = useState<string>('all')
+  const didDefaultSection = useRef(false)
   const [picked, setPicked] = useState<Picked[]>([])
   const [name, setName] = useState('')
   const [comboPrice, setComboPrice] = useState('')
   const [coins, setCoins] = useState('')
   const [walletCoins, setWalletCoins] = useState(false)
+  const [coinsAccepted, setCoinsAccepted] = useState('')
   const [coupon, setCoupon] = useState('')
   const [bonus, setBonus] = useState('')
   const [image, setImage] = useState<File | null>(null)
@@ -65,11 +69,11 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
 
   useEffect(() => {
     if (!open) return
-    setSectionId('all')
     setName(combo?.name ?? '')
     setComboPrice(combo ? String(combo.comboPrice) : '')
     setCoins(combo?.coinsEarned != null ? String(combo.coinsEarned) : '')
     setWalletCoins(combo?.walletCoinsAccepted ?? false)
+    setCoinsAccepted(combo?.coinsAccepted ? String(combo.coinsAccepted) : '')
     setCoupon(combo?.nextVisitCoupon ?? '')
     setBonus(combo?.bonusReward ?? '')
     setImage(null)
@@ -88,15 +92,40 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
     )
   }, [open, combo])
 
+  // Default the active tab to the FIRST category (07C — start where the products
+  // are), once per open and only after sections load. Never overrides a later
+  // manual choice.
+  useEffect(() => {
+    if (!open) {
+      didDefaultSection.current = false
+      return
+    }
+    if (didDefaultSection.current || sections === undefined) return
+    didDefaultSection.current = true
+    setSectionId(sections.length > 0 ? sections[0].id : 'all')
+  }, [open, sections])
+
   const visibleProducts = useMemo(() => {
     const list = products ?? []
     return sectionId === 'all' ? list : list.filter((p) => p.categoryId === sectionId)
   }, [products, sectionId])
 
+  const { visible: shownProducts, hasMore, sentinelRef } = useProgressiveReveal(visibleProducts, 12)
+
   const totalPrice = picked.reduce((sum, p) => sum + p.sellingPrice * p.quantity, 0)
   const priceNum = Number(comboPrice) || 0
   const savings = Math.max(0, totalPrice - priceNum)
   const pending = create.isPending || update.isPending
+
+  function setQuantity(productId: string, delta: number) {
+    setPicked((prev) =>
+      prev.map((p) =>
+        p.productId === productId
+          ? { ...p, quantity: Math.max(1, Math.min(9, p.quantity + delta)) }
+          : p,
+      ),
+    )
+  }
 
   function toggleProduct(product: Product) {
     setPicked((prev) => {
@@ -129,6 +158,7 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
       combo_price: priceNum,
       coins_earned: coins ? Number(coins) : null,
       wallet_coins_accepted: walletCoins,
+      coins_accepted: walletCoins && coinsAccepted ? Number(coinsAccepted) : 0,
       next_visit_coupon: coupon.trim() || null,
       bonus_reward: bonus.trim() || null,
       is_visible: visible,
@@ -190,6 +220,30 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
                         )}
                       </span>
                       <span className="max-w-24 truncate text-small font-medium text-foreground">{p.name}</span>
+                      {/* Quantity — optional, defaults to 1. */}
+                      <span className="flex items-center gap-1 rounded-full bg-surface-muted px-1 py-0.5">
+                        <button
+                          type="button"
+                          aria-label={`Decrease ${p.name} quantity`}
+                          onClick={() => setQuantity(p.productId, -1)}
+                          disabled={p.quantity <= 1}
+                          className="grid size-4 place-items-center rounded-full text-text-secondary hover:text-foreground disabled:opacity-40"
+                        >
+                          <Minus className="size-3" aria-hidden />
+                        </button>
+                        <span className="min-w-4 text-center text-small font-semibold tabular-nums text-foreground">
+                          {p.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label={`Increase ${p.name} quantity`}
+                          onClick={() => setQuantity(p.productId, 1)}
+                          disabled={p.quantity >= 9}
+                          className="grid size-4 place-items-center rounded-full text-text-secondary hover:text-foreground disabled:opacity-40"
+                        >
+                          <Plus className="size-3" aria-hidden />
+                        </button>
+                      </span>
                       <button
                         type="button"
                         aria-label={`Remove ${p.name}`}
@@ -211,10 +265,10 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
             )}
           </div>
 
-          {/* Section filter */}
+          {/* Section filter — categories first, All last (07C). Scrolls sideways
+              so a long menu stays one tidy row instead of a tall wrapped block. */}
           {sections && sections.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              <SectionChip label="All" active={sectionId === 'all'} onClick={() => setSectionId('all')} />
+            <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {sections.map((s) => (
                 <SectionChip
                   key={s.id}
@@ -223,12 +277,13 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
                   onClick={() => setSectionId(s.id)}
                 />
               ))}
+              <SectionChip label="All" active={sectionId === 'all'} onClick={() => setSectionId('all')} />
             </div>
           )}
 
           {/* Product grid */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {visibleProducts.map((product) => {
+          <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+            {shownProducts.map((product) => {
               const active = pickedIds.has(product.id)
               return (
                 <button
@@ -265,6 +320,11 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
               )
             })}
           </div>
+          {hasMore && (
+            <div ref={sentinelRef} className="flex justify-center py-3">
+              <Spinner size={20} label="Loading more products" />
+            </div>
+          )}
           {visibleProducts.length === 0 && (
             <p className="py-4 text-center text-small text-text-muted">
               No products here yet. Add products first.
@@ -312,6 +372,21 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
               <span className="text-caption font-medium text-foreground">Accept wallet coins</span>
               <Switch checked={walletCoins} onCheckedChange={setWalletCoins} />
             </label>
+            {walletCoins && (
+              <div className="space-y-1.5">
+                <Label htmlFor="combo-coins-accepted">Accept up to (coins)</Label>
+                <Input
+                  id="combo-coins-accepted"
+                  inputMode="numeric"
+                  value={coinsAccepted}
+                  onChange={(e) => setCoinsAccepted(e.target.value)}
+                  placeholder="e.g. 15"
+                />
+                <p className="text-small text-text-muted">
+                  Most Listee coins a customer can spend on this combo (₹1 per coin).
+                </p>
+              </div>
+            )}
             <label className="flex items-center justify-between gap-4 py-0.5">
               <span className="text-caption font-medium text-foreground">Visible to customers</span>
               <Switch checked={visible} onCheckedChange={setVisible} />
@@ -340,7 +415,7 @@ function SectionChip({ label, active, onClick }: { label: string; active: boolea
       type="button"
       onClick={onClick}
       className={cn(
-        'rounded-full px-3 py-1 text-small font-medium transition-colors',
+        'shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-small font-medium transition-colors',
         active ? 'bg-primary text-primary-foreground' : 'bg-surface-muted text-text-secondary hover:text-foreground',
       )}
     >

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { TextField } from '@/components/forms/TextField'
 import { EmptyState } from '@/components/feedback/EmptyState'
@@ -7,7 +8,8 @@ import { useNearbyBusinesses } from '@/features/businesses/hooks/useNearbyBusine
 import { MESSAGES } from '@/constants/messages'
 
 export function SearchPage() {
-  const [term, setTerm] = useState('')
+  const [searchParams] = useSearchParams()
+  const [term, setTerm] = useState(() => searchParams.get('q') ?? '')
   const { data } = useNearbyBusinesses()
 
   const results = useMemo(() => {

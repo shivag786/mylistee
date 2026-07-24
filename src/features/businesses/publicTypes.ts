@@ -17,6 +17,52 @@ export interface PublicGalleryImage {
   sortOrder: number
 }
 
+export interface PublicProduct {
+  id: string
+  name: string
+  description: string | null
+  imageUrl: string | null
+  mrp: number | null
+  sellingPrice: number
+  discountPercent: number
+  effectivePrice?: number
+  activeOffer?: { id: string; name: string; type: string } | null
+  /** Any active promotion (all types) with its type + short label. */
+  promo?: { name: string; type: string; typeLabel: string; label: string } | null
+  foodType: 'veg' | 'non_veg' | 'egg' | null
+  isTodaysSpecial: boolean
+  isBestseller: boolean
+  isRecommended: boolean
+  inStock: boolean
+}
+
+export interface PublicMenuSection {
+  id: string
+  name: string
+  products: PublicProduct[]
+}
+
+export interface PublicComboItem {
+  productId: string | null
+  name: string | null
+  imageUrl: string | null
+  quantity: number
+}
+
+export interface PublicCombo {
+  id: string
+  name: string
+  imageUrl: string | null
+  comboPrice: number
+  totalPrice: number
+  savings: number
+  coinsEarned: number | null
+  /** Max Listee coins a customer may spend on this combo (0 = none). */
+  coinsAccepted: number
+  items: PublicComboItem[]
+  isActiveNow: boolean
+}
+
 export interface PublicBusiness {
   id: string
   name: string
@@ -40,6 +86,8 @@ export interface PublicBusiness {
   totalReviews: number
   gallery: PublicGalleryImage[]
   offers: PublicOffer[]
+  menu: PublicMenuSection[]
+  combos: PublicCombo[]
 }
 
 export interface SpinState {

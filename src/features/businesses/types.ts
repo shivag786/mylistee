@@ -22,3 +22,15 @@ export interface Business {
   isNew: boolean
   status: BusinessStatus
 }
+
+/** Public business category (home chips / search filter). */
+export interface BusinessCategory {
+  id: string
+  name: string
+  slug: string
+  icon: string | null
+  imageUrl: string | null
+  description: string | null
+  showOnHomepage: boolean
+  showInSearch: boolean
+}

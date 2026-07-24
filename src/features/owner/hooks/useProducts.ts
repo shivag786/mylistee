@@ -27,10 +27,14 @@ export function useProductCategories() {
 
 export function useProductActions() {
   const qc = useQueryClient()
-  const done = () => {
-    void qc.invalidateQueries({ queryKey: productKeys.products })
-    void qc.invalidateQueries({ queryKey: productKeys.categories })
-  }
+  // Return the promise so the mutation stays pending until the lists are
+  // refetched, and force an active refetch so the UI always reflects the change
+  // (not just the second time round).
+  const done = () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: productKeys.products, refetchType: 'active' }),
+      qc.invalidateQueries({ queryKey: productKeys.categories, refetchType: 'active' }),
+    ])
 
   return {
     create: useMutation({

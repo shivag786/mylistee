@@ -17,6 +17,8 @@ import { AdminLayout } from '@/layouts/AdminLayout'
 const NearbyPage = lazyPage(() => import('@/pages/customer/NearbyPage'), 'NearbyPage')
 const SearchPage = lazyPage(() => import('@/pages/customer/SearchPage'), 'SearchPage')
 const BusinessProfilePage = lazyPage(() => import('@/pages/customer/BusinessProfilePage'), 'BusinessProfilePage')
+const DealsPage = lazyPage(() => import('@/pages/customer/DealsPage'), 'DealsPage')
+const OrdersHistoryPage = lazyPage(() => import('@/pages/customer/OrdersHistoryPage'), 'OrdersHistoryPage')
 const WalletPage = lazyPage(() => import('@/pages/customer/WalletPage'), 'WalletPage')
 const NotificationsPage = lazyPage(() => import('@/pages/customer/NotificationsPage'), 'NotificationsPage')
 const ProfilePage = lazyPage(() => import('@/pages/customer/ProfilePage'), 'ProfilePage')
@@ -25,7 +27,9 @@ const FavoritesPage = lazyPage(() => import('@/pages/customer/FavoritesPage'), '
 const BusinessRegistrationPage = lazyPage(() => import('@/pages/owner/BusinessRegistrationPage'), 'BusinessRegistrationPage')
 const OwnerDashboardPage = lazyPage(() => import('@/pages/owner/OwnerDashboardPage'), 'OwnerDashboardPage')
 const ProductsPage = lazyPage(() => import('@/pages/owner/ProductsPage'), 'ProductsPage')
+const CombosPage = lazyPage(() => import('@/pages/owner/CombosPage'), 'CombosPage')
 const GrowSalesPage = lazyPage(() => import('@/pages/owner/GrowSalesPage'), 'GrowSalesPage')
+const OrdersPage = lazyPage(() => import('@/pages/owner/OrdersPage'), 'OrdersPage')
 const OffersPage = lazyPage(() => import('@/pages/owner/OffersPage'), 'OffersPage')
 const LoyaltyPage = lazyPage(() => import('@/pages/owner/LoyaltyPage'), 'LoyaltyPage')
 const AnalyticsPage = lazyPage(() => import('@/pages/owner/AnalyticsPage'), 'AnalyticsPage')
@@ -37,6 +41,7 @@ const OwnerProfilePage = lazyPage(() => import('@/pages/owner/OwnerProfilePage')
 
 const AdminDashboardPage = lazyPage(() => import('@/pages/admin/AdminDashboardPage'), 'AdminDashboardPage')
 const AdminBusinessesPage = lazyPage(() => import('@/pages/admin/AdminBusinessesPage'), 'AdminBusinessesPage')
+const AdminBusinessImportPage = lazyPage(() => import('@/pages/admin/AdminBusinessImportPage'), 'AdminBusinessImportPage')
 const AdminCategoriesPage = lazyPage(() => import('@/pages/admin/AdminCategoriesPage'), 'AdminCategoriesPage')
 const AdminCategoryRequestsPage = lazyPage(() => import('@/pages/admin/AdminCategoryRequestsPage'), 'AdminCategoryRequestsPage')
 const AdminCustomersPage = lazyPage(() => import('@/pages/admin/AdminCustomersPage'), 'AdminCustomersPage')
@@ -84,11 +89,13 @@ export function AppRouter() {
         {/* Public browsing (no sign-in required) */}
         <Route path={ROUTES.home} element={<HomePage />} />
         <Route path={ROUTES.nearby} element={<NearbyPage />} />
+        <Route path={ROUTES.deals} element={<DealsPage />} />
         <Route path={ROUTES.search} element={<SearchPage />} />
         <Route path={ROUTES.businessProfile()} element={<BusinessProfilePage />} />
 
         {/* Requires an authenticated customer */}
         <Route element={<RequireAuth />}>
+          <Route path={ROUTES.orders} element={<OrdersHistoryPage />} />
           <Route path={ROUTES.wallet} element={<WalletPage />} />
           <Route path={ROUTES.notifications} element={<NotificationsPage />} />
           <Route path={ROUTES.profile} element={<ProfilePage />} />
@@ -103,7 +110,9 @@ export function AppRouter() {
           <Route path={ROUTES.owner.register} element={<BusinessRegistrationPage />} />
           <Route element={<OwnerLayout />}>
             <Route path={ROUTES.owner.dashboard} element={<OwnerDashboardPage />} />
+            <Route path={ROUTES.owner.orders} element={<OrdersPage />} />
             <Route path={ROUTES.owner.products} element={<ProductsPage />} />
+            <Route path={ROUTES.owner.combos} element={<CombosPage />} />
             <Route path={ROUTES.owner.growSales} element={<GrowSalesPage />} />
             <Route path={ROUTES.owner.offers} element={<OffersPage />} />
             <Route path={ROUTES.owner.loyalty} element={<LoyaltyPage />} />
@@ -124,6 +133,7 @@ export function AppRouter() {
             <Route path={ROUTES.admin.root} element={<AdminDashboardPage />} />
             <Route path={ROUTES.admin.dashboard} element={<AdminDashboardPage />} />
             <Route path={ROUTES.admin.businesses} element={<AdminBusinessesPage />} />
+            <Route path={ROUTES.admin.businessImport} element={<AdminBusinessImportPage />} />
             <Route path={ROUTES.admin.categories} element={<AdminCategoriesPage />} />
             <Route path={ROUTES.admin.categoryRequests} element={<AdminCategoryRequestsPage />} />
             <Route path={ROUTES.admin.customers} element={<AdminCustomersPage />} />

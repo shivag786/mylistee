@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import Cropper, { type Area } from 'react-easy-crop'
-import { ImagePlus, X, ZoomIn } from 'lucide-react'
+import Cropper, { type Area, type MediaSize } from 'react-easy-crop'
+import { ImagePlus, Maximize2, X, ZoomIn } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -55,6 +55,11 @@ export function ImageCropField({
   const [zoom, setZoom] = useState(1)
   const [areaPixels, setAreaPixels] = useState<Area | null>(null)
   const [saving, setSaving] = useState(false)
+  // Zoom at which the whole image fits inside the frame (contain). Lets owners
+  // keep the entire photo instead of being forced to crop off the edges.
+  const [fitZoom, setFitZoom] = useState(1)
+
+  const minZoom = Math.min(fitZoom, 1)
 
   // Live preview of the selected file (revoked on change to avoid leaks).
   useEffect(() => {
@@ -75,12 +80,29 @@ export function ImageCropField({
     setCropSrc(URL.createObjectURL(file))
     setCrop({ x: 0, y: 0 })
     setZoom(1)
+    setFitZoom(1)
     if (inputRef.current) inputRef.current.value = ''
   }
 
   const onCropComplete = useCallback((_area: Area, areaInPixels: Area) => {
     setAreaPixels(areaInPixels)
   }, [])
+
+  // At zoom 1 react-easy-crop covers the frame; the ratio of contain-to-cover
+  // scale is the zoom that shows the whole image inside `aspect`.
+  const onMediaLoaded = useCallback(
+    (media: MediaSize) => {
+      const imgAspect = media.naturalWidth / media.naturalHeight
+      const contain = Math.min(imgAspect / aspect, aspect / imgAspect)
+      setFitZoom(contain < 1 ? contain : 1)
+    },
+    [aspect],
+  )
+
+  function fitWholeImage() {
+    setZoom(minZoom)
+    setCrop({ x: 0, y: 0 })
+  }
 
   async function handleSave() {
     if (!cropSrc || !areaPixels) return
@@ -169,12 +191,16 @@ export function ImageCropField({
                 image={cropSrc}
                 crop={crop}
                 zoom={zoom}
+                minZoom={minZoom}
+                maxZoom={3}
+                restrictPosition={false}
                 aspect={aspect}
                 cropShape={shape === 'circle' ? 'round' : 'rect'}
                 showGrid={shape === 'rect'}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
+                onMediaLoaded={onMediaLoaded}
               />
             )}
           </div>
@@ -183,7 +209,7 @@ export function ImageCropField({
             <ZoomIn className="size-4 shrink-0 text-text-secondary" aria-hidden />
             <input
               type="range"
-              min={1}
+              min={minZoom}
               max={3}
               step={0.01}
               value={zoom}
@@ -191,6 +217,18 @@ export function ImageCropField({
               onChange={(e) => setZoom(Number(e.target.value))}
               className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-border-strong accent-primary"
             />
+            {fitZoom < 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="shrink-0 gap-1.5"
+                onClick={fitWholeImage}
+              >
+                <Maximize2 className="size-4" aria-hidden />
+                Fit
+              </Button>
+            )}
           </div>
 
           <DialogFooter>

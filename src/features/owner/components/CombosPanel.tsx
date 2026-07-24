@@ -8,6 +8,7 @@ import { ConfirmationDialog } from '@/components/feedback/ConfirmationDialog'
 import { Stagger, StaggerItem } from '@/components/motion/Stagger'
 import { ComboCard } from './ComboCard'
 import { ComboBuilder } from './ComboBuilder'
+import { useProgressiveReveal } from '@/hooks/useProgressiveReveal'
 import { useCombos, useComboActions } from '../hooks/useCombos'
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
@@ -17,17 +18,25 @@ import type { Combo } from '../comboTypes'
 /** Combos tab on the Products page (Phase 7.3). */
 export function CombosPanel() {
   const { data, isLoading, isError, refetch } = useCombos()
-  const { remove } = useComboActions()
+  const { remove, update } = useComboActions()
 
   const [builderOpen, setBuilderOpen] = useState(false)
   const [editing, setEditing] = useState<Combo | null>(null)
   const [deleting, setDeleting] = useState<Combo | null>(null)
 
   const combos = data ?? []
+  const { visible, hasMore, sentinelRef } = useProgressiveReveal(combos, 12)
 
   function openCreate() {
     setEditing(null)
     setBuilderOpen(true)
+  }
+
+  function toggleVisible(combo: Combo, value: boolean) {
+    update.mutate(
+      { id: combo.id, values: { is_visible: value } },
+      { onError: (err) => toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic) },
+    )
   }
 
   async function confirmDelete() {
@@ -67,20 +76,29 @@ export function CombosPanel() {
           onAction={openCreate}
         />
       ) : (
-        <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {combos.map((combo) => (
-            <StaggerItem key={combo.id}>
-              <ComboCard
-                combo={combo}
-                onEdit={(c) => {
-                  setEditing(c)
-                  setBuilderOpen(true)
-                }}
-                onDelete={setDeleting}
-              />
-            </StaggerItem>
-          ))}
-        </Stagger>
+        <>
+          <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+            {visible.map((combo) => (
+              <StaggerItem key={combo.id}>
+                <ComboCard
+                  combo={combo}
+                  onEdit={(c) => {
+                    setEditing(c)
+                    setBuilderOpen(true)
+                  }}
+                  onDelete={setDeleting}
+                  onToggleVisible={toggleVisible}
+                  busy={update.isPending}
+                />
+              </StaggerItem>
+            ))}
+          </Stagger>
+          {hasMore && (
+            <div ref={sentinelRef} className="flex justify-center py-6">
+              <Spinner size={22} label="Loading more combos" />
+            </div>
+          )}
+        </>
       )}
 
       <ComboBuilder open={builderOpen} onOpenChange={setBuilderOpen} combo={editing} />

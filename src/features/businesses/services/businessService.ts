@@ -4,7 +4,7 @@
  * here via the service layer.
  */
 import { apiClient } from '@/services/apiClient'
-import type { Business } from '../types'
+import type { Business, BusinessCategory } from '../types'
 
 export type DiscoveryParams = {
   lat?: number
@@ -34,5 +34,10 @@ export const businessService = {
 
   async search(term: string): Promise<Business[]> {
     return apiClient.get<Business[]>('businesses', { query: { search: term, sort: 'rating' } })
+  },
+
+  /** Public business categories (home chips / search filter). */
+  async categories(): Promise<BusinessCategory[]> {
+    return apiClient.get<BusinessCategory[]>('categories')
   },
 }

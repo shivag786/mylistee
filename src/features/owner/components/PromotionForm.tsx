@@ -7,10 +7,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { Utensils } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -24,10 +26,12 @@ import { ApiError } from '@/types/api'
 import { MESSAGES } from '@/constants/messages'
 import {
   PROMOTION_TYPES,
+  PROMOTION_STATUS_TONE,
   type Promotion,
   type PromotionFormValues,
   type PromotionTypeKey,
 } from '../promotionTypes'
+import type { Product } from '../productTypes'
 
 interface PromotionFormProps {
   open: boolean
@@ -36,6 +40,8 @@ interface PromotionFormProps {
   /** When launched as a product "Smart Offer", the target product is fixed. */
   presetProductId?: string | null
   presetProductName?: string | null
+  /** Full target product — shown as a details header at the top of the form. */
+  product?: Product | null
 }
 
 interface State {
@@ -85,9 +91,12 @@ export function PromotionForm({
   promotion,
   presetProductId,
   presetProductName,
+  product,
 }: PromotionFormProps) {
   const { create, update } = usePromotionActions()
   const isEdit = promotion !== null
+  const targetProductId = product?.id ?? presetProductId ?? promotion?.productId ?? null
+  const targetProductName = product?.name ?? presetProductName ?? promotion?.productName ?? null
 
   const [form, setForm] = useState<State>(() => initial(promotion))
   const [error, setError] = useState<string | null>(null)
@@ -101,6 +110,21 @@ export function PromotionForm({
 
   function set<K extends keyof State>(key: K, value: State[K]) {
     setForm((f) => ({ ...f, [key]: value }))
+  }
+
+  // Split the datetime into separate, easy-to-read date + time fields. A schedule
+  // needs a date; the time defaults sensibly (start of day / end of day) so the
+  // owner can pick just a date and be done.
+  const startDate = form.startsAt.slice(0, 10)
+  const startTime = form.startsAt.slice(11, 16)
+  const endDate = form.endsAt.slice(0, 10)
+  const endTime = form.endsAt.slice(11, 16)
+
+  function setStart(date: string, time: string) {
+    set('startsAt', date ? `${date}T${time || '00:00'}` : '')
+  }
+  function setEnd(date: string, time: string) {
+    set('endsAt', date ? `${date}T${time || '23:59'}` : '')
   }
 
   const pending = create.isPending || update.isPending
@@ -125,7 +149,7 @@ export function PromotionForm({
     const values: PromotionFormValues = {
       promotion_type: t,
       name: form.name.trim(),
-      product_id: presetProductId ?? promotion?.productId ?? null,
+      product_id: targetProductId,
       priority: form.priority ? Number(form.priority) : 0,
       auto_start: form.autoStart,
       auto_stop: form.autoStop,
@@ -165,17 +189,47 @@ export function PromotionForm({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex w-full max-w-md flex-col gap-0 p-0">
+      <SheetContent side="right" className="flex w-full max-w-md flex-col gap-0 p-0 sm:max-w-lg">
         <SheetHeader className="border-b border-border px-5 py-4">
           <SheetTitle>{isEdit ? 'Edit promotion' : 'New promotion'}</SheetTitle>
           <SheetDescription>
-            {presetProductName
-              ? `Smart offer for ${presetProductName}`
+            {targetProductName
+              ? `Offer for ${targetProductName}`
               : 'Runs automatically on the schedule you set.'}
           </SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          {/* Item details — so the owner always sees which product this offer is for. */}
+          {(product || targetProductName) && (
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface-muted/50 p-3">
+              <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface-muted">
+                {product?.imageUrl ? (
+                  <img src={product.imageUrl} alt="" className="size-full object-cover" />
+                ) : (
+                  <Utensils className="size-6 text-text-muted" aria-hidden />
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-caption font-semibold text-foreground">
+                  {targetProductName ?? 'This product'}
+                </p>
+                {product && (
+                  <p className="flex items-baseline gap-1.5 text-small text-text-muted">
+                    <span className="font-semibold text-foreground">₹{product.effectivePrice ?? product.sellingPrice}</span>
+                    {product.mrp != null && product.mrp > product.sellingPrice && (
+                      <span className="line-through">₹{product.mrp}</span>
+                    )}
+                  </p>
+                )}
+              </div>
+              {isEdit && promotion && (
+                <Badge tone={PROMOTION_STATUS_TONE[promotion.status]} className="capitalize">
+                  {promotion.status}
+                </Badge>
+              )}
+            </div>
+          )}
           {!isEdit && (
             <div className="space-y-1.5">
               <Label htmlFor="promo-type">Promotion type</Label>
@@ -269,16 +323,64 @@ export function PromotionForm({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Schedule — separate date + time fields so the whole window is easy to
+              read and set, even on wide laptop screens. */}
+          <fieldset className="space-y-4 rounded-2xl border border-border bg-surface-muted/40 p-4">
+            <legend className="px-1 text-caption font-medium text-foreground">
+              Schedule <span className="font-normal text-text-muted">(optional)</span>
+            </legend>
+
             <div className="space-y-1.5">
-              <Label htmlFor="promo-start">Starts</Label>
-              <Input id="promo-start" type="datetime-local" value={form.startsAt} onChange={(e) => set('startsAt', e.target.value)} />
+              <span className="text-small font-semibold uppercase tracking-wide text-text-muted">Starts</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="promo-start-date">Start date</Label>
+                  <Input
+                    id="promo-start-date"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStart(e.target.value, startTime)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="promo-start-time">Start time</Label>
+                  <Input
+                    id="promo-start-time"
+                    type="time"
+                    value={startTime}
+                    disabled={!startDate}
+                    onChange={(e) => setStart(startDate, e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
+
             <div className="space-y-1.5">
-              <Label htmlFor="promo-end">Ends</Label>
-              <Input id="promo-end" type="datetime-local" value={form.endsAt} onChange={(e) => set('endsAt', e.target.value)} />
+              <span className="text-small font-semibold uppercase tracking-wide text-text-muted">Ends</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="promo-end-date">End date</Label>
+                  <Input
+                    id="promo-end-date"
+                    type="date"
+                    value={endDate}
+                    min={startDate || undefined}
+                    onChange={(e) => setEnd(e.target.value, endTime)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="promo-end-time">End time</Label>
+                  <Input
+                    id="promo-end-time"
+                    type="time"
+                    value={endTime}
+                    disabled={!endDate}
+                    onChange={(e) => setEnd(endDate, e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          </fieldset>
 
           <label className="flex items-center justify-between gap-4 py-0.5">
             <span className="space-y-0.5">

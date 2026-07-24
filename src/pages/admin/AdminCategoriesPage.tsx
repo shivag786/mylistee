@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash2, ArrowUp, ArrowDown, Grid3x3, Home, Search } from 
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
 import { IconButton } from '@/components/ui/icon-button'
 import { Spinner } from '@/components/feedback/Spinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
@@ -20,7 +21,7 @@ import type { AdminCategory } from '@/features/admin/types'
 export function AdminCategoriesPage() {
   usePageTitle('Categories')
   const { data, isLoading, isError, refetch } = useAdminCategories()
-  const { remove, reorder } = useCategoryActions()
+  const { remove, reorder, setVisibility } = useCategoryActions()
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing] = useState<AdminCategory | null>(null)
@@ -36,6 +37,16 @@ export function AdminCategoriesPage() {
   function openEdit(category: AdminCategory) {
     setEditing(category)
     setSheetOpen(true)
+  }
+
+  function toggleVisibility(
+    category: AdminCategory,
+    payload: { showOnHomepage?: boolean; showInSearch?: boolean },
+  ) {
+    setVisibility.mutate(
+      { id: category.id, payload },
+      { onError: (err) => toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic) },
+    )
   }
 
   function move(index: number, direction: -1 | 1) {
@@ -118,17 +129,29 @@ export function AdminCategoriesPage() {
                   </Badge>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5">
-                  {category.showOnHomepage && (
-                    <Badge tone="primary" className="gap-1">
-                      <Home className="size-3" aria-hidden /> Homepage
-                    </Badge>
-                  )}
-                  {category.showInSearch && (
-                    <Badge tone="info" className="gap-1">
-                      <Search className="size-3" aria-hidden /> Search
-                    </Badge>
-                  )}
+                <div className="space-y-1.5 rounded-xl bg-surface-muted/50 px-3 py-2">
+                  <label className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-caption font-medium text-text-secondary">
+                      <Home className="size-3.5" aria-hidden /> Show on homepage
+                    </span>
+                    <Switch
+                      checked={category.showOnHomepage}
+                      onCheckedChange={(v) => toggleVisibility(category, { showOnHomepage: v })}
+                      disabled={setVisibility.isPending}
+                      aria-label={`Show ${category.name} on homepage`}
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-caption font-medium text-text-secondary">
+                      <Search className="size-3.5" aria-hidden /> Show in search
+                    </span>
+                    <Switch
+                      checked={category.showInSearch}
+                      onCheckedChange={(v) => toggleVisibility(category, { showInSearch: v })}
+                      disabled={setVisibility.isPending}
+                      aria-label={`Show ${category.name} in search`}
+                    />
+                  </label>
                 </div>
 
                 <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-3">

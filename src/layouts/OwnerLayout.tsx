@@ -10,6 +10,7 @@ import { ROUTES } from '@/constants/routes'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useOwnerBusiness } from '@/features/owner/hooks/useOwner'
 import { OwnerNav } from '@/features/owner/components/OwnerNav'
+import { FloatingOrderButton } from '@/features/owner/components/FloatingOrderButton'
 import { OWNER_NAV } from '@/features/owner/ownerNav'
 import { SuspenseOutlet } from '@/app/PageLoader'
 import { cn } from '@/utils/cn'
@@ -85,6 +86,8 @@ export function OwnerLayout() {
           </PageTransition>
         </AnimatePresence>
       </main>
+
+      <FloatingOrderButton />
 
       <OwnerNav />
     </div>

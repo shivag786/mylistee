@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Home, MapPin, Wallet, Bell, User, type LucideIcon } from 'lucide-react'
+import { Home, MapPin, Wallet, Receipt, User, type LucideIcon } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
 import { cn } from '@/utils/cn'
 
@@ -13,8 +13,8 @@ interface Tab {
 const TABS: Tab[] = [
   { to: ROUTES.home, label: 'Home', icon: Home },
   { to: ROUTES.nearby, label: 'Nearby', icon: MapPin },
+  { to: ROUTES.orders, label: 'Orders', icon: Receipt },
   { to: ROUTES.wallet, label: 'Wallet', icon: Wallet },
-  { to: ROUTES.notifications, label: 'Alerts', icon: Bell },
   { to: ROUTES.profile, label: 'Profile', icon: User },
 ]
 

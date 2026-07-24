@@ -4,7 +4,13 @@
  */
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { adminService } from '../services/adminService'
-import type { CategoryInput, ListFilters, PlatformSettings } from '../types'
+import type {
+  BusinessUpdateInput,
+  CategoryInput,
+  ImportApplyInput,
+  ListFilters,
+  PlatformSettings,
+} from '../types'
 
 export const adminKeys = {
   dashboard: ['admin', 'dashboard'] as const,
@@ -48,8 +54,39 @@ export function useBusinessActions() {
     setStatus: useMutation({ mutationFn: (v: { id: string; status: string }) => adminService.setBusinessStatus(v.id, v.status), onSuccess: done }),
     verify: useMutation({ mutationFn: (id: string) => adminService.verifyBusiness(id), onSuccess: done }),
     feature: useMutation({ mutationFn: (id: string) => adminService.featureBusiness(id), onSuccess: done }),
+    update: useMutation({
+      mutationFn: (v: { id: string; input: BusinessUpdateInput }) => adminService.updateBusiness(v.id, v.input),
+      onSuccess: done,
+    }),
+    uploadImage: useMutation({
+      mutationFn: (v: { id: string; type: 'logo' | 'cover'; image: File }) =>
+        adminService.uploadBusinessImage(v.id, v.type, v.image),
+      onSuccess: done,
+    }),
   }
 }
+
+// ---- Business Import Engine (SPEC-011) ----
+export const useImportPreview = () =>
+  useMutation({ mutationFn: (url: string) => adminService.importPreview(url) })
+
+export function useImportApply() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: ImportApplyInput) => adminService.importApply(input),
+    onSuccess: () => {
+      invalidate(qc, 'businesses')
+      void qc.invalidateQueries({ queryKey: ['admin', 'import-logs'] })
+    },
+  })
+}
+
+export const useImportLogs = (filters: ListFilters) =>
+  useQuery({
+    queryKey: ['admin', 'import-logs', filters] as const,
+    queryFn: () => adminService.importLogs(filters),
+    placeholderData: keepPreviousData,
+  })
 
 // ---- Customers ----
 export const useAdminCustomers = (filters: ListFilters) =>
@@ -182,6 +219,11 @@ export function useCategoryActions() {
     }),
     reorder: useMutation({
       mutationFn: (order: string[]) => adminService.reorderCategories(order),
+      onSuccess: done,
+    }),
+    setVisibility: useMutation({
+      mutationFn: (v: { id: string; payload: { showOnHomepage?: boolean; showInSearch?: boolean } }) =>
+        adminService.setCategoryVisibility(v.id, v.payload),
       onSuccess: done,
     }),
   }

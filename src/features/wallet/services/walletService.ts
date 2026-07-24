@@ -11,12 +11,6 @@ export interface WalletSummary {
 
 export type WalletRewardStatus = 'active' | 'redeemed' | 'expired'
 
-export interface WalletToken {
-  token: string
-  expiresAt: string
-  expiresInSeconds: number
-}
-
 export const walletService = {
   async getSummary(): Promise<WalletSummary> {
     const { summary } = await apiClient.get<{ summary: WalletSummary }>('wallet')
@@ -25,14 +19,5 @@ export const walletService = {
 
   async getRewards(status?: WalletRewardStatus): Promise<WonReward[]> {
     return apiClient.get<WonReward[]>('wallet/rewards', { query: { status } })
-  },
-
-  /** Rotating wallet token shown at the counter (Phase 7.3). */
-  async getToken(): Promise<WalletToken> {
-    return apiClient.get<WalletToken>('wallet/token')
-  },
-
-  async refreshToken(): Promise<WalletToken> {
-    return apiClient.post<WalletToken>('wallet/token/refresh')
   },
 }

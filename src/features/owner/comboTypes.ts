@@ -18,6 +18,8 @@ export interface Combo {
   savings: number
   coinsEarned: number | null
   walletCoinsAccepted: boolean
+  /** Max Listee coins a customer may spend on this combo (0 = none). */
+  coinsAccepted: number
   nextVisitCoupon: string | null
   bonusReward: string | null
   items: ComboItem[]
@@ -41,6 +43,7 @@ export interface ComboFormValues {
   product_category_id?: string | null
   coins_earned?: number | null
   wallet_coins_accepted?: boolean
+  coins_accepted?: number | null
   next_visit_coupon?: string | null
   bonus_reward?: string | null
   starts_at?: string | null

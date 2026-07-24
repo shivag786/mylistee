@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import {
@@ -31,9 +32,18 @@ interface ProductCategorySelectProps {
  */
 export function ProductCategorySelect({ value, onChange, disabled }: ProductCategorySelectProps) {
   const { data: categories, isLoading } = useProductCategories()
+  const newInputRef = useRef<HTMLInputElement>(null)
 
   const creating = value.name !== null
   const selectValue = creating ? NEW : (value.id ?? '')
+
+  // Radix Select restores focus to its trigger when the menu closes, which steals
+  // the input's `autoFocus`. Re-focus on the next frame once "New section" is chosen.
+  useEffect(() => {
+    if (!creating) return
+    const id = requestAnimationFrame(() => newInputRef.current?.focus())
+    return () => cancelAnimationFrame(id)
+  }, [creating])
 
   function handleSelect(next: string) {
     if (next === NEW) {
@@ -63,6 +73,7 @@ export function ProductCategorySelect({ value, onChange, disabled }: ProductCate
 
       {creating && (
         <Input
+          ref={newInputRef}
           autoFocus
           value={value.name ?? ''}
           onChange={(e) => onChange({ id: null, name: e.target.value })}

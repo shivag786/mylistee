@@ -34,7 +34,20 @@ export interface AdminBusiness {
   ownerMobile: string | null
   ownerPin: string | null
   category: string | null
+  categoryId: string | null
+  description: string | null
+  address: string | null
+  phone: string | null
+  email: string | null
+  website: string | null
+  facebook: string | null
+  instagram: string | null
+  whatsapp: string | null
+  gst: string | null
+  openingTime: string | null
+  closingTime: string | null
   logoUrl: string | null
+  coverUrl: string | null
   status: BusinessStatus
   verified: boolean
   featured: boolean
@@ -43,6 +56,24 @@ export interface AdminBusiness {
   totalVisits: number
   totalSpins: number
   createdAt: string | null
+}
+
+/** Editable business fields for the admin edit form. */
+export interface BusinessUpdateInput {
+  name: string
+  categoryId?: string | null
+  description?: string | null
+  address?: string | null
+  phone?: string | null
+  email?: string | null
+  website?: string | null
+  facebook?: string | null
+  instagram?: string | null
+  whatsapp?: string | null
+  gst?: string | null
+  openingTime?: string | null
+  closingTime?: string | null
+  status?: string
 }
 
 export interface AdminCustomer {
@@ -134,6 +165,85 @@ export interface ListFilters {
   status?: string
   page?: number
   perPage?: number
+}
+
+// ---- Business Import Engine (SPEC-011) ----
+
+/** Normalized, unsaved preview returned by the importer. */
+export interface ImportPreview {
+  source: string
+  sourceLabel: string
+  sourceUrl: string
+  placeId: string | null
+  name: string | null
+  phone: string | null
+  website: string | null
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  categories: string[]
+  category: string | null
+  openingHours: { weekdayDescriptions?: string[] } & Record<string, unknown>
+  rating: number | null
+  reviewCount: number | null
+  businessStatus: string | null
+  primaryImageUrl: string | null
+  secondaryImageUrl: string | null
+}
+
+export interface ImportPreviewResult {
+  preview: ImportPreview
+  /** An existing business this import matches, or null. */
+  duplicate: AdminBusiness | null
+}
+
+/** Admin-confirmed field values written on import. */
+export interface ImportApplyFields {
+  name?: string | null
+  phone?: string | null
+  website?: string | null
+  address?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  category?: string | null
+  openingTime?: string | null
+  closingTime?: string | null
+  rating?: number | null
+  reviewCount?: number | null
+  businessStatus?: string | null
+  primaryImageUrl?: string | null
+  secondaryImageUrl?: string | null
+}
+
+export interface ImportApplyInput {
+  source?: string
+  url: string
+  placeId?: string | null
+  mode: 'create' | 'update' | 'ignore'
+  businessId?: string | null
+  fields?: ImportApplyFields
+}
+
+export interface ImportApplyResult {
+  business: AdminBusiness | null
+  mode: string
+  updatedFields: string[]
+  updatedCount: number
+}
+
+export interface ImportLog {
+  id: string
+  source: string
+  sourceUrl: string | null
+  placeId: string | null
+  status: string
+  updatedFields: string[]
+  message: string | null
+  importedBy: string
+  businessId: string | null
+  businessName: string | null
+  ipAddress: string | null
+  createdAt: string | null
 }
 
 // ---- Master categories (Phase 7.1) ----
