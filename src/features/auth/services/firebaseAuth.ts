@@ -77,7 +77,10 @@ export async function consumeRedirectResult(): Promise<string | null> {
   const auth = getFirebaseAuth()
   if (!auth || !isFirebaseConfigured) return null
 
-  const result = await getRedirectResult(auth).catch(() => null)
+  const result = await getRedirectResult(auth).catch((err) => {
+    console.error('getRedirectResult failed:', err)
+    return null
+  })
   if (!result) return null
 
   return result.user.getIdToken()
