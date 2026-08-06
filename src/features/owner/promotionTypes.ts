@@ -20,6 +20,7 @@ export interface Promotion {
   status: PromotionStatusKey
   productId: string | null
   productName: string | null
+  productImage: string | null
   discountType: 'percentage' | 'flat' | null
   value: number | null
   buyQty: number | null

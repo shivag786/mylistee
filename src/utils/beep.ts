@@ -1,10 +1,17 @@
 /**
- * A short synthesized "ding" for new-order alerts (Phase 7.5). Uses the Web
- * Audio API so there's no asset to ship. Browsers require a user gesture before
- * audio can start — call `armBeep()` from a click handler once, then `beep()`
- * plays freely.
+ * New-order alert sound (Phase 7.5). By default a short synthesized "ding" via
+ * the Web Audio API (no asset to ship). An admin can upload a custom sound
+ * (GET /config → orderSoundUrl); when set, `beep()` plays that instead.
+ *
+ * Browsers require a user gesture before audio can start — call `armBeep()` from
+ * a click handler once, then `beep()` plays freely.
  */
 let ctx: AudioContext | null = null
+let armed = false
+
+// Admin-uploaded custom sound, if any.
+let customUrl: string | null = null
+let customAudio: HTMLAudioElement | null = null
 
 function context(): AudioContext | null {
   if (typeof window === 'undefined') return null
@@ -14,13 +21,54 @@ function context(): AudioContext | null {
   return ctx
 }
 
-/** Prime the audio context from a user gesture so later beeps aren't blocked. */
+/** Unlock an <audio> element within a user gesture so later `.play()` isn't blocked. */
+function unlock(el: HTMLAudioElement): void {
+  el.muted = true
+  el.play()
+    .then(() => {
+      el.pause()
+      el.currentTime = 0
+      el.muted = false
+    })
+    .catch(() => {
+      el.muted = false
+    })
+}
+
+/** Point the alert at an admin-uploaded sound (or null to use the built-in ding). */
+export function setOrderSoundUrl(url: string | null): void {
+  if (url === customUrl) return
+  customUrl = url
+  if (url) {
+    customAudio = typeof Audio !== 'undefined' ? new Audio(url) : null
+    if (customAudio) {
+      customAudio.preload = 'auto'
+      if (armed) unlock(customAudio)
+    }
+  } else {
+    customAudio = null
+  }
+}
+
+/** Prime audio from a user gesture so later beeps aren't blocked. */
 export function armBeep(): void {
+  armed = true
   const c = context()
   if (c && c.state === 'suspended') void c.resume()
+  if (customAudio) unlock(customAudio)
 }
 
 export function beep(): void {
+  // Prefer the admin-uploaded sound when configured.
+  if (customAudio) {
+    customAudio.currentTime = 0
+    customAudio.play().catch(() => synthBeep())
+    return
+  }
+  synthBeep()
+}
+
+function synthBeep(): void {
   const c = context()
   if (!c) return
   if (c.state === 'suspended') void c.resume()

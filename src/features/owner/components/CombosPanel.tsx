@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/feedback/Spinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { EmptyState } from '@/components/feedback/EmptyState'
-import { ConfirmationDialog } from '@/components/feedback/ConfirmationDialog'
 import { Stagger, StaggerItem } from '@/components/motion/Stagger'
 import { ComboCard } from './ComboCard'
 import { ComboBuilder } from './ComboBuilder'
@@ -18,11 +17,10 @@ import type { Combo } from '../comboTypes'
 /** Combos tab on the Products page (Phase 7.3). */
 export function CombosPanel() {
   const { data, isLoading, isError, refetch } = useCombos()
-  const { remove, update } = useComboActions()
+  const { update } = useComboActions()
 
   const [builderOpen, setBuilderOpen] = useState(false)
   const [editing, setEditing] = useState<Combo | null>(null)
-  const [deleting, setDeleting] = useState<Combo | null>(null)
 
   const combos = data ?? []
   const { visible, hasMore, sentinelRef } = useProgressiveReveal(combos, 12)
@@ -37,17 +35,6 @@ export function CombosPanel() {
       { id: combo.id, values: { is_visible: value } },
       { onError: (err) => toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic) },
     )
-  }
-
-  async function confirmDelete() {
-    if (!deleting) return
-    try {
-      await remove.mutateAsync(deleting.id)
-      toast.success('Combo deleted')
-      setDeleting(null)
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic)
-    }
   }
 
   if (isLoading) {
@@ -86,7 +73,6 @@ export function CombosPanel() {
                     setEditing(c)
                     setBuilderOpen(true)
                   }}
-                  onDelete={setDeleting}
                   onToggleVisible={toggleVisible}
                   busy={update.isPending}
                 />
@@ -102,17 +88,6 @@ export function CombosPanel() {
       )}
 
       <ComboBuilder open={builderOpen} onOpenChange={setBuilderOpen} combo={editing} />
-
-      <ConfirmationDialog
-        open={deleting !== null}
-        onOpenChange={(open) => !open && setDeleting(null)}
-        title={`Delete ${deleting?.name ?? 'combo'}?`}
-        description="This removes the combo. This can't be undone."
-        confirmLabel="Delete"
-        destructive
-        isLoading={remove.isPending}
-        onConfirm={() => void confirmDelete()}
-      />
     </div>
   )
 }

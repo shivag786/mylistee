@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CombosPanel } from '@/features/owner/components/CombosPanel'
+import { PlanUsageBanner } from '@/features/owner/components/PlanUsageBanner'
 import { ROUTES } from '@/constants/routes'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
@@ -25,6 +26,8 @@ export function CombosPage() {
           <Link to={ROUTES.owner.products}>Products</Link>
         </Button>
       </header>
+
+      <PlanUsageBanner metric="activeCombos" />
 
       <CombosPanel />
     </div>

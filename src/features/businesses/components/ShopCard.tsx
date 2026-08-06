@@ -28,6 +28,8 @@ export function ShopCard({ business }: ShopCardProps) {
   const [favorite, setFavorite] = useState(business.isFavorite)
 
   const hasRating = business.rating > 0 && business.reviewCount > 0
+  // Prefer a product image; fall back to the shop banner.
+  const cardImage = business.previewImage ?? business.coverImage
 
   function onToggleFavorite(e: React.MouseEvent) {
     e.preventDefault()
@@ -45,9 +47,9 @@ export function ShopCard({ business }: ShopCardProps) {
     <Card padding="none" interactive className="group relative h-full overflow-hidden">
       {/* Cover */}
       <div className="relative">
-        {business.coverImage ? (
+        {cardImage ? (
           <img
-            src={business.coverImage}
+            src={cardImage}
             alt=""
             loading="lazy"
             className="h-28 w-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -88,52 +90,42 @@ export function ShopCard({ business }: ShopCardProps) {
         </IconButton>
       </div>
 
-      {/* Body */}
-      <div className="flex gap-2.5 p-3">
-        <div className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-surface-muted text-text-muted">
-          {business.logo ? (
-            <img src={business.logo} alt="" loading="lazy" className="size-full object-cover" />
-          ) : (
-            <Store className="size-4" aria-hidden />
+      {/* Body — no logo; product/banner image carries the visual weight. */}
+      <div className="min-w-0 p-3">
+        <h3 className="flex items-start gap-1 text-caption font-semibold leading-tight text-foreground">
+          {/* Stretched link — makes the whole card tappable, no button. */}
+          <Link
+            to={ROUTES.businessProfile(business.slug)}
+            className="line-clamp-2 after:absolute after:inset-0"
+          >
+            {business.name}
+          </Link>
+          {business.verified && (
+            <BadgeCheck className="mt-0.5 size-3.5 shrink-0 fill-info text-white" aria-label="Verified" />
           )}
-        </div>
+        </h3>
 
-        <div className="min-w-0 flex-1">
-          <h3 className="flex items-start gap-1 text-body font-semibold leading-tight text-foreground">
-            {/* Stretched link — makes the whole card tappable, no button. */}
-            <Link
-              to={ROUTES.businessProfile(business.slug)}
-              className="line-clamp-2 after:absolute after:inset-0"
-            >
-              {business.name}
-            </Link>
-            {business.verified && (
-              <BadgeCheck className="mt-0.5 size-4 shrink-0 fill-info text-white" aria-label="Verified" />
+        {business.category && (
+          <p className="truncate text-small text-text-secondary">{business.category}</p>
+        )}
+
+        {(hasRating || business.distanceMeters != null) && (
+          <div className="mt-1 flex items-center gap-2.5 text-caption text-text-secondary">
+            {hasRating && (
+              <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                <Star className="size-3.5 fill-gold text-gold" aria-hidden />
+                {business.rating.toFixed(1)}
+                <span className="font-normal text-text-muted">({business.reviewCount})</span>
+              </span>
             )}
-          </h3>
-
-          {business.category && (
-            <p className="truncate text-caption text-text-secondary">{business.category}</p>
-          )}
-
-          {(hasRating || business.distanceMeters != null) && (
-            <div className="mt-1 flex items-center gap-2.5 text-caption text-text-secondary">
-              {hasRating && (
-                <span className="inline-flex items-center gap-1 font-medium text-foreground">
-                  <Star className="size-3.5 fill-gold text-gold" aria-hidden />
-                  {business.rating.toFixed(1)}
-                  <span className="font-normal text-text-muted">({business.reviewCount})</span>
-                </span>
-              )}
-              {business.distanceMeters != null && (
-                <span className="inline-flex items-center gap-0.5">
-                  <MapPin className="size-3.5" aria-hidden />
-                  {formatDistance(business.distanceMeters)}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
+            {business.distanceMeters != null && (
+              <span className="inline-flex items-center gap-0.5">
+                <MapPin className="size-3.5" aria-hidden />
+                {formatDistance(business.distanceMeters)}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </Card>
   )

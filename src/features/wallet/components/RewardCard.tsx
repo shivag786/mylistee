@@ -51,8 +51,8 @@ export function RewardCard({ reward }: { reward: WonReward }) {
 
       {isActive && (
         <div className="flex items-center justify-between border-t border-dashed border-border px-4 py-2.5">
-          <span className="text-small text-text-muted">Redemption code</span>
-          <span className="font-mono text-body font-bold tracking-[0.2em] text-foreground">{reward.code}</span>
+          <span className="text-small text-text-muted">Redemption PIN</span>
+          <span className="font-mono text-body font-bold tracking-[0.3em] text-foreground">{reward.code}</span>
         </div>
       )}
     </Card>

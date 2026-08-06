@@ -1,12 +1,13 @@
-import { Coins, Check, X, CheckCheck, Utensils } from 'lucide-react'
+import { Coins, Check, X, CheckCheck, Utensils, MapPin, Banknote, Smartphone } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ORDER_STATUS_TONE, type Order, type OrderStatusKey } from '../orderTypes'
+import { ORDER_STATUS_TONE, type Order, type OrderStatusKey, type PaymentMethodKey } from '../orderTypes'
+import { SERVICE_META, SERVICE_TONE } from '@/features/orders/serviceTypes'
 
 interface OrderCardProps {
   order: Order
-  onAction: (id: string, status: Exclude<OrderStatusKey, 'placed'>) => void
+  onAction: (id: string, status: Exclude<OrderStatusKey, 'placed'>, paymentMethod?: PaymentMethodKey) => void
   busy?: boolean
 }
 
@@ -19,11 +20,32 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
           <p className="text-caption text-text-muted">Token</p>
           <p className="font-mono text-2xl font-bold tracking-widest text-foreground">{order.token}</p>
         </div>
-        <div className="text-right">
+        <div className="flex flex-col items-end gap-1">
           <Badge tone={ORDER_STATUS_TONE[order.status]}>{order.status}</Badge>
-          <p className="mt-1 text-caption text-text-secondary">{order.customerName ?? 'Customer'}</p>
+          {(() => {
+            const Icon = SERVICE_META[order.serviceType]?.icon ?? Utensils
+            return (
+              <Badge tone={SERVICE_TONE[order.serviceType] ?? 'neutral'} className="gap-1">
+                <Icon className="size-3" aria-hidden /> {order.serviceLabel}
+              </Badge>
+            )
+          })()}
+          {order.paymentLabel && (
+            <Badge tone={order.paymentMethod === 'online' ? 'info' : 'success'} className="gap-1">
+              {order.paymentMethod === 'online' ? <Smartphone className="size-3" aria-hidden /> : <Banknote className="size-3" aria-hidden />}
+              {order.paymentLabel}
+            </Badge>
+          )}
+          <p className="text-caption text-text-secondary">{order.customerName ?? 'Customer'}</p>
         </div>
       </div>
+
+      {order.serviceAddress && (
+        <p className="flex items-start gap-1.5 rounded-lg bg-surface-muted p-2 text-caption text-text-secondary">
+          <MapPin className="mt-0.5 size-3.5 shrink-0 text-text-muted" aria-hidden />
+          <span>{order.serviceAddress}</span>
+        </p>
+      )}
 
       <ul className="space-y-1 border-y border-border py-2">
         {order.items.map((item, i) => (
@@ -42,6 +64,7 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
       <div className="space-y-0.5 text-caption">
         <Row label="Subtotal" value={`₹${order.subtotal}`} />
         {order.coinsUsed > 0 && <Row label={`Coins used (${order.coinsUsed})`} value={`−₹${order.coinDiscount}`} muted />}
+        {order.deliveryFee > 0 && <Row label="Delivery fee" value={`₹${order.deliveryFee}`} />}
         <div className="flex items-center justify-between font-semibold text-foreground">
           <span>Total</span>
           <span>₹{order.total}</span>
@@ -68,8 +91,11 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
         )}
         {order.status === 'confirmed' && (
           <>
-            <Button size="sm" variant="success" leftIcon={<Coins className="size-4" />} onClick={() => onAction(order.id, 'paid')} disabled={busy}>
-              Mark paid
+            <Button size="sm" variant="success" leftIcon={<Banknote className="size-4" />} onClick={() => onAction(order.id, 'paid', 'cod')} disabled={busy}>
+              COD collected
+            </Button>
+            <Button size="sm" leftIcon={<Smartphone className="size-4" />} onClick={() => onAction(order.id, 'paid', 'online')} disabled={busy}>
+              Online paid
             </Button>
             <Button size="sm" variant="outline" leftIcon={<X className="size-4" />} onClick={() => onAction(order.id, 'cancelled')} disabled={busy}>
               Cancel

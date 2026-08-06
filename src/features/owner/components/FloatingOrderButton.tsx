@@ -2,6 +2,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ClipboardList } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
+import { useAppConfig } from '@/hooks/useAppConfig'
+import { isOwnerModuleEnabled } from '@/features/owner/ownerNav'
 import { useOwnerOrderAlerts } from '../hooks/useOwnerOrderAlerts'
 
 /**
@@ -12,11 +14,13 @@ import { useOwnerOrderAlerts } from '../hooks/useOwnerOrderAlerts'
  */
 export function FloatingOrderButton() {
   const { activeCount } = useOwnerOrderAlerts()
+  const { data: config } = useAppConfig()
   const location = useLocation()
   const reduce = useReducedMotion()
 
+  const ordersEnabled = isOwnerModuleEnabled(config?.ownerModules, 'orders')
   const onOrdersPage = location.pathname.startsWith(ROUTES.owner.orders)
-  const show = activeCount > 0 && !onOrdersPage
+  const show = ordersEnabled && activeCount > 0 && !onOrdersPage
 
   return (
     <AnimatePresence>

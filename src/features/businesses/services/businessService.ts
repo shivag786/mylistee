@@ -14,6 +14,8 @@ export type DiscoveryParams = {
   sort?: 'newest' | 'rating' | 'name' | 'nearest'
   verified?: 1
   new?: 1
+  /** Homepage rows: only shops with a live offer, visible product, or combo. */
+  withContent?: 1
   perPage?: number
 }
 

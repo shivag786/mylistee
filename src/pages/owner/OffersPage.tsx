@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Tag, Pencil, Trash2, Archive, RotateCcw, Ticket, Sparkles, Lightbulb } from 'lucide-react'
+import { Plus, Tag, Pencil, Archive, RotateCcw, Ticket, Sparkles, Lightbulb } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,6 @@ import {
 import { Spinner } from '@/components/feedback/Spinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { EmptyState } from '@/components/feedback/EmptyState'
-import { ConfirmationDialog } from '@/components/feedback/ConfirmationDialog'
 import { Stagger, StaggerItem } from '@/components/motion/Stagger'
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
@@ -22,12 +21,12 @@ import {
   useOffers,
   useCreateOffer,
   useUpdateOffer,
-  useDeleteOffer,
   useSetOfferStatus,
   useOfferSuggestions,
 } from '@/features/owner/hooks/useOwner'
 import { OfferForm, type OfferSeed } from '@/features/owner/components/OfferForm'
 import { OfferStatusBadge } from '@/features/owner/components/OfferStatusBadge'
+import { PlanUsageBanner } from '@/features/owner/components/PlanUsageBanner'
 import type { Offer, OfferFormValues, OfferType } from '@/features/owner/types'
 import type { OfferSuggestion } from '@/features/owner/services/ownerService'
 
@@ -36,12 +35,10 @@ export function OffersPage() {
   const create = useCreateOffer()
   const update = useUpdateOffer()
   const setStatus = useSetOfferStatus()
-  const remove = useDeleteOffer()
 
   const [editing, setEditing] = useState<Offer | null>(null)
   const [creating, setCreating] = useState(false)
   const [seed, setSeed] = useState<OfferSeed | undefined>(undefined)
-  const [deleting, setDeleting] = useState<Offer | null>(null)
   const [showIdeas, setShowIdeas] = useState(false)
   const suggestions = useOfferSuggestions(showIdeas)
 
@@ -50,8 +47,6 @@ export function OffersPage() {
     setShowIdeas(false)
     setCreating(true)
   }
-
-  const activeCount = offers?.filter((o) => o.status === 'active').length ?? 0
 
   if (isLoading) {
     return (
@@ -75,20 +70,9 @@ export function OffersPage() {
     const next = offer.status === 'archived' ? 'active' : 'archived'
     try {
       await setStatus.mutateAsync({ id: offer.id, status: next })
-      toast.success(next === 'archived' ? 'Offer archived' : 'Offer activated')
+      toast.success(next === 'archived' ? 'Offer turned off' : 'Offer turned on')
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Could not update the offer.')
-    }
-  }
-  async function confirmDelete() {
-    if (!deleting) return
-    try {
-      await remove.mutateAsync(deleting.id)
-      toast.success('Offer deleted')
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Could not delete the offer.')
-    } finally {
-      setDeleting(null)
     }
   }
 
@@ -97,7 +81,7 @@ export function OffersPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-title font-bold text-foreground">Offers</h1>
-          <p className="text-caption text-text-secondary">{activeCount}/3 active on the free plan</p>
+          <p className="text-caption text-text-secondary">Rewards customers can win on your spinner.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -113,6 +97,8 @@ export function OffersPage() {
           </Button>
         </div>
       </div>
+
+      <PlanUsageBanner metric="activeOffers" />
 
       {offers.length === 0 ? (
         <EmptyState
@@ -154,20 +140,15 @@ export function OffersPage() {
                   <IconButton aria-label="Edit offer" variant="ghost" onClick={() => setEditing(offer)}>
                     <Pencil className="size-4" aria-hidden />
                   </IconButton>
-                  <IconButton
-                    aria-label={offer.status === 'archived' ? 'Activate offer' : 'Archive offer'}
-                    variant="ghost"
+                  <Button
+                    size="sm"
+                    variant={offer.status === 'archived' ? 'outline' : 'ghost'}
+                    leftIcon={offer.status === 'archived' ? <RotateCcw className="size-4" /> : <Archive className="size-4" />}
                     onClick={() => void toggleArchive(offer)}
+                    isLoading={setStatus.isPending}
                   >
-                    {offer.status === 'archived' ? (
-                      <RotateCcw className="size-4" aria-hidden />
-                    ) : (
-                      <Archive className="size-4" aria-hidden />
-                    )}
-                  </IconButton>
-                  <IconButton aria-label="Delete offer" variant="ghost" onClick={() => setDeleting(offer)}>
-                    <Trash2 className="size-4 text-danger" aria-hidden />
-                  </IconButton>
+                    {offer.status === 'archived' ? 'Turn on' : 'Turn off'}
+                  </Button>
                 </div>
               </Card>
             </StaggerItem>
@@ -268,17 +249,6 @@ export function OffersPage() {
           </div>
         </SheetContent>
       </Sheet>
-
-      <ConfirmationDialog
-        open={deleting !== null}
-        onOpenChange={(open) => !open && setDeleting(null)}
-        title="Delete this offer?"
-        description="This permanently removes the offer. Rewards already won by customers are unaffected."
-        confirmLabel="Delete"
-        destructive
-        isLoading={remove.isPending}
-        onConfirm={() => void confirmDelete()}
-      />
     </div>
   )
 }

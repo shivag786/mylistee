@@ -11,7 +11,8 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useOwnerBusiness } from '@/features/owner/hooks/useOwner'
 import { OwnerNav } from '@/features/owner/components/OwnerNav'
 import { FloatingOrderButton } from '@/features/owner/components/FloatingOrderButton'
-import { OWNER_NAV } from '@/features/owner/ownerNav'
+import { OWNER_NAV, visibleOwnerNav, type OwnerNavItem } from '@/features/owner/ownerNav'
+import { useAppConfig } from '@/hooks/useAppConfig'
 import { SuspenseOutlet } from '@/app/PageLoader'
 import { cn } from '@/utils/cn'
 
@@ -25,6 +26,8 @@ export function OwnerLayout() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const { data: business, isLoading, isError } = useOwnerBusiness()
+  const { data: config } = useAppConfig()
+  const nav = visibleOwnerNav(OWNER_NAV, config?.ownerModules)
 
   async function handleSignOut() {
     await signOut()
@@ -52,6 +55,7 @@ export function OwnerLayout() {
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-surface lg:flex">
         <OwnerSidebar
+          nav={nav}
           businessName={businessName}
           businessLogo={business?.logoUrl}
           userName={user?.name}
@@ -95,11 +99,13 @@ export function OwnerLayout() {
 }
 
 function OwnerSidebar({
+  nav,
   businessName,
   businessLogo,
   userName,
   onSignOut,
 }: {
+  nav: OwnerNavItem[]
   businessName: string
   businessLogo?: string | null
   userName?: string
@@ -121,7 +127,7 @@ function OwnerSidebar({
       </div>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3" aria-label="Business">
-        {OWNER_NAV.map(({ to, label, icon: Icon }) => {
+        {nav.map(({ to, label, icon: Icon }) => {
           const active = location.pathname === to || location.pathname.startsWith(`${to}/`)
           return (
             <NavLink

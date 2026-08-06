@@ -10,6 +10,7 @@ import { RequireAuth } from '@/features/auth/components/RequireAuth'
 import { RequireRole } from '@/features/auth/components/RequireRole'
 import { OwnerLayout } from '@/layouts/OwnerLayout'
 import { OwnerEntry } from '@/pages/owner/OwnerEntry'
+import { OwnerModuleGuard } from '@/features/owner/components/OwnerModuleGuard'
 import { AdminLayout } from '@/layouts/AdminLayout'
 
 // Code-split (Milestone 15): everything past the customer landing loads on demand,
@@ -27,6 +28,7 @@ const FavoritesPage = lazyPage(() => import('@/pages/customer/FavoritesPage'), '
 const BusinessRegistrationPage = lazyPage(() => import('@/pages/owner/BusinessRegistrationPage'), 'BusinessRegistrationPage')
 const OwnerDashboardPage = lazyPage(() => import('@/pages/owner/OwnerDashboardPage'), 'OwnerDashboardPage')
 const ProductsPage = lazyPage(() => import('@/pages/owner/ProductsPage'), 'ProductsPage')
+const TablesPage = lazyPage(() => import('@/pages/owner/TablesPage'), 'TablesPage')
 const CombosPage = lazyPage(() => import('@/pages/owner/CombosPage'), 'CombosPage')
 const GrowSalesPage = lazyPage(() => import('@/pages/owner/GrowSalesPage'), 'GrowSalesPage')
 const OrdersPage = lazyPage(() => import('@/pages/owner/OrdersPage'), 'OrdersPage')
@@ -48,8 +50,11 @@ const AdminCustomersPage = lazyPage(() => import('@/pages/admin/AdminCustomersPa
 const AdminOffersPage = lazyPage(() => import('@/pages/admin/AdminOffersPage'), 'AdminOffersPage')
 const AdminReviewsPage = lazyPage(() => import('@/pages/admin/AdminReviewsPage'), 'AdminReviewsPage')
 const AdminPlansPage = lazyPage(() => import('@/pages/admin/AdminPlansPage'), 'AdminPlansPage')
+const AdminRevenuePage = lazyPage(() => import('@/pages/admin/AdminRevenuePage'), 'AdminRevenuePage')
 const AdminBroadcastPage = lazyPage(() => import('@/pages/admin/AdminBroadcastPage'), 'AdminBroadcastPage')
+const AdminBannersPage = lazyPage(() => import('@/pages/admin/AdminBannersPage'), 'AdminBannersPage')
 const AdminFeatureFlagsPage = lazyPage(() => import('@/pages/admin/AdminFeatureFlagsPage'), 'AdminFeatureFlagsPage')
+const AdminOwnerMenuPage = lazyPage(() => import('@/pages/admin/AdminOwnerMenuPage'), 'AdminOwnerMenuPage')
 const AdminCmsPage = lazyPage(() => import('@/pages/admin/AdminCmsPage'), 'AdminCmsPage')
 const AdminFraudPage = lazyPage(() => import('@/pages/admin/AdminFraudPage'), 'AdminFraudPage')
 const AdminAuditLogsPage = lazyPage(() => import('@/pages/admin/AdminAuditLogsPage'), 'AdminAuditLogsPage')
@@ -110,17 +115,18 @@ export function AppRouter() {
           <Route path={ROUTES.owner.register} element={<BusinessRegistrationPage />} />
           <Route element={<OwnerLayout />}>
             <Route path={ROUTES.owner.dashboard} element={<OwnerDashboardPage />} />
-            <Route path={ROUTES.owner.orders} element={<OrdersPage />} />
-            <Route path={ROUTES.owner.products} element={<ProductsPage />} />
-            <Route path={ROUTES.owner.combos} element={<CombosPage />} />
-            <Route path={ROUTES.owner.growSales} element={<GrowSalesPage />} />
-            <Route path={ROUTES.owner.offers} element={<OffersPage />} />
-            <Route path={ROUTES.owner.loyalty} element={<LoyaltyPage />} />
-            <Route path={ROUTES.owner.analytics} element={<AnalyticsPage />} />
-            <Route path={ROUTES.owner.reviews} element={<OwnerReviewsPage />} />
+            <Route path={ROUTES.owner.orders} element={<OwnerModuleGuard module="orders"><OrdersPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.products} element={<OwnerModuleGuard module="products"><ProductsPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.tables} element={<OwnerModuleGuard module="tables"><TablesPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.combos} element={<OwnerModuleGuard module="combos"><CombosPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.growSales} element={<OwnerModuleGuard module="grow_sales"><GrowSalesPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.offers} element={<OwnerModuleGuard module="spin_rewards"><OffersPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.loyalty} element={<OwnerModuleGuard module="loyalty"><LoyaltyPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.analytics} element={<OwnerModuleGuard module="analytics"><AnalyticsPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.reviews} element={<OwnerModuleGuard module="reviews"><OwnerReviewsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.subscription} element={<SubscriptionPage />} />
-            <Route path={ROUTES.owner.redeem} element={<RedeemPage />} />
-            <Route path={ROUTES.owner.qr} element={<QrPage />} />
+            <Route path={ROUTES.owner.redeem} element={<OwnerModuleGuard module="redeem"><RedeemPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.qr} element={<OwnerModuleGuard module="qr"><QrPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.profile} element={<OwnerProfilePage />} />
           </Route>
         </Route>
@@ -140,8 +146,11 @@ export function AppRouter() {
             <Route path={ROUTES.admin.offers} element={<AdminOffersPage />} />
             <Route path={ROUTES.admin.reviews} element={<AdminReviewsPage />} />
             <Route path={ROUTES.admin.plans} element={<AdminPlansPage />} />
+            <Route path={ROUTES.admin.revenue} element={<AdminRevenuePage />} />
             <Route path={ROUTES.admin.broadcast} element={<AdminBroadcastPage />} />
+            <Route path={ROUTES.admin.banners} element={<AdminBannersPage />} />
             <Route path={ROUTES.admin.featureFlags} element={<AdminFeatureFlagsPage />} />
+            <Route path={ROUTES.admin.ownerMenu} element={<AdminOwnerMenuPage />} />
             <Route path={ROUTES.admin.cms} element={<AdminCmsPage />} />
             <Route path={ROUTES.admin.fraud} element={<AdminFraudPage />} />
             <Route path={ROUTES.admin.auditLogs} element={<AdminAuditLogsPage />} />

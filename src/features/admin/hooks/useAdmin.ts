@@ -136,6 +136,14 @@ export function useSetReviewStatus() {
   })
 }
 
+// ---- Revenue ----
+export const useAdminRevenue = (filters: import('../types').RevenueFilters) =>
+  useQuery({
+    queryKey: ['admin', 'revenue', filters] as const,
+    queryFn: () => adminService.revenue(filters),
+    placeholderData: keepPreviousData,
+  })
+
 // ---- Plans ----
 export const useAdminPlans = () =>
   useQuery({ queryKey: adminKeys.plans, queryFn: () => adminService.plans() })
@@ -148,9 +156,39 @@ export function useUpdatePlan() {
   })
 }
 
+export function useCreatePlan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: Record<string, unknown>) => adminService.createPlan(payload),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: adminKeys.plans }),
+  })
+}
+
 // ---- Broadcast ----
 export const useBroadcast = () =>
   useMutation({ mutationFn: adminService.broadcast })
+
+// ---- Homepage banners ----
+export const useAdminBanners = () =>
+  useQuery({ queryKey: ['admin', 'banners'] as const, queryFn: () => adminService.banners() })
+
+export function useBannerActions() {
+  const qc = useQueryClient()
+  const done = () => {
+    void qc.invalidateQueries({ queryKey: ['admin', 'banners'] })
+    void qc.invalidateQueries({ queryKey: ['banners'] }) // refresh the public homepage feed
+  }
+  return {
+    create: useMutation({ mutationFn: (input: import('../types').BannerInput) => adminService.createBanner(input), onSuccess: done }),
+    update: useMutation({
+      mutationFn: (v: { id: string; input: import('../types').BannerInput }) => adminService.updateBanner(v.id, v.input),
+      onSuccess: done,
+    }),
+    remove: useMutation({ mutationFn: (id: string) => adminService.deleteBanner(id), onSuccess: done }),
+    toggle: useMutation({ mutationFn: (id: string) => adminService.toggleBanner(id), onSuccess: done }),
+    reorder: useMutation({ mutationFn: (order: string[]) => adminService.reorderBanners(order), onSuccess: done }),
+  }
+}
 
 // ---- Feature flags ----
 export const useFeatureFlags = () =>
@@ -172,6 +210,22 @@ export function useUpdateSettings() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (payload: Partial<PlatformSettings>) => adminService.updateSettings(payload),
+    onSuccess: (data) => qc.setQueryData(adminKeys.settings, data),
+  })
+}
+
+export function useUploadOrderSound() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => adminService.uploadOrderSound(file),
+    onSuccess: (data) => qc.setQueryData(adminKeys.settings, data),
+  })
+}
+
+export function useRemoveOrderSound() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => adminService.removeOrderSound(),
     onSuccess: (data) => qc.setQueryData(adminKeys.settings, data),
   })
 }

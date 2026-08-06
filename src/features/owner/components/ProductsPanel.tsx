@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/feedback/Spinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { EmptyState } from '@/components/feedback/EmptyState'
-import { ConfirmationDialog } from '@/components/feedback/ConfirmationDialog'
 import { Stagger, StaggerItem } from '@/components/motion/Stagger'
 import { ProductCard } from './ProductCard'
 import { ProductForm } from './ProductForm'
@@ -21,12 +20,11 @@ import type { Promotion } from '../promotionTypes'
 /** Products tab on the Products page (Phase 7.2a). */
 export function ProductsPanel() {
   const { data, isLoading, isError, refetch } = useProducts()
-  const { remove, toggle } = useProductActions()
+  const { toggle } = useProductActions()
   const { data: promotions } = usePromotions()
 
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
-  const [deleting, setDeleting] = useState<Product | null>(null)
   const [offerFor, setOfferFor] = useState<Product | null>(null)
   const [editingPromo, setEditingPromo] = useState<Promotion | null>(null)
 
@@ -64,17 +62,6 @@ export function ProductsPanel() {
     )
   }
 
-  async function confirmDelete() {
-    if (!deleting) return
-    try {
-      await remove.mutateAsync(deleting.id)
-      toast.success('Product deleted')
-      setDeleting(null)
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic)
-    }
-  }
-
   if (isLoading) {
     return (
       <div className="flex min-h-[40dvh] items-center justify-center">
@@ -108,7 +95,6 @@ export function ProductsPanel() {
                 <ProductCard
                   product={product}
                   onEdit={openEdit}
-                  onDelete={setDeleting}
                   onToggleVisible={toggleVisible}
                   onSmartOffer={setOfferFor}
                   promotion={promoByProduct.get(product.id) ?? null}
@@ -138,17 +124,6 @@ export function ProductsPanel() {
         }}
         promotion={editingPromo}
         product={promoProduct}
-      />
-
-      <ConfirmationDialog
-        open={deleting !== null}
-        onOpenChange={(open) => !open && setDeleting(null)}
-        title={`Delete ${deleting?.name ?? 'product'}?`}
-        description="This removes it from your menu. This can't be undone."
-        confirmLabel="Delete"
-        destructive
-        isLoading={remove.isPending}
-        onConfirm={() => void confirmDelete()}
       />
     </div>
   )

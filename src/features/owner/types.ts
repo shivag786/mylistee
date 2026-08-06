@@ -96,6 +96,9 @@ export interface Plan {
   interval: string
   limits: {
     maxActiveOffers: number | null
+    maxActiveCombos: number | null
+    maxActivePromotions: number | null
+    maxPushPerMonth: number | null
     maxOfferDays: number | null
     maxQrCodes: number | null
     maxGalleryImages: number | null
@@ -130,6 +133,8 @@ export interface SubscriptionState {
   subscription: Subscription | null
   usage: {
     activeOffers: PlanUsageItem
+    activeCombos: PlanUsageItem
+    activePromotions: PlanUsageItem
     galleryImages: PlanUsageItem
     qrCodes: PlanUsageItem
   }

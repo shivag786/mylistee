@@ -1,7 +1,12 @@
-import { Store, Coins, Clock } from 'lucide-react'
+import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Store, Coins, Clock, Star } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ReviewPromptDialog } from '@/features/businesses/components/ReviewPromptDialog'
 import { ORDER_STATUS_TONE, type Order, type OrderStatusKey } from '@/features/owner/orderTypes'
+import { SERVICE_META, SERVICE_TONE } from './serviceTypes'
 
 const STATUS_LABEL: Record<OrderStatusKey, string> = {
   placed: 'Placed',
@@ -25,8 +30,12 @@ function formatWhen(iso: string | null): string {
 
 /** One past order for the customer's order history — details + coins/rewards. */
 export function OrderHistoryCard({ order }: { order: Order }) {
+  const qc = useQueryClient()
+  const [reviewOpen, setReviewOpen] = useState(false)
   const when = formatWhen(order.createdAt ?? order.placedAt)
   const paid = order.status === 'paid' || order.status === 'completed'
+  // Offer a review once the order is paid/completed and the shop isn't reviewed yet.
+  const canReview = paid && !order.reviewed && Boolean(order.businessSlug)
 
   return (
     <Card padding="md" className="space-y-3">
@@ -42,8 +51,26 @@ export function OrderHistoryCard({ order }: { order: Order }) {
             </p>
           )}
         </div>
-        <Badge tone={ORDER_STATUS_TONE[order.status]}>{STATUS_LABEL[order.status]}</Badge>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <Badge tone={ORDER_STATUS_TONE[order.status]}>{STATUS_LABEL[order.status]}</Badge>
+          {(() => {
+            const Icon = SERVICE_META[order.serviceType]?.icon
+            return (
+              <Badge tone={SERVICE_TONE[order.serviceType] ?? 'neutral'} className="gap-1">
+                {Icon && <Icon className="size-3" aria-hidden />} {order.serviceLabel}
+              </Badge>
+            )
+          })()}
+        </div>
       </div>
+
+      {/* Token — needed at the counter until the order is fulfilled. */}
+      {(order.status === 'placed' || order.status === 'confirmed' || order.status === 'paid') && (
+        <div className="flex items-center justify-between rounded-xl bg-surface-muted px-3 py-2">
+          <span className="text-caption text-text-muted">Show this token</span>
+          <span className="font-mono text-xl font-bold tracking-widest text-foreground">{order.token}</span>
+        </div>
+      )}
 
       {/* Items */}
       <ul className="space-y-1 border-t border-border pt-2 text-caption">
@@ -79,6 +106,28 @@ export function OrderHistoryCard({ order }: { order: Order }) {
             {paid ? `Earned ${order.coinsEarned} coins` : `Earn ${order.coinsEarned} coins when paid`}
           </Badge>
         </div>
+      )}
+
+      {canReview && (
+        <Button
+          size="sm"
+          variant="outline"
+          fullWidth
+          leftIcon={<Star className="size-4" />}
+          onClick={() => setReviewOpen(true)}
+        >
+          Rate this shop
+        </Button>
+      )}
+      {order.businessSlug && (
+        <ReviewPromptDialog
+          open={reviewOpen}
+          onOpenChange={setReviewOpen}
+          slug={order.businessSlug}
+          orderId={order.id}
+          businessName={order.businessName ?? 'this shop'}
+          onSubmitted={() => void qc.invalidateQueries({ queryKey: ['customer', 'orders'] })}
+        />
       )}
     </Card>
   )

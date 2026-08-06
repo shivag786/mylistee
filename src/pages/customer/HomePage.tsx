@@ -40,6 +40,10 @@ import { HorizontalScroller } from '@/components/navigation/HorizontalScroller'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { Stagger, StaggerItem } from '@/components/motion/Stagger'
+import { LazySection } from '@/components/motion/LazySection'
+import { BannerCarousel } from '@/features/banners/BannerCarousel'
+import { useBannerSlot } from '@/features/banners/useBanners'
+import { LastOrderReviewNudge } from '@/features/orders/LastOrderReviewNudge'
 import type { Business, BusinessCategory } from '@/features/businesses/types'
 import type { Deal } from '@/features/deals/types'
 import type { ComboDeal } from '@/features/combos/types'
@@ -58,25 +62,22 @@ export function HomePage() {
   const coins = useCoinSummary(isAuthenticated)
   const appConfig = useAppConfig()
   const categories = usePublicCategories()
+  // Above-the-fold: fetched eagerly so there's immediate content under the hero.
   const deals = useDeals()
-  const festival = useFestivalDeals()
-  const combos = useComboFeed()
-  const recommended = useRecommendedBusinesses()
-  const fresh = useNewBusinesses()
-  const nearby = useNearbyBusinesses()
+  const nearby = useNearbyBusinesses({ withContent: 1 })
+  const topBanners = useBannerSlot('home_top')
+  const afterCombosBanners = useBannerSlot('home_after_combos')
 
   // Admin-controlled: hide the whole category quick-filter row when the flag is off.
   const showCategoryChips = appConfig.data?.flags.homeCategoryFilter ?? true
   const { greeting, line } = timeContext()
 
-  // Shops with a spin available right now (deduped across the discovery rows).
+  // Shops with a spin available right now (from the nearby grid).
   const spinCount = useMemo(() => {
     const ids = new Set<string>()
-    for (const list of [nearby.data, recommended.data, fresh.data]) {
-      for (const b of list ?? []) if (b.spinAvailable) ids.add(b.id)
-    }
+    for (const b of nearby.data ?? []) if (b.spinAvailable) ids.add(b.id)
     return ids.size
-  }, [nearby.data, recommended.data, fresh.data])
+  }, [nearby.data])
 
   return (
     <div className="space-y-6">
@@ -107,17 +108,37 @@ export function HomePage() {
         <p className="mt-1 text-body opacity-90">{line}</p>
       </section>
 
+      {/* Advertisement — top of home (admin-managed) */}
+      {topBanners.length > 0 && <BannerCarousel banners={topBanners} />}
+
       <AnimatedSearchBar />
 
       {isAuthenticated && <CoinsProgressCard />}
       <SpinPrompt count={spinCount} />
 
       {showCategoryChips && <CategoryChips query={categories} />}
+
+      {/* Above the fold — eager, immediate content under the hero. */}
       <DealRow title="Today's Deals" icon={Tag} query={deals} seeAllTo={ROUTES.deals} />
-      <DealRow title="Festival specials" icon={PartyPopper} query={festival} />
-      <ComboRow query={combos} />
-      <ShopRow title="Recommended" icon={Star} query={recommended} />
-      <ShopRow title="New on Listee" icon={Sparkles} query={fresh} />
+
+      {/* Below the fold — each mounts (and fetches) only when scrolled near.
+          Item rows (combos, festival) lead; shop rows follow. */}
+      <LazySection minHeight={220}>
+        <CombosSection />
+      </LazySection>
+
+      {/* Advertisement — after combos (admin-managed) */}
+      {afterCombosBanners.length > 0 && <BannerCarousel banners={afterCombosBanners} />}
+
+      <LazySection minHeight={180}>
+        <FestivalSection />
+      </LazySection>
+      <LazySection minHeight={220}>
+        <RecommendedSection />
+      </LazySection>
+      <LazySection minHeight={220}>
+        <NewSection />
+      </LazySection>
 
       {/* Nearby — grid of compact cards */}
       <section>
@@ -153,6 +174,9 @@ export function HomePage() {
           </Stagger>
         )}
       </section>
+
+      {/* Gentle, one-time prompt to review the most recent completed order. */}
+      <LastOrderReviewNudge />
     </div>
   )
 }
@@ -182,7 +206,7 @@ function SpinPrompt({ count }: { count: number }) {
   if (count <= 0) return null
   return (
     <Card padding="md" interactive className="relative overflow-hidden bg-gradient-to-br from-premium/15 to-primary/10">
-      <Link to={ROUTES.nearby} className="absolute inset-0" aria-label="Shops with a spin available" />
+      <Link to={`${ROUTES.nearby}?spin=1`} className="absolute inset-0" aria-label="Shops with a spin available" />
       <div className="flex items-center gap-3">
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-premium/20 text-premium">
           <Zap className="size-5 fill-current" aria-hidden />
@@ -254,7 +278,7 @@ function DealRow({
             ))
           : data!.map((deal) => (
               <div key={deal.id} className="w-40 shrink-0 snap-start sm:w-44">
-                <DealCard deal={deal} />
+                <DealCard deal={deal} hideOfferBadge />
               </div>
             ))}
       </HorizontalScroller>
@@ -286,6 +310,27 @@ function ComboRow({ query }: { query: UseQueryResult<ComboDeal[]> }) {
       </HorizontalScroller>
     </section>
   )
+}
+
+/**
+ * Self-contained below-the-fold sections. Each owns its query hook, so when
+ * wrapped in <LazySection> the fetch only fires once the section is scrolled
+ * near — nothing is loaded for sections the user never reaches.
+ */
+function FestivalSection() {
+  return <DealRow title="Festival specials" icon={PartyPopper} query={useFestivalDeals()} />
+}
+
+function CombosSection() {
+  return <ComboRow query={useComboFeed()} />
+}
+
+function RecommendedSection() {
+  return <ShopRow title="Recommended" icon={Star} query={useRecommendedBusinesses()} />
+}
+
+function NewSection() {
+  return <ShopRow title="New on Listee" icon={Sparkles} query={useNewBusinesses()} />
 }
 
 /** A horizontal card row. Hides itself entirely when there's nothing to show. */

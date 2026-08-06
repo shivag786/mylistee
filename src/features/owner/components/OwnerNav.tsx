@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
-import { OWNER_MOBILE_NAV } from '@/features/owner/ownerNav'
+import { OWNER_MOBILE_NAV, visibleOwnerNav } from '@/features/owner/ownerNav'
+import { useAppConfig } from '@/hooks/useAppConfig'
 import { cn } from '@/utils/cn'
 
 /**
@@ -8,13 +9,16 @@ import { cn } from '@/utils/cn'
  * the dashboard/profile on mobile; it's on the sidebar for desktop.
  */
 export function OwnerNav() {
+  const { data: config } = useAppConfig()
+  const items = visibleOwnerNav(OWNER_MOBILE_NAV, config?.ownerModules)
+
   return (
     <nav
       aria-label="Business navigation"
       className="sticky bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur lg:hidden"
     >
       <ul className="app-container flex h-[72px] items-stretch justify-between px-1">
-        {OWNER_MOBILE_NAV.map(({ to, shortLabel, icon: Icon }) => (
+        {items.map(({ to, shortLabel, icon: Icon }) => (
           <li key={to} className="flex-1">
             <NavLink
               to={to}

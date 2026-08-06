@@ -50,32 +50,32 @@ export function RedeemPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-title font-bold text-foreground">Redeem a reward</h1>
-        <p className="text-caption text-text-secondary">Enter the code from the customer's wallet.</p>
+        <p className="text-caption text-text-secondary">Enter the 6-digit PIN from the customer's wallet.</p>
       </div>
 
       <Card className="space-y-4">
         <form onSubmit={handleVerify} className="space-y-3">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="reward-code">Reward code</Label>
+            <Label htmlFor="reward-code">Reward PIN</Label>
             <Input
               id="reward-code"
               value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="e.g. FDY49YGL"
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="6-digit PIN"
+              inputMode="numeric"
               autoComplete="off"
-              autoCapitalize="characters"
-              className="font-mono tracking-[0.2em]"
-              maxLength={16}
+              className="text-center font-mono text-2xl tracking-[0.4em]"
+              maxLength={6}
             />
           </div>
           <Button
             type="submit"
             fullWidth
             isLoading={verify.isPending}
-            disabled={code.trim().length < 4}
+            disabled={code.trim().length !== 6}
             leftIcon={<Search className="size-4" />}
           >
-            Verify code
+            Verify PIN
           </Button>
         </form>
 

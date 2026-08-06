@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Bell, Play, Trash2, Upload } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +9,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Spinner } from '@/components/feedback/Spinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { toast } from '@/utils/toast'
-import { useAdminSettings, useUpdateSettings } from '@/features/admin/hooks/useAdmin'
+import { ApiError } from '@/types/api'
+import {
+  useAdminSettings,
+  useUpdateSettings,
+  useUploadOrderSound,
+  useRemoveOrderSound,
+} from '@/features/admin/hooks/useAdmin'
 import type { PlatformSettings } from '@/features/admin/types'
 
 export function AdminSettingsPage() {
@@ -93,7 +100,99 @@ export function AdminSettingsPage() {
           </Button>
         </form>
       </Card>
+
+      <OrderSoundCard currentUrl={form.orderSoundUrl} />
     </div>
+  )
+}
+
+/**
+ * Upload a custom new-order alert sound owners hear when an order arrives. Empty
+ * = the built-in synthesized "ding". Applies platform-wide via GET /config.
+ */
+function OrderSoundCard({ currentUrl }: { currentUrl: string | null }) {
+  const upload = useUploadOrderSound()
+  const remove = useRemoveOrderSound()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-picking the same file
+    if (!file) return
+    upload.mutate(file, {
+      onSuccess: () => toast.success('Order sound updated'),
+      onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not upload that sound.'),
+    })
+  }
+
+  function preview() {
+    if (!currentUrl) return
+    audioRef.current ??= new Audio(currentUrl)
+    if (audioRef.current.src !== currentUrl) audioRef.current.src = currentUrl
+    audioRef.current.currentTime = 0
+    void audioRef.current.play().catch(() => toast.error('Could not play the sound.'))
+  }
+
+  return (
+    <Card elevation="soft" className="max-w-xl" padding="lg">
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary">
+          <Bell className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-foreground">Order alert sound</p>
+          <p className="text-caption text-text-secondary">
+            Plays on the owner’s order screen when a new order arrives. MP3/WAV/OGG, up to 1 MB.
+            Leave empty for the built-in ding.
+          </p>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <input
+              ref={inputRef}
+              type="file"
+              accept="audio/*"
+              onChange={onPick}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              size="sm"
+              leftIcon={<Upload className="size-4" />}
+              isLoading={upload.isPending}
+              onClick={() => inputRef.current?.click()}
+            >
+              {currentUrl ? 'Replace sound' : 'Upload sound'}
+            </Button>
+            {currentUrl && (
+              <>
+                <Button type="button" size="sm" variant="outline" leftIcon={<Play className="size-4" />} onClick={preview}>
+                  Preview
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  leftIcon={<Trash2 className="size-4 text-destructive" />}
+                  isLoading={remove.isPending}
+                  onClick={() =>
+                    remove.mutate(undefined, {
+                      onSuccess: () => toast.success('Reverted to the default sound'),
+                      onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not remove the sound.'),
+                    })
+                  }
+                >
+                  Remove
+                </Button>
+              </>
+            )}
+          </div>
+          <p className="mt-2 text-small text-text-muted">
+            {currentUrl ? 'A custom sound is active.' : 'Using the built-in ding.'}
+          </p>
+        </div>
+      </div>
+    </Card>
   )
 }
 

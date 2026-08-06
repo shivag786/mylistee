@@ -18,6 +18,9 @@ export function AdminFeatureFlagsPage() {
   }
   if (isError || !data) return <ErrorState onRetry={() => void refetch()} />
 
+  // Owner-menu modules (owner_*) have their own admin page.
+  const flags = data.filter((f) => !f.key.startsWith('owner_'))
+
   function toggle(key: string, enabled: boolean) {
     setFlag
       .mutateAsync({ key, enabled })
@@ -34,7 +37,7 @@ export function AdminFeatureFlagsPage() {
 
       <Card elevation="soft" padding="none">
         <ul className="divide-y divide-border">
-          {data.map((flag) => (
+          {flags.map((flag) => (
             <li key={flag.key} className="flex items-center justify-between gap-4 px-4 py-3.5">
               <div className="min-w-0">
                 <p className="font-medium text-foreground">{flag.name}</p>

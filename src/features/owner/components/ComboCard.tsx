@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Utensils, Coins, EyeOff } from 'lucide-react'
+import { Pencil, Utensils, Coins, EyeOff } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
@@ -8,13 +8,12 @@ import type { Combo } from '../comboTypes'
 interface ComboCardProps {
   combo: Combo
   onEdit: (combo: Combo) => void
-  onDelete: (combo: Combo) => void
   onToggleVisible: (combo: Combo, value: boolean) => void
   busy?: boolean
 }
 
 /** Owner combo card (Phase 7.3) — item thumbnails, price vs total, savings. */
-export function ComboCard({ combo, onEdit, onDelete, onToggleVisible, busy }: ComboCardProps) {
+export function ComboCard({ combo, onEdit, onToggleVisible, busy }: ComboCardProps) {
   return (
     <Card className="flex h-full flex-col gap-2" padding="sm">
       <div className="flex items-start gap-2.5">
@@ -88,9 +87,6 @@ export function ComboCard({ combo, onEdit, onDelete, onToggleVisible, busy }: Co
         <div className="flex items-center gap-0.5">
           <IconButton aria-label={`Edit ${combo.name}`} size="sm" onClick={() => onEdit(combo)}>
             <Pencil className="size-4" aria-hidden />
-          </IconButton>
-          <IconButton aria-label={`Delete ${combo.name}`} size="sm" onClick={() => onDelete(combo)}>
-            <Trash2 className="size-4 text-destructive" aria-hidden />
           </IconButton>
         </div>
       </div>

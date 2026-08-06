@@ -166,6 +166,8 @@ function CurrentPlanCard({ state, onCancel }: { state: SubscriptionState; onCanc
 
         <div className="space-y-3">
           <UsageRow label="Active offers" item={usage.activeOffers} unit="offers" />
+          <UsageRow label="Active combos" item={usage.activeCombos} unit="combos" />
+          <UsageRow label="Active promotions" item={usage.activePromotions} unit="promotions" />
           <UsageRow label="Gallery images" item={usage.galleryImages} unit="images" />
           <UsageRow label="QR codes" item={usage.qrCodes} unit="codes" />
         </div>

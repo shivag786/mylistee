@@ -3,12 +3,19 @@
  * directly.
  */
 import { apiClient } from '@/services/apiClient'
-import type { Order, OrderStatusKey } from '../orderTypes'
+import type { Order, OrderStatusKey, PaymentMethodKey } from '../orderTypes'
 
 export const ownerOrderService = {
   list: (params?: { status?: string }): Promise<Order[]> =>
     apiClient.get<Order[]>('business/orders', { query: { status: params?.status || undefined } }),
 
-  setStatus: (id: string, status: Exclude<OrderStatusKey, 'placed'>): Promise<Order> =>
-    apiClient.patch<Order>(`business/orders/${id}/status`, { status }),
+  setStatus: (
+    id: string,
+    status: Exclude<OrderStatusKey, 'placed'>,
+    paymentMethod?: PaymentMethodKey,
+  ): Promise<Order> =>
+    apiClient.patch<Order>(`business/orders/${id}/status`, {
+      status,
+      payment_method: paymentMethod,
+    }),
 }

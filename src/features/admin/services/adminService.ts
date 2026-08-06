@@ -7,6 +7,8 @@ import { apiClient, getAuthToken } from '@/services/apiClient'
 import { apiConfig } from '@/config/api.config'
 import type { Paginated } from '@/types/api'
 import type {
+  AdminBanner,
+  BannerInput,
   AdminBusiness,
   BusinessUpdateInput,
   AdminCategory,
@@ -27,6 +29,8 @@ import type {
   ListFilters,
   Plan,
   PlatformSettings,
+  RevenueFilters,
+  RevenueResponse,
 } from '../types'
 
 type Query = Record<string, string | number | undefined>
@@ -38,6 +42,19 @@ function toQuery(f: ListFilters = {}): Query {
     page: f.page,
     perPage: f.perPage,
   }
+}
+
+/** Build multipart FormData for a banner (image upload + schedule). */
+function bannerFormData(input: BannerInput): FormData {
+  const form = new FormData()
+  form.append('title', input.title)
+  form.append('placement', input.placement)
+  if (input.linkUrl != null) form.append('link_url', input.linkUrl)
+  if (input.startsAt != null) form.append('starts_at', input.startsAt)
+  if (input.endsAt != null) form.append('ends_at', input.endsAt)
+  if (input.isActive !== undefined) form.append('is_active', input.isActive ? '1' : '0')
+  if (input.image) form.append('image', input.image)
+  return form
 }
 
 /** Build multipart FormData for a category (image upload). */
@@ -153,12 +170,38 @@ export const adminService = {
   setReviewStatus: (id: string, status: string) =>
     apiClient.patch<AdminReview>(`admin/reviews/${id}/status`, { status }),
 
+  revenue: (f?: RevenueFilters) =>
+    apiClient.get<RevenueResponse>('admin/revenue', {
+      query: {
+        search: f?.search || undefined,
+        status: f?.status || undefined,
+        plan: f?.plan || undefined,
+        sort: f?.sort || undefined,
+        page: f?.page,
+        perPage: f?.perPage,
+      },
+    }),
+
   plans: () => apiClient.get<Plan[]>('admin/plans'),
+  createPlan: (payload: Record<string, unknown>) => apiClient.post<Plan>('admin/plans', payload),
   updatePlan: (key: string, payload: Record<string, unknown>) =>
     apiClient.patch<Plan>(`admin/plans/${key}`, payload),
 
   broadcast: (payload: { title: string; body?: string; target: string; link?: string }) =>
     apiClient.post<{ sent: number }>('admin/broadcast', payload),
+
+  // ---- Homepage banners ----
+  banners: () => apiClient.get<AdminBanner[]>('admin/banners'),
+  createBanner: (input: BannerInput) =>
+    apiClient.post<AdminBanner>('admin/banners', bannerFormData(input)),
+  updateBanner: (id: string, input: BannerInput) => {
+    const form = bannerFormData(input)
+    form.append('_method', 'PUT') // method spoofing for multipart
+    return apiClient.post<AdminBanner>(`admin/banners/${id}`, form)
+  },
+  deleteBanner: (id: string) => apiClient.delete<null>(`admin/banners/${id}`),
+  toggleBanner: (id: string) => apiClient.patch<AdminBanner>(`admin/banners/${id}/toggle`),
+  reorderBanners: (order: string[]) => apiClient.patch<AdminBanner[]>('admin/banners/reorder', { order }),
 
   featureFlags: () => apiClient.get<FeatureFlag[]>('admin/feature-flags'),
   setFeatureFlag: (key: string, enabled: boolean) =>
@@ -167,6 +210,12 @@ export const adminService = {
   settings: () => apiClient.get<PlatformSettings>('admin/settings'),
   updateSettings: (payload: Partial<PlatformSettings>) =>
     apiClient.put<PlatformSettings>('admin/settings', payload),
+  uploadOrderSound: (file: File) => {
+    const body = new FormData()
+    body.append('sound', file)
+    return apiClient.post<PlatformSettings>('admin/settings/order-sound', body)
+  },
+  removeOrderSound: () => apiClient.delete<PlatformSettings>('admin/settings/order-sound'),
 
   cmsPages: () => apiClient.get<CmsPage[]>('admin/cms'),
   updateCms: (slug: string, payload: { title: string; body?: string; status?: string }) =>

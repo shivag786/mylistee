@@ -6,6 +6,8 @@ import type { Deal } from '../types'
 
 interface DealCardProps {
   deal: Deal
+  /** Hide the discount/quantity badge (used on the home rows for a cleaner look). */
+  hideOfferBadge?: boolean
 }
 
 /** Hours until an ISO timestamp, or null when absent/invalid/past. */
@@ -20,7 +22,7 @@ function hoursUntil(iso: string | null | undefined): number | null {
  * stretched link to the shop's profile, where the offer can be ordered. Mirrors
  * ShopCard's compact styling so the rows feel like one system.
  */
-export function DealCard({ deal }: DealCardProps) {
+export function DealCard({ deal, hideOfferBadge }: DealCardProps) {
   const discounted = deal.effectivePrice < deal.sellingPrice
   const hoursLeft = hoursUntil(deal.offer?.endsAt)
   const endingSoon = hoursLeft !== null && hoursLeft > 0 && hoursLeft <= 24
@@ -40,7 +42,7 @@ export function DealCard({ deal }: DealCardProps) {
             <Utensils className="size-7" aria-hidden />
           </div>
         )}
-        {deal.offer && (
+        {!hideOfferBadge && deal.offer && (
           <span className="absolute left-2 top-2 inline-flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-small font-semibold text-primary-foreground shadow-sm">
             <Tag className="size-3 shrink-0" aria-hidden />
             <span className="truncate">{deal.offer.label}</span>

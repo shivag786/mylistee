@@ -7,6 +7,7 @@ import { ErrorState } from '@/components/feedback/ErrorState'
 import { toast } from '@/utils/toast'
 import { generateQrDataUrl, downloadDataUrl, downloadQrPdf } from '@/utils/qr'
 import { useOwnerBusiness, useRecordQrDownload } from '@/features/owner/hooks/useOwner'
+import { PlanUsageBanner } from '@/features/owner/components/PlanUsageBanner'
 
 export function QrPage() {
   const { data: business, isLoading, isError, refetch } = useOwnerBusiness()
@@ -76,6 +77,8 @@ export function QrPage() {
           Print it, place it on your counter, and let customers scan to win.
         </p>
       </div>
+
+      <PlanUsageBanner metric="qrCodes" />
 
       <Card className="flex flex-col items-center gap-4" elevation="soft">
         <div className="rounded-2xl bg-white p-4 shadow-soft">

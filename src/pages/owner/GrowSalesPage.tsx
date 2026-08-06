@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Megaphone, Pause, Play, Pencil, Trash2, Package } from 'lucide-react'
+import { Plus, Megaphone, Pause, Play, Pencil, Package } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -7,9 +7,9 @@ import { IconButton } from '@/components/ui/icon-button'
 import { Spinner } from '@/components/feedback/Spinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { EmptyState } from '@/components/feedback/EmptyState'
-import { ConfirmationDialog } from '@/components/feedback/ConfirmationDialog'
 import { Stagger, StaggerItem } from '@/components/motion/Stagger'
 import { PromotionForm } from '@/features/owner/components/PromotionForm'
+import { PlanUsageBanner } from '@/features/owner/components/PlanUsageBanner'
 import { usePromotions, usePromotionActions } from '@/features/owner/hooks/usePromotions'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { toast } from '@/utils/toast'
@@ -30,11 +30,10 @@ function summary(p: Promotion): string {
 export function GrowSalesPage() {
   usePageTitle('Grow sales')
   const { data, isLoading, isError, refetch } = usePromotions()
-  const { setStatus, remove } = usePromotionActions()
+  const { setStatus } = usePromotionActions()
 
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Promotion | null>(null)
-  const [deleting, setDeleting] = useState<Promotion | null>(null)
 
   const promotions = data ?? []
 
@@ -51,16 +50,6 @@ export function GrowSalesPage() {
     )
   }
 
-  async function confirmDelete() {
-    if (!deleting) return
-    try {
-      await remove.mutateAsync(deleting.id)
-      toast.success('Promotion deleted')
-      setDeleting(null)
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic)
-    }
-  }
 
   if (isLoading) {
     return (
@@ -84,6 +73,8 @@ export function GrowSalesPage() {
           New promotion
         </Button>
       </header>
+
+      <PlanUsageBanner metric="activePromotions" />
 
       {promotions.length === 0 ? (
         <EmptyState
@@ -139,9 +130,6 @@ export function GrowSalesPage() {
                   >
                     Edit
                   </Button>
-                  <IconButton aria-label={`Delete ${p.name}`} size="sm" onClick={() => setDeleting(p)}>
-                    <Trash2 className="size-4 text-destructive" aria-hidden />
-                  </IconButton>
                 </div>
               </Card>
             </StaggerItem>
@@ -150,17 +138,6 @@ export function GrowSalesPage() {
       )}
 
       <PromotionForm open={formOpen} onOpenChange={setFormOpen} promotion={editing} />
-
-      <ConfirmationDialog
-        open={deleting !== null}
-        onOpenChange={(open) => !open && setDeleting(null)}
-        title={`Delete ${deleting?.name ?? 'promotion'}?`}
-        description="This removes the promotion. This can't be undone."
-        confirmLabel="Delete"
-        destructive
-        isLoading={remove.isPending}
-        onConfirm={() => void confirmDelete()}
-      />
     </div>
   )
 }

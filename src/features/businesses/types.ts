@@ -6,6 +6,8 @@ export interface Business {
   name: string
   category: string | null
   coverImage: string | null
+  /** First product image, when present — the card prefers it over the banner. */
+  previewImage: string | null
   logo: string | null
   rating: number
   reviewCount: number

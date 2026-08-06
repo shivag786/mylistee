@@ -1,5 +1,6 @@
 /** Customer-facing (public) business profile + spin types — mirror the Laravel
  * PublicBusinessResource / RewardResource. */
+import type { ServiceType } from '@/features/orders/serviceTypes'
 
 export interface PublicOffer {
   id: string
@@ -33,6 +34,10 @@ export interface PublicProduct {
   isTodaysSpecial: boolean
   isBestseller: boolean
   isRecommended: boolean
+  /** Units ordered in the recent window (null when never ordered). */
+  orderCount?: number | null
+  /** True once it clears the "most ordered" threshold — drives the Popular badge. */
+  isPopular?: boolean
   inStock: boolean
 }
 
@@ -59,8 +64,26 @@ export interface PublicCombo {
   coinsEarned: number | null
   /** Max Listee coins a customer may spend on this combo (0 = none). */
   coinsAccepted: number
+  /** Units ordered in the recent window (null when never ordered). */
+  orderCount?: number | null
+  /** True once it clears the "most ordered" threshold — drives the Popular badge. */
+  isPopular?: boolean
   items: PublicComboItem[]
   isActiveNow: boolean
+}
+
+/** A business's fulfilment config for the checkout picker (Phase 7.6). */
+export interface PublicServiceConfig {
+  modes: ServiceType[]
+  defaultMode: ServiceType
+  deliveryFee: number
+}
+
+/** A dine-in table the customer can pick (Phase 7.6). */
+export interface PublicTable {
+  id: string
+  label: string
+  capacity: number | null
 }
 
 export interface PublicBusiness {
@@ -88,6 +111,8 @@ export interface PublicBusiness {
   offers: PublicOffer[]
   menu: PublicMenuSection[]
   combos: PublicCombo[]
+  service: PublicServiceConfig
+  tables: PublicTable[]
 }
 
 export interface SpinState {

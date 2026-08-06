@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Navigation,
   Gift,
+  Utensils,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -40,6 +41,7 @@ export function BusinessProfilePage() {
   const { slug = '' } = useParams<{ slug: string }>()
   const [searchParams] = useSearchParams()
   const focusItem = searchParams.get('item') ?? undefined
+  const tableParam = searchParams.get('table') ?? null
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
   const { data, isLoading, isError, refetch } = usePublicBusiness(slug)
@@ -97,8 +99,24 @@ export function BusinessProfilePage() {
   const activeCombos = business.combos.filter((c) => c.isActiveNow)
   const canSpin = spinState.available && !spinState.alreadySpunToday && !spin.isPending && resultIndex === null
 
+  // The table bound from a scanned table QR (?table=…), if it belongs to this shop.
+  const boundTable = tableParam ? business.tables.find((t) => t.id === tableParam) ?? null : null
+
+  // Service config captured into the cart so the global checkout sheet is self-sufficient.
+  function serviceContext() {
+    return {
+      service: {
+        modes: business!.service.modes,
+        defaultMode: business!.service.defaultMode,
+        deliveryFee: business!.service.deliveryFee,
+        tables: business!.tables.map((t) => ({ id: t.id, label: t.label })),
+      },
+      tableId: boundTable?.id ?? null,
+    }
+  }
+
   function handleAdd(item: Omit<CartItem, 'quantity'>) {
-    const res = cart.add({ slug, name: business!.name }, item)
+    const res = cart.add({ slug, name: business!.name }, item, 1, serviceContext())
     if (res === 'conflict') setConflictItem(item)
     else toast.success(`${item.name} added`)
   }
@@ -177,6 +195,14 @@ export function BusinessProfilePage() {
           {activeCombos.length > 0 && <Badge tone="success">Combos</Badge>}
         </div>
       </div>
+
+      {/* Table QR binding — the customer scanned a specific table's code. */}
+      {boundTable && (
+        <div className="flex items-center gap-2 rounded-xl border border-info/30 bg-info-soft px-3 py-2 text-caption font-medium text-info">
+          <Utensils className="size-4 shrink-0" aria-hidden />
+          <span>You’re at {boundTable.label} — your order will be served here.</span>
+        </div>
+      )}
 
       {/* Sticky action buttons */}
       <div className="sticky top-16 z-20 -mx-4 flex gap-2 overflow-x-auto border-b border-border bg-background/95 px-4 py-2 backdrop-blur">
@@ -334,7 +360,7 @@ export function BusinessProfilePage() {
         confirmLabel="Start new cart"
         onConfirm={() => {
           if (conflictItem) {
-            cart.replace({ slug, name: business!.name }, conflictItem)
+            cart.replace({ slug, name: business!.name }, conflictItem, 1, serviceContext())
             toast.success(`${conflictItem.name} added`)
           }
           setConflictItem(null)

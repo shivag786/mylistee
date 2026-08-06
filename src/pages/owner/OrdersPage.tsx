@@ -15,7 +15,7 @@ import { ApiError } from '@/types/api'
 import { MESSAGES } from '@/constants/messages'
 import { armBeep, beep } from '@/utils/beep'
 import { cn } from '@/utils/cn'
-import type { Order, OrderStatusKey } from '@/features/owner/orderTypes'
+import type { Order, OrderStatusKey, PaymentMethodKey } from '@/features/owner/orderTypes'
 
 const TABS = [
   { value: 'active', label: 'Active' },
@@ -53,9 +53,9 @@ export function OrdersPage() {
     return range === 'today' ? list.filter(isToday) : list
   }, [data, range])
 
-  function handleAction(id: string, next: Exclude<OrderStatusKey, 'placed'>) {
+  function handleAction(id: string, next: Exclude<OrderStatusKey, 'placed'>, paymentMethod?: PaymentMethodKey) {
     status.mutate(
-      { id, status: next },
+      { id, status: next, paymentMethod },
       { onError: (err) => toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic) },
     )
   }

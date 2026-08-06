@@ -97,6 +97,7 @@ export function PromotionForm({
   const isEdit = promotion !== null
   const targetProductId = product?.id ?? presetProductId ?? promotion?.productId ?? null
   const targetProductName = product?.name ?? presetProductName ?? promotion?.productName ?? null
+  const targetProductImage = product?.imageUrl ?? promotion?.productImage ?? null
 
   const [form, setForm] = useState<State>(() => initial(promotion))
   const [error, setError] = useState<string | null>(null)
@@ -204,8 +205,8 @@ export function PromotionForm({
           {(product || targetProductName) && (
             <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface-muted/50 p-3">
               <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface-muted">
-                {product?.imageUrl ? (
-                  <img src={product.imageUrl} alt="" className="size-full object-cover" />
+                {targetProductImage ? (
+                  <img src={targetProductImage} alt="" className="size-full object-cover" />
                 ) : (
                   <Utensils className="size-6 text-text-muted" aria-hidden />
                 )}

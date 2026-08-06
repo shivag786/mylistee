@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useSubscription } from '../hooks/useOwner'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -16,6 +17,14 @@ import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { OFFER_TYPE_OPTIONS, defaultOfferDates, offerSchema, type OfferSchema } from '../offerSchema'
 import type { Offer, OfferFormValues } from '../types'
+
+/** Add whole days to a yyyy-mm-dd string, returning yyyy-mm-dd. */
+function addDays(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00`)
+  if (Number.isNaN(d.getTime())) return iso
+  d.setDate(d.getDate() + days)
+  return d.toISOString().slice(0, 10)
+}
 
 /** Prefill values for a brand-new offer (e.g. from a suggestion). */
 export type OfferSeed = Partial<Pick<OfferFormValues, 'title' | 'type' | 'rewardValue'>>
@@ -50,6 +59,21 @@ export function OfferForm({ offer, seed, onSubmit, onDone, submitting }: OfferFo
     defaultValues: initialValues(offer, seed),
     mode: 'onTouched',
   })
+
+  // The plan caps how long an offer can run. When there's a cap, the end date is
+  // derived (start + cap days) and locked — the owner only picks the start. A
+  // null cap (Pro/Enterprise) leaves the end date freely editable.
+  const { data: sub } = useSubscription()
+  const maxDays = sub?.plan?.limits.maxOfferDays ?? null
+  const capped = typeof maxDays === 'number'
+  const startsAt = form.watch('startsAt')
+
+  useEffect(() => {
+    if (typeof maxDays === 'number' && startsAt) {
+      form.setValue('endsAt', addDays(startsAt, maxDays), { shouldValidate: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startsAt, maxDays])
 
   async function submit(values: OfferSchema) {
     try {
@@ -98,7 +122,18 @@ export function OfferForm({ offer, seed, onSubmit, onDone, submitting }: OfferFo
 
       <div className="grid grid-cols-2 gap-3">
         <TextField label="Starts" type="date" error={form.formState.errors.startsAt?.message} {...form.register('startsAt')} />
-        <TextField label="Ends" type="date" hint="Up to 3 days (free plan)" error={form.formState.errors.endsAt?.message} {...form.register('endsAt')} />
+        <TextField
+          label="Ends"
+          type="date"
+          readOnly={capped}
+          hint={
+            capped
+              ? `Auto: ${maxDays} day${maxDays === 1 ? '' : 's'} after the start (${sub?.plan?.name ?? 'your'} plan)`
+              : 'Pick any end date'
+          }
+          error={form.formState.errors.endsAt?.message}
+          {...form.register('endsAt')}
+        />
       </div>
 
       <TextField

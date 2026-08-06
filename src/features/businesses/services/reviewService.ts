@@ -15,8 +15,9 @@ export const reviewService = {
   async list(slug: string): Promise<Review[]> {
     return apiClient.get<Review[]>(`businesses/${slug}/reviews`)
   },
-  async submit(slug: string, rating: number, comment?: string): Promise<Review> {
-    return apiClient.post<Review>('reviews', { businessSlug: slug, rating, comment })
+  /** Reviews are verified purchases — submitted against a fulfilled order. */
+  async submit(orderId: string, rating: number, comment?: string): Promise<Review> {
+    return apiClient.post<Review>('reviews', { orderId, rating, comment })
   },
   async remove(id: string): Promise<void> {
     await apiClient.delete(`reviews/${id}`)

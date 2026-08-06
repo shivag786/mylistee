@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Utensils, Star, Sparkles, EyeOff, Tag } from 'lucide-react'
+import { Pencil, Utensils, Star, Sparkles, EyeOff, Tag } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
@@ -9,7 +9,6 @@ import { PROMOTION_STATUS_TONE, type Promotion } from '../promotionTypes'
 interface ProductCardProps {
   product: Product
   onEdit: (product: Product) => void
-  onDelete: (product: Product) => void
   onToggleVisible: (product: Product, value: boolean) => void
   onSmartOffer: (product: Product) => void
   /** Existing product-scoped promotion (any status), if any. */
@@ -28,7 +27,6 @@ const FOOD_DOT: Record<string, string> = {
 export function ProductCard({
   product,
   onEdit,
-  onDelete,
   onToggleVisible,
   onSmartOffer,
   promotion,
@@ -137,9 +135,6 @@ export function ProductCard({
             )}
             <IconButton aria-label={`Edit ${product.name}`} size="sm" onClick={() => onEdit(product)}>
               <Pencil className="size-4" aria-hidden />
-            </IconButton>
-            <IconButton aria-label={`Delete ${product.name}`} size="sm" onClick={() => onDelete(product)}>
-              <Trash2 className="size-4 text-destructive" aria-hidden />
             </IconButton>
           </div>
         </div>

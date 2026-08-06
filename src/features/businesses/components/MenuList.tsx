@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { Utensils, Star, Sparkles, Layers, Coins, Tag, Plus, Minus } from 'lucide-react'
+import { Utensils, Star, Sparkles, Layers, Coins, Tag, Plus, Minus, Flame } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ExpandableText } from '@/components/data/ExpandableText'
 import { cart, useCart, type CartItem } from '@/features/orders/cartStore'
+import { ImageLightbox, type LightboxImage } from '@/components/media/ImageLightbox'
 import { cn } from '@/utils/cn'
 import type { PublicCombo, PublicMenuSection, PublicProduct } from '../publicTypes'
 
 type AddHandler = (item: Omit<CartItem, 'quantity'>) => void
+type ZoomHandler = (images: LightboxImage[], index: number, title: string) => void
 
 const FOOD_DOT: Record<string, string> = {
   veg: 'border-success text-success',
@@ -30,6 +32,9 @@ interface MenuListProps {
 export function MenuList({ menu, combos, businessSlug, onAdd, focusProductId }: MenuListProps) {
   const cartData = useCart()
   const inShop = cartData?.businessSlug === businessSlug
+
+  const [lightbox, setLightbox] = useState<{ images: LightboxImage[]; index: number; title: string } | null>(null)
+  const onZoom: ZoomHandler = (images, index, title) => setLightbox({ images, index, title })
 
   const qtyOf = (type: CartItem['type'], id: string) =>
     inShop ? (cartData?.items.find((i) => i.type === type && i.id === id)?.quantity ?? 0) : 0
@@ -56,7 +61,7 @@ export function MenuList({ menu, combos, businessSlug, onAdd, focusProductId }: 
           </h3>
           <div className="space-y-2">
             {activeCombos.map((combo) => (
-              <ComboRow key={combo.id} combo={combo} qty={qtyOf('combo', combo.id)} onAdd={onAdd} />
+              <ComboRow key={combo.id} combo={combo} qty={qtyOf('combo', combo.id)} onAdd={onAdd} onZoom={onZoom} />
             ))}
           </div>
         </section>
@@ -72,13 +77,37 @@ export function MenuList({ menu, combos, businessSlug, onAdd, focusProductId }: 
                 product={product}
                 qty={qtyOf('product', product.id)}
                 onAdd={onAdd}
+                onZoom={onZoom}
                 focus={product.id === focusProductId}
               />
             ))}
           </div>
         </section>
       ))}
+
+      <ImageLightbox
+        open={lightbox !== null}
+        onOpenChange={(o) => !o && setLightbox(null)}
+        images={lightbox?.images ?? []}
+        startIndex={lightbox?.index ?? 0}
+        title={lightbox?.title ?? 'Image'}
+      />
     </div>
+  )
+}
+
+/**
+ * "Most ordered" social-proof badge. Shows the real order count whenever the item
+ * has been ordered; a hot flame + warning tone once it clears the popularity
+ * threshold, otherwise a quiet neutral count.
+ */
+function PopularBadge({ count, popular }: { count?: number | null; popular?: boolean }) {
+  const n = count ?? 0
+  return (
+    <Badge tone={popular ? 'warning' : 'neutral'} size="sm" className="gap-0.5">
+      <Flame className={cn('size-2.5', popular && 'fill-current')} aria-hidden />
+      {n > 0 ? `${n} ordered` : 'Popular'}
+    </Badge>
   )
 }
 
@@ -123,11 +152,13 @@ function ProductRow({
   product,
   qty,
   onAdd,
+  onZoom,
   focus,
 }: {
   product: PublicProduct
   qty: number
   onAdd?: AddHandler
+  onZoom?: ZoomHandler
   focus?: boolean
 }) {
   const hasOffer = Boolean(product.activeOffer) && product.effectivePrice != null
@@ -172,6 +203,9 @@ function ProductRow({
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-1">
+          {((product.orderCount ?? 0) > 0 || product.isPopular) && (
+            <PopularBadge count={product.orderCount} popular={product.isPopular} />
+          )}
           {product.isBestseller && (
             <Badge tone="premium" size="sm" className="gap-0.5">
               <Star className="size-2.5" aria-hidden /> Bestseller
@@ -206,7 +240,19 @@ function ProductRow({
 
       <div className="flex shrink-0 flex-col items-end justify-between gap-1.5">
         {product.imageUrl && (
-          <img src={product.imageUrl} alt="" loading="lazy" className="size-16 rounded-image object-cover" />
+          <button
+            type="button"
+            onClick={() => onZoom?.([{ url: product.imageUrl!, label: product.name }], 0, product.name)}
+            className="overflow-hidden rounded-image focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label={`View ${product.name} image`}
+          >
+            <img
+              src={product.imageUrl}
+              alt=""
+              loading="lazy"
+              className="size-16 object-cover transition-transform duration-200 hover:scale-105"
+            />
+          </button>
         )}
         {onAdd && (
           <AddControl
@@ -224,19 +270,57 @@ function ProductRow({
   )
 }
 
-function ComboRow({ combo, qty, onAdd }: { combo: PublicCombo; qty: number; onAdd?: AddHandler }) {
+function ComboRow({
+  combo,
+  qty,
+  onAdd,
+  onZoom,
+}: {
+  combo: PublicCombo
+  qty: number
+  onAdd?: AddHandler
+  onZoom?: ZoomHandler
+}) {
+  // Slider images: the combo's own photo first (if any), then each item's photo.
+  const galleryImages: LightboxImage[] = [
+    ...(combo.imageUrl ? [{ url: combo.imageUrl, label: combo.name }] : []),
+    ...combo.items
+      .filter((i) => i.imageUrl)
+      .map((i) => ({ url: i.imageUrl as string, label: i.name })),
+  ]
+  const canZoom = onZoom && galleryImages.length > 0
+
   return (
     <Card className="flex items-start gap-3" padding="sm">
       {combo.imageUrl ? (
-        <img src={combo.imageUrl} alt="" loading="lazy" className="size-14 shrink-0 rounded-image object-cover" />
+        <button
+          type="button"
+          onClick={() => canZoom && onZoom!(galleryImages, 0, combo.name)}
+          disabled={!canZoom}
+          className="shrink-0 overflow-hidden rounded-image focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-default"
+          aria-label={`View ${combo.name} images`}
+        >
+          <img
+            src={combo.imageUrl}
+            alt=""
+            loading="lazy"
+            className="size-14 object-cover transition-transform duration-200 hover:scale-105"
+          />
+        </button>
       ) : (
-        <div className="flex shrink-0 -space-x-3 pt-0.5">
+        <button
+          type="button"
+          onClick={() => canZoom && onZoom!(galleryImages, 0, combo.name)}
+          disabled={!canZoom}
+          className="flex shrink-0 -space-x-3 pt-0.5 focus:outline-none disabled:cursor-default"
+          aria-label={`View ${combo.name} images`}
+        >
           {combo.items.slice(0, 3).map((item, i) => (
             <span key={item.productId ?? i} className="grid size-8 place-items-center overflow-hidden rounded-full border-2 border-surface bg-surface-muted">
               {item.imageUrl ? <img src={item.imageUrl} alt="" className="size-full object-cover" /> : <Utensils className="size-3 text-text-muted" aria-hidden />}
             </span>
           ))}
-        </div>
+        </button>
       )}
 
       <div className="min-w-0 flex-1">
@@ -246,6 +330,9 @@ function ComboRow({ combo, qty, onAdd }: { combo: PublicCombo; qty: number; onAd
           <span className="text-caption font-bold text-foreground">₹{combo.comboPrice}</span>
           {combo.totalPrice > combo.comboPrice && (
             <span className="text-small text-text-muted line-through">₹{combo.totalPrice}</span>
+          )}
+          {((combo.orderCount ?? 0) > 0 || combo.isPopular) && (
+            <PopularBadge count={combo.orderCount} popular={combo.isPopular} />
           )}
           {combo.savings > 0 && <Badge tone="success" size="sm">Save ₹{combo.savings}</Badge>}
           {combo.coinsEarned ? (
@@ -265,7 +352,9 @@ function ComboRow({ combo, qty, onAdd }: { combo: PublicCombo; qty: number; onAd
                 type: 'combo',
                 id: combo.id,
                 name: combo.name,
-                imageUrl: combo.imageUrl,
+                // Combos without their own photo fall back to a component item's
+                // image so the cart still shows a picture instead of a placeholder.
+                imageUrl: combo.imageUrl ?? combo.items.find((i) => i.imageUrl)?.imageUrl ?? null,
                 unitPrice: combo.comboPrice,
                 coinsAccepted: combo.coinsAccepted,
               })

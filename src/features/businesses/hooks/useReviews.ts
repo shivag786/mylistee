@@ -17,8 +17,8 @@ export function useReviews(slug: string) {
 export function useSubmitReview(slug: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ rating, comment }: { rating: number; comment?: string }) =>
-      reviewService.submit(slug, rating, comment),
+    mutationFn: ({ orderId, rating, comment }: { orderId: string; rating: number; comment?: string }) =>
+      reviewService.submit(orderId, rating, comment),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: reviewKeys.list(slug) })
       void qc.invalidateQueries({ queryKey: publicBusinessKeys.profile(slug) })

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Plus } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,12 +11,14 @@ import { ErrorState } from '@/components/feedback/ErrorState'
 import { toast } from '@/utils/toast'
 import { useAdminPlans, useUpdatePlan } from '@/features/admin/hooks/useAdmin'
 import { FEATURE_LABELS } from '@/features/owner/planDisplay'
+import { PlanCreateSheet } from '@/features/admin/components/PlanCreateSheet'
 import type { Plan } from '@/features/admin/types'
 
 const ALL_FEATURES = Object.keys(FEATURE_LABELS)
 
 export function AdminPlansPage() {
   const { data, isLoading, isError, refetch } = useAdminPlans()
+  const [creating, setCreating] = useState(false)
 
   if (isLoading) {
     return (
@@ -28,11 +31,16 @@ export function AdminPlansPage() {
 
   return (
     <div className="space-y-4">
-      <header>
-        <h1 className="text-title font-bold text-foreground">Plans</h1>
-        <p className="text-caption text-text-secondary">
-          Edit limits, pricing and features. Empty limit = unlimited.
-        </p>
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-title font-bold text-foreground">Plans</h1>
+          <p className="text-caption text-text-secondary">
+            Edit limits, pricing and features. Empty limit = unlimited.
+          </p>
+        </div>
+        <Button size="sm" leftIcon={<Plus className="size-4" />} onClick={() => setCreating(true)}>
+          New plan
+        </Button>
       </header>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -40,6 +48,8 @@ export function AdminPlansPage() {
           <PlanEditor key={plan.key} plan={plan} />
         ))}
       </div>
+
+      <PlanCreateSheet open={creating} onOpenChange={setCreating} existingKeys={data.map((p) => p.key)} />
     </div>
   )
 }
@@ -50,6 +60,9 @@ function PlanEditor({ plan }: { plan: Plan }) {
   const [price, setPrice] = useState(String(plan.price))
   const [limits, setLimits] = useState({
     maxActiveOffers: plan.limits.maxActiveOffers,
+    maxActiveCombos: plan.limits.maxActiveCombos,
+    maxActivePromotions: plan.limits.maxActivePromotions,
+    maxPushPerMonth: plan.limits.maxPushPerMonth,
     maxOfferDays: plan.limits.maxOfferDays,
     maxQrCodes: plan.limits.maxQrCodes,
     maxGalleryImages: plan.limits.maxGalleryImages,
@@ -89,6 +102,9 @@ function PlanEditor({ plan }: { plan: Plan }) {
         <LabeledInput label="Name" value={name} onChange={setName} />
         <LabeledInput label={`Price (${plan.currency})`} value={price} onChange={setPrice} type="number" />
         <LabeledInput label="Max active offers" value={numStr(limits.maxActiveOffers)} onChange={(v) => setLimit('maxActiveOffers', v)} type="number" placeholder="∞" />
+        <LabeledInput label="Max active combos" value={numStr(limits.maxActiveCombos)} onChange={(v) => setLimit('maxActiveCombos', v)} type="number" placeholder="∞" />
+        <LabeledInput label="Max active promotions" value={numStr(limits.maxActivePromotions)} onChange={(v) => setLimit('maxActivePromotions', v)} type="number" placeholder="∞" />
+        <LabeledInput label="Push / month" value={numStr(limits.maxPushPerMonth)} onChange={(v) => setLimit('maxPushPerMonth', v)} type="number" placeholder="∞" />
         <LabeledInput label="Max offer days" value={numStr(limits.maxOfferDays)} onChange={(v) => setLimit('maxOfferDays', v)} type="number" placeholder="∞" />
         <LabeledInput label="Max QR codes" value={numStr(limits.maxQrCodes)} onChange={(v) => setLimit('maxQrCodes', v)} type="number" placeholder="∞" />
         <LabeledInput label="Max gallery images" value={numStr(limits.maxGalleryImages)} onChange={(v) => setLimit('maxGalleryImages', v)} type="number" placeholder="∞" />

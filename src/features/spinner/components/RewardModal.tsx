@@ -63,8 +63,8 @@ export function RewardModal({ reward, coinsEarned = 0, onClose }: RewardModalPro
             </div>
 
             <div className="w-full rounded-2xl border border-dashed border-border-strong bg-surface-muted px-4 py-3">
-              <p className="text-small text-text-muted">Show this code to redeem</p>
-              <p className="text-subtitle font-bold tracking-[0.2em] text-foreground">{reward.code}</p>
+              <p className="text-small text-text-muted">Show this PIN to redeem</p>
+              <p className="text-subtitle font-bold tracking-[0.3em] text-foreground">{reward.code}</p>
             </div>
 
             <div className="flex w-full flex-col gap-2">

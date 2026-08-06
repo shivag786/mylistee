@@ -152,6 +152,8 @@ export interface PlatformSettings {
   defaultLanguage: string
   maintenanceMode: boolean
   maintenanceMessage: string
+  /** Custom new-order alert sound owners hear (null = built-in ding). */
+  orderSoundUrl: string | null
 }
 
 export interface FraudSignals {
@@ -165,6 +167,81 @@ export interface ListFilters {
   status?: string
   page?: number
   perPage?: number
+}
+
+// ---- Revenue (admin) ----
+
+export interface RevenueSummary {
+  totalRevenue: number
+  thisMonthRevenue: number
+  activeSubscriptions: number
+  mrr: number
+}
+
+export interface RevenueRow {
+  id: string
+  businessName: string | null
+  businessSlug: string | null
+  planName: string
+  price: number
+  currency: string
+  interval: string
+  status: 'active' | 'cancelled' | 'expired'
+  autoRenew: boolean
+  totalPaid: number
+  startedAt: string | null
+  endsAt: string | null
+  cancelledAt: string | null
+}
+
+export interface RevenueResponse {
+  summary: RevenueSummary
+  rows: RevenueRow[]
+  meta: {
+    currentPage: number
+    lastPage: number
+    perPage: number
+    total: number
+  }
+}
+
+export interface RevenueFilters {
+  search?: string
+  status?: string
+  plan?: string
+  sort?: 'newest' | 'revenue' | 'price'
+  page?: number
+  perPage?: number
+}
+
+// ---- Homepage banners (admin) ----
+
+export type BannerPlacement = 'home_top' | 'home_after_combos'
+
+export interface AdminBanner {
+  id: string
+  title: string
+  imageUrl: string | null
+  linkUrl: string | null
+  placement: BannerPlacement
+  placementLabel: string
+  position: number
+  startsAt: string | null
+  endsAt: string | null
+  isActive: boolean
+  isLive: boolean
+  createdAt: string | null
+}
+
+/** Fields the banner form edits; `image` is the freshly chosen file, if any. */
+export interface BannerInput {
+  title: string
+  linkUrl?: string | null
+  placement: BannerPlacement
+  startsAt?: string | null
+  endsAt?: string | null
+  isActive?: boolean
+  image?: File | null
 }
 
 // ---- Business Import Engine (SPEC-011) ----
