@@ -61,24 +61,12 @@ export function LegalPage({
           <header className="space-y-2">
             <h1 className="text-title font-bold text-foreground">{title}</h1>
             <p className="text-body text-text-secondary">{summary}</p>
-            <p className="text-small text-text-muted">
-              Last updated {LEGAL.lastUpdated} · {LEGAL.entity}
-            </p>
+            <p className="text-small text-text-muted">Last updated {LEGAL.lastUpdated}</p>
           </header>
 
           {children}
 
-          <footer className="space-y-3 border-t border-border pt-5">
-            <p className="text-caption text-text-secondary">
-              Questions about this page? Write to{' '}
-              <a
-                href={`mailto:${LEGAL.support.email}`}
-                className="font-medium text-primary underline"
-              >
-                {LEGAL.support.email}
-              </a>
-              .
-            </p>
+          <footer className="border-t border-border pt-5">
             <nav
               aria-label="Other policies"
               className="flex flex-wrap gap-x-4 gap-y-1 text-caption"

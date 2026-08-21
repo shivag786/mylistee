@@ -9,6 +9,7 @@ import { landingPathForRole } from '@/features/auth/roleRoutes'
 import { firebaseErrorMessage, isCancelledSignIn } from '@/utils/firebaseErrors'
 import { MESSAGES } from '@/constants/messages'
 import { ROUTES } from '@/constants/routes'
+import { LegalFooter } from '@/components/navigation/LegalFooter'
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { fadeInUp } from '@/animations'
@@ -84,7 +85,15 @@ export function LoginPage() {
         </Button>
 
         <p className="text-center text-small text-text-muted">
-          By continuing you agree to our Terms &amp; Privacy Policy.
+          By continuing you agree to our{' '}
+          <Link to={ROUTES.terms} className="font-medium text-foreground hover:underline">
+            Terms &amp; Conditions
+          </Link>{' '}
+          and{' '}
+          <Link to={ROUTES.privacy} className="font-medium text-foreground hover:underline">
+            Privacy Policy
+          </Link>
+          .
         </p>
 
         <p className="text-center text-small text-text-muted">
@@ -96,6 +105,8 @@ export function LoginPage() {
 
         {import.meta.env.DEV && <DevLoginPanel from={from} />}
       </motion.div>
+
+      <LegalFooter className="w-full border-0 bg-transparent py-0" />
     </div>
   )
 }

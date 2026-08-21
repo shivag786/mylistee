@@ -14,6 +14,7 @@ import { FloatingOrderButton } from '@/features/owner/components/FloatingOrderBu
 import { OWNER_NAV, visibleOwnerNav, type OwnerNavItem } from '@/features/owner/ownerNav'
 import { useAppConfig } from '@/hooks/useAppConfig'
 import { SuspenseOutlet } from '@/app/PageLoader'
+import { LegalFooter } from '@/components/navigation/LegalFooter'
 import { cn } from '@/utils/cn'
 
 /**
@@ -90,6 +91,8 @@ export function OwnerLayout() {
           </PageTransition>
         </AnimatePresence>
       </main>
+
+      <LegalFooter />
 
       <FloatingOrderButton />
 

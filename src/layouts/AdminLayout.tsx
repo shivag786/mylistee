@@ -8,6 +8,7 @@ import { ROUTES } from '@/constants/routes'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ADMIN_NAV } from '@/features/admin/adminNav'
 import { SuspenseOutlet } from '@/app/PageLoader'
+import { LegalFooter } from '@/components/navigation/LegalFooter'
 import { cn } from '@/utils/cn'
 
 /**
@@ -61,6 +62,8 @@ export function AdminLayout() {
           <Outlet />
         </SuspenseOutlet>
       </main>
+
+      <LegalFooter className="mt-4" />
     </div>
   )
 }

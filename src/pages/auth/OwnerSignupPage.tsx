@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/forms/PasswordInput'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ROUTES } from '@/constants/routes'
+import { LegalFooter } from '@/components/navigation/LegalFooter'
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { fadeInUp } from '@/animations'
@@ -70,7 +71,8 @@ export function OwnerSignupPage() {
         </span>
         <h1 className="text-title font-bold text-foreground">Register your business</h1>
         <p className="max-w-xs text-body text-text-secondary">
-          Create an owner account with your mobile number and a PIN. You’ll set up your business next.
+          Create an owner account with your mobile number and a PIN. You’ll set up your business
+          next.
         </p>
       </motion.div>
 
@@ -84,20 +86,48 @@ export function OwnerSignupPage() {
       >
         <div className="space-y-1.5">
           <Label htmlFor="su-name">Your name</Label>
-          <Input id="su-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Priya Shah" autoComplete="name" />
+          <Input
+            id="su-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Priya Shah"
+            autoComplete="name"
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="su-mobile">Mobile number</Label>
-          <Input id="su-mobile" inputMode="numeric" autoComplete="tel" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))} placeholder="10-digit mobile" maxLength={10} />
+          <Input
+            id="su-mobile"
+            inputMode="numeric"
+            autoComplete="tel"
+            value={mobile}
+            onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
+            placeholder="10-digit mobile"
+            maxLength={10}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label htmlFor="su-pin">Create PIN</Label>
-            <PasswordInput id="su-pin" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="4–8 digits" maxLength={8} />
+            <PasswordInput
+              id="su-pin"
+              inputMode="numeric"
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
+              placeholder="4–8 digits"
+              maxLength={8}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="su-pin2">Confirm PIN</Label>
-            <PasswordInput id="su-pin2" inputMode="numeric" value={confirmPin} onChange={(e) => setConfirmPin(e.target.value)} placeholder="Repeat PIN" maxLength={8} />
+            <PasswordInput
+              id="su-pin2"
+              inputMode="numeric"
+              value={confirmPin}
+              onChange={(e) => setConfirmPin(e.target.value)}
+              placeholder="Repeat PIN"
+              maxLength={8}
+            />
           </div>
         </div>
 
@@ -123,6 +153,7 @@ export function OwnerSignupPage() {
       <span className="opacity-60">
         <Logo size={28} />
       </span>
+      <LegalFooter className="w-full border-0 bg-transparent py-0" />
     </div>
   )
 }

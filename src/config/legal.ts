@@ -1,50 +1,27 @@
 /**
- * The company facts that appear in the legal pages, in one place.
- *
- * ⚠️ FILL THESE IN BEFORE GOING LIVE. Everything marked TODO is a placeholder —
- * a policy naming the wrong legal entity, address or grievance officer is not
- * enforceable, and payment providers verify these details against your
- * registration during onboarding.
+ * The facts the legal pages quote, in one place.
  *
  * Kept as a module rather than env vars deliberately: this is public information
- * that belongs in version control, where a change to it is reviewable.
+ * that belongs in version control, where a change to it is reviewable. Change a
+ * value here and all three policies follow.
+ *
+ * Deliberately minimal — no registered entity, address, phone or grievance
+ * officer. Those were removed on request. Note that an India-facing platform is
+ * expected to publish a named grievance officer (Consumer Protection
+ * (E-Commerce) Rules 2020, IT Rules 2021), and payment providers check for one
+ * during onboarding, so plan to reinstate that block before launch.
  */
 export const LEGAL = {
-  /** Consumer-facing product name. */
+  /** Consumer-facing product name, used throughout the policies. */
   brand: 'Listee',
 
-  /** TODO: the registered legal entity that actually receives the money. */
-  entity: 'Listee Technologies Private Limited',
+  /** The one contact route the policies point at, for refunds and data rights. */
+  supportEmail: 'support@listee.app',
 
-  /** TODO: registered office, as filed. Required on the refund/contact pages. */
-  address: '[Registered office address], India',
-
-  /** TODO: CIN / LLPIN, if incorporated. Leave empty for a sole proprietorship. */
-  cin: '',
-
-  /** TODO: GSTIN, if registered. Shown on invoices and the terms page. */
-  gstin: '',
-
-  support: {
-    email: 'support@listee.app',
-    /** TODO: a number you actually answer — required by the consumer rules. */
-    phone: '[Support phone number]',
-    hours: 'Monday to Saturday, 10:00–19:00 IST',
-  },
-
-  /**
-   * TODO: named grievance officer. Mandatory under the Consumer Protection
-   * (E-Commerce) Rules 2020 and the IT Rules 2021 for anything operating in India.
-   */
-  grievance: {
-    name: '[Grievance Officer name]',
-    email: 'grievance@listee.app',
-  },
-
-  /** Courts with exclusive jurisdiction. TODO: match your registered office. */
+  /** Courts with exclusive jurisdiction, quoted in the Terms. */
   jurisdiction: 'Ahmedabad, Gujarat',
 
-  /** Last review date for all three policies, shown at the top of each page. */
+  /** Last review date, shown at the top of every policy page. */
   lastUpdated: '21 August 2026',
 
   /** Business-day windows quoted in the refund policy. */

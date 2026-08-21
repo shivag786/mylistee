@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { LegalPage, Section, P, UL, DL, Callout } from '@/components/legal/LegalPage'
+import { LegalPage, Section, P, UL, Callout } from '@/components/legal/LegalPage'
 import { ROUTES } from '@/constants/routes'
 import { LEGAL } from '@/config/legal'
 
@@ -25,11 +25,9 @@ export function TermsPage() {
     >
       <Section heading="1. Who we are">
         <P>
-          {LEGAL.brand} is operated by {LEGAL.entity}
-          {LEGAL.cin ? ` (CIN ${LEGAL.cin})` : ''}, with its registered office at {LEGAL.address}.
-          In these terms, “we”, “us” and “{LEGAL.brand}” mean that company, and “you” means anyone
-          using the platform — whether through the web app, the installed app, or a QR code at a
-          shop.
+          In these terms, “we”, “us” and “{LEGAL.brand}” mean the operator of the {LEGAL.brand}{' '}
+          platform, and “you” means anyone using it — whether through the web app, the installed
+          app, or a QR code at a shop.
         </P>
         <P>
           By creating an account, scanning a {LEGAL.brand} QR code, or using any part of the
@@ -76,11 +74,8 @@ export function TermsPage() {
           <li>
             Keep your PIN and your device secure. Anything done through your account is treated as
             done by you, so tell us immediately at{' '}
-            <a
-              href={`mailto:${LEGAL.support.email}`}
-              className="font-medium text-primary underline"
-            >
-              {LEGAL.support.email}
+            <a href={`mailto:${LEGAL.supportEmail}`} className="font-medium text-primary underline">
+              {LEGAL.supportEmail}
             </a>{' '}
             if you suspect someone else has access.
           </li>
@@ -311,31 +306,7 @@ export function TermsPage() {
         </P>
       </Section>
 
-      <Section heading="13. Grievance officer">
-        <P>
-          In line with the Information Technology (Intermediary Guidelines and Digital Media Ethics
-          Code) Rules, 2021 and the Consumer Protection (E-Commerce) Rules, 2020, complaints may be
-          addressed to:
-        </P>
-        <DL
-          items={[
-            { term: 'Grievance Officer', detail: LEGAL.grievance.name },
-            {
-              term: 'Email',
-              detail: (
-                <a href={`mailto:${LEGAL.grievance.email}`} className="text-primary underline">
-                  {LEGAL.grievance.email}
-                </a>
-              ),
-            },
-            { term: 'Address', detail: LEGAL.address },
-            { term: 'Acknowledgement', detail: 'Within 48 hours' },
-            { term: 'Resolution', detail: 'Within 30 days of receipt' },
-          ]}
-        />
-      </Section>
-
-      <Section heading="14. Governing law">
+      <Section heading="13. Governing law">
         <P>
           These terms are governed by the laws of India. The courts at {LEGAL.jurisdiction} have
           exclusive jurisdiction, without prejudice to any right you have as a consumer to bring
@@ -343,32 +314,12 @@ export function TermsPage() {
         </P>
       </Section>
 
-      <Section heading="15. Changes to these terms">
+      <Section heading="14. Changes to these terms">
         <P>
           We may update these terms. The date at the top of this page always shows the current
           version, and we will notify you in the app before a material change takes effect.
           Continuing to use {LEGAL.brand} after that means you accept the updated terms.
         </P>
-      </Section>
-
-      <Section heading="16. Contact">
-        <DL
-          items={[
-            { term: 'Entity', detail: LEGAL.entity },
-            { term: 'Address', detail: LEGAL.address },
-            {
-              term: 'Email',
-              detail: (
-                <a href={`mailto:${LEGAL.support.email}`} className="text-primary underline">
-                  {LEGAL.support.email}
-                </a>
-              ),
-            },
-            { term: 'Phone', detail: LEGAL.support.phone },
-            { term: 'Hours', detail: LEGAL.support.hours },
-            ...(LEGAL.gstin ? [{ term: 'GSTIN', detail: LEGAL.gstin }] : []),
-          ]}
-        />
       </Section>
     </LegalPage>
   )
