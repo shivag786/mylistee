@@ -144,6 +144,30 @@ export const useAdminRevenue = (filters: import('../types').RevenueFilters) =>
     placeholderData: keepPreviousData,
   })
 
+// ---- Gateway payments & refunds ----
+export const useAdminPayments = (filters: import('../types').PaymentFilters) =>
+  useQuery({
+    queryKey: ['admin', 'payments', filters] as const,
+    queryFn: () => adminService.payments(filters),
+    placeholderData: keepPreviousData,
+  })
+
+/**
+ * Issue a refund. Invalidates revenue too — a refund changes the totals on that
+ * page, and an admin who refunds then checks revenue should see the new number.
+ */
+export function useRefundPayment() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: { id: string; amount?: number; reason?: string }) =>
+      adminService.refundPayment(v.id, { amount: v.amount, reason: v.reason }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'payments'] })
+      void qc.invalidateQueries({ queryKey: ['admin', 'revenue'] })
+    },
+  })
+}
+
 // ---- Plans ----
 export const useAdminPlans = () =>
   useQuery({ queryKey: adminKeys.plans, queryFn: () => adminService.plans() })

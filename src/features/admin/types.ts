@@ -1,4 +1,5 @@
 import type { Plan } from '@/features/owner/types'
+import type { PaginationMeta } from '@/types/api'
 
 export type { Plan }
 
@@ -210,6 +211,53 @@ export interface RevenueFilters {
   status?: string
   plan?: string
   sort?: 'newest' | 'revenue' | 'price'
+  page?: number
+  perPage?: number
+}
+
+// ---- Gateway payments (admin) ----
+
+export type PaymentStatus = 'created' | 'authorized' | 'captured' | 'failed' | 'refunded'
+
+/** One Razorpay payment attempt, including the ones that never completed. */
+export interface AdminPayment {
+  id: string
+  gateway: string
+  orderId: string
+  paymentId: string | null
+  status: PaymentStatus
+  amount: number
+  currency: string
+  method: string | null
+  refundedAmount: number
+  /** How much of a captured payment can still be sent back. */
+  refundableAmount: number
+  errorCode: string | null
+  errorDescription: string | null
+  paidAt: string | null
+  failedAt: string | null
+  refundedAt: string | null
+  createdAt: string | null
+  planName?: string
+  businessName?: string
+  invoiceNumber?: string | null
+}
+
+/**
+ * The payments endpoint puts running totals in the envelope `meta` alongside the
+ * page info, so the header figures do not need a second request.
+ */
+export interface PaymentsPage {
+  items: AdminPayment[]
+  meta: PaginationMeta & {
+    capturedTotal: number
+    refundedTotal: number
+  }
+}
+
+export interface PaymentFilters {
+  search?: string
+  status?: string
   page?: number
   perPage?: number
 }

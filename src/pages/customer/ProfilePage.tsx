@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Heart, Store, Bell } from 'lucide-react'
+import { LogOut, Heart, Store, Bell, FileText, ShieldCheck, RotateCcw } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -61,6 +61,26 @@ export function ProfilePage() {
           icon={<Bell className="size-5" />}
           label="Notifications"
           onClick={() => navigate(ROUTES.notifications)}
+        />
+      </Card>
+
+      {/* Legal — reachable from the app, not only from a policy URL someone
+          happens to have. */}
+      <Card padding="none">
+        <ProfileRow
+          icon={<FileText className="size-5" />}
+          label="Terms & Conditions"
+          onClick={() => navigate(ROUTES.terms)}
+        />
+        <ProfileRow
+          icon={<ShieldCheck className="size-5" />}
+          label="Privacy Policy"
+          onClick={() => navigate(ROUTES.privacy)}
+        />
+        <ProfileRow
+          icon={<RotateCcw className="size-5" />}
+          label="Refund & Cancellation Policy"
+          onClick={() => navigate(ROUTES.refund)}
         />
       </Card>
 
