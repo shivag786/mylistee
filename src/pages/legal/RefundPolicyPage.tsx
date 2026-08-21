@@ -136,8 +136,8 @@ export function RefundPolicyPage() {
           {LEGAL.brand} never receives that money, so we cannot refund it. Contact the shop using
           the details on its {LEGAL.brand} profile. If a shop repeatedly refuses a fair refund, tell
           us at{' '}
-          <a href={`mailto:${LEGAL.support.email}`} className="font-medium text-primary underline">
-            {LEGAL.support.email}
+          <a href={`mailto:${LEGAL.supportEmail}`} className="font-medium text-primary underline">
+            {LEGAL.supportEmail}
           </a>{' '}
           — we investigate and can suspend a listing, even though we cannot return money we never
           held.
@@ -153,8 +153,8 @@ export function RefundPolicyPage() {
       <Section heading="7. How to request a refund">
         <P>
           Email{' '}
-          <a href={`mailto:${LEGAL.support.email}`} className="font-medium text-primary underline">
-            {LEGAL.support.email}
+          <a href={`mailto:${LEGAL.supportEmail}`} className="font-medium text-primary underline">
+            {LEGAL.supportEmail}
           </a>{' '}
           from the address on your {LEGAL.brand} account, with:
         </P>
@@ -164,16 +164,6 @@ export function RefundPolicyPage() {
           <li>the date and amount of the payment;</li>
           <li>what went wrong.</li>
         </UL>
-        <P>
-          You can also raise it with our Grievance Officer, {LEGAL.grievance.name}, at{' '}
-          <a
-            href={`mailto:${LEGAL.grievance.email}`}
-            className="font-medium text-primary underline"
-          >
-            {LEGAL.grievance.email}
-          </a>
-          .
-        </P>
       </Section>
 
       <Section heading="8. How long it takes">
@@ -211,18 +201,6 @@ export function RefundPolicyPage() {
           releases within 5–7 working days without any action from us. If it has not cleared after
           that, send us the payment reference and we will trace it with Razorpay.
         </P>
-      </Section>
-
-      <Section heading="10. Contact">
-        <DL
-          items={[
-            { term: 'Entity', detail: LEGAL.entity },
-            { term: 'Email', detail: LEGAL.support.email },
-            { term: 'Phone', detail: LEGAL.support.phone },
-            { term: 'Hours', detail: LEGAL.support.hours },
-            { term: 'Address', detail: LEGAL.address },
-          ]}
-        />
       </Section>
     </LegalPage>
   )

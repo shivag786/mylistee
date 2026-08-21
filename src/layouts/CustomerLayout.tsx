@@ -5,6 +5,7 @@ import { BottomNav } from '@/components/navigation/BottomNav'
 import { PageTransition } from '@/components/motion/PageTransition'
 import { SuspenseOutlet } from '@/app/PageLoader'
 import { GlobalCartBar } from '@/features/orders/GlobalCartBar'
+import { LegalFooter } from '@/components/navigation/LegalFooter'
 
 /**
  * Shell for the customer-facing app: fixed app bar, scrollable content with
@@ -25,6 +26,7 @@ export function CustomerLayout() {
           </PageTransition>
         </AnimatePresence>
       </main>
+      <LegalFooter />
       <GlobalCartBar />
       <BottomNav />
     </div>

@@ -1,6 +1,4 @@
-import { Link } from 'react-router-dom'
 import { LegalPage, Section, P, UL, DL, Callout } from '@/components/legal/LegalPage'
-import { ROUTES } from '@/constants/routes'
 import { LEGAL } from '@/config/legal'
 
 /**
@@ -29,9 +27,9 @@ export function PrivacyPolicyPage() {
 
       <Section heading="2. Who is responsible for your data">
         <P>
-          {LEGAL.entity}, at {LEGAL.address}, is the data fiduciary for personal data processed
-          through {LEGAL.brand} — meaning we decide why and how it is used, under the Digital
-          Personal Data Protection Act, 2023 and the Information Technology Act, 2000.
+          The operator of {LEGAL.brand} is the data fiduciary for personal data processed through
+          the platform — meaning we decide why and how it is used, under the Digital Personal Data
+          Protection Act, 2023 and the Information Technology Act, 2000.
         </P>
         <P>
           A business you interact with is separately responsible for what it does with the customer
@@ -222,8 +220,8 @@ export function PrivacyPolicyPage() {
         </UL>
         <P>
           Write to{' '}
-          <a href={`mailto:${LEGAL.support.email}`} className="font-medium text-primary underline">
-            {LEGAL.support.email}
+          <a href={`mailto:${LEGAL.supportEmail}`} className="font-medium text-primary underline">
+            {LEGAL.supportEmail}
           </a>{' '}
           from your registered email address. We respond within 30 days. If you are not satisfied,
           you may complain to the Data Protection Board of India.
@@ -253,25 +251,6 @@ export function PrivacyPolicyPage() {
         <P>
           The date at the top of this page shows the current version. We will notify you in the app
           before a material change takes effect.
-        </P>
-      </Section>
-
-      <Section heading="12. Contact and grievances">
-        <DL
-          items={[
-            { term: 'Data protection queries', detail: LEGAL.support.email },
-            { term: 'Grievance Officer', detail: LEGAL.grievance.name },
-            { term: 'Grievance email', detail: LEGAL.grievance.email },
-            { term: 'Address', detail: LEGAL.address },
-            { term: 'Response time', detail: '48 hours to acknowledge, 30 days to resolve' },
-          ]}
-        />
-        <P>
-          See also our{' '}
-          <Link to={ROUTES.terms} className="font-medium text-primary underline">
-            Terms &amp; Conditions
-          </Link>
-          .
         </P>
       </Section>
     </LegalPage>

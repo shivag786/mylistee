@@ -10,6 +10,7 @@ import { Spinner } from '@/components/feedback/Spinner'
 import { Stepper } from '@/components/navigation/Stepper'
 import { ImageUploadField } from '@/components/forms/ImageUploadField'
 import { ROUTES } from '@/constants/routes'
+import { LegalFooter } from '@/components/navigation/LegalFooter'
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { fadeInUp } from '@/animations'
@@ -170,6 +171,8 @@ export function BusinessRegistrationPage() {
           )}
         </div>
       </form>
+
+      <LegalFooter className="w-full border-0 bg-transparent py-0" />
     </div>
   )
 }

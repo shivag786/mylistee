@@ -4,6 +4,7 @@ import { LogIn, Home } from 'lucide-react'
 import { Logo } from '@/components/icons/Logo'
 import { PinLoginForm } from '@/features/auth/components/PinLoginForm'
 import { ROUTES } from '@/constants/routes'
+import { LegalFooter } from '@/components/navigation/LegalFooter'
 import { fadeInUp } from '@/animations'
 
 // Demo admin (seeded by DemoAccountSeeder). Shown only in demo mode.
@@ -76,6 +77,7 @@ export function OwnerLoginPage() {
           Go to Listee home
         </Link>
       </motion.div>
+      <LegalFooter className="w-full border-0 bg-transparent py-0" />
     </div>
   )
 }
