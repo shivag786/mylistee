@@ -51,6 +51,7 @@ const AdminOffersPage = lazyPage(() => import('@/pages/admin/AdminOffersPage'), 
 const AdminReviewsPage = lazyPage(() => import('@/pages/admin/AdminReviewsPage'), 'AdminReviewsPage')
 const AdminPlansPage = lazyPage(() => import('@/pages/admin/AdminPlansPage'), 'AdminPlansPage')
 const AdminRevenuePage = lazyPage(() => import('@/pages/admin/AdminRevenuePage'), 'AdminRevenuePage')
+const AdminPaymentsPage = lazyPage(() => import('@/pages/admin/AdminPaymentsPage'), 'AdminPaymentsPage')
 const AdminBroadcastPage = lazyPage(() => import('@/pages/admin/AdminBroadcastPage'), 'AdminBroadcastPage')
 const AdminBannersPage = lazyPage(() => import('@/pages/admin/AdminBannersPage'), 'AdminBannersPage')
 const AdminFeatureFlagsPage = lazyPage(() => import('@/pages/admin/AdminFeatureFlagsPage'), 'AdminFeatureFlagsPage')
@@ -60,6 +61,12 @@ const AdminFraudPage = lazyPage(() => import('@/pages/admin/AdminFraudPage'), 'A
 const AdminAuditLogsPage = lazyPage(() => import('@/pages/admin/AdminAuditLogsPage'), 'AdminAuditLogsPage')
 const AdminReportsPage = lazyPage(() => import('@/pages/admin/AdminReportsPage'), 'AdminReportsPage')
 const AdminSettingsPage = lazyPage(() => import('@/pages/admin/AdminSettingsPage'), 'AdminSettingsPage')
+
+// Legal pages. Lazy like everything else, but reachable signed-out: payment
+// providers and app stores open these URLs cold.
+const TermsPage = lazyPage(() => import('@/pages/legal/TermsPage'), 'TermsPage')
+const PrivacyPolicyPage = lazyPage(() => import('@/pages/legal/PrivacyPolicyPage'), 'PrivacyPolicyPage')
+const RefundPolicyPage = lazyPage(() => import('@/pages/legal/RefundPolicyPage'), 'RefundPolicyPage')
 
 const OwnerSignupPage = lazyPage(() => import('@/pages/auth/OwnerSignupPage'), 'OwnerSignupPage')
 const OwnerLoginPage = lazyPage(() => import('@/pages/auth/OwnerLoginPage'), 'OwnerLoginPage')
@@ -87,6 +94,33 @@ export function AppRouter() {
           </SuspenseOutlet>
         }
       />
+      {/* Legal — outside every app shell so they render standalone for a visitor
+          with no account (Razorpay onboarding, app store review). */}
+      <Route
+        path={ROUTES.terms}
+        element={
+          <SuspenseOutlet>
+            <TermsPage />
+          </SuspenseOutlet>
+        }
+      />
+      <Route
+        path={ROUTES.privacy}
+        element={
+          <SuspenseOutlet>
+            <PrivacyPolicyPage />
+          </SuspenseOutlet>
+        }
+      />
+      <Route
+        path={ROUTES.refund}
+        element={
+          <SuspenseOutlet>
+            <RefundPolicyPage />
+          </SuspenseOutlet>
+        }
+      />
+
       {import.meta.env.DEV && <Route path="/dev/ui" element={<UiShowcasePage />} />}
 
       {/* Customer app shell */}
@@ -147,6 +181,7 @@ export function AppRouter() {
             <Route path={ROUTES.admin.reviews} element={<AdminReviewsPage />} />
             <Route path={ROUTES.admin.plans} element={<AdminPlansPage />} />
             <Route path={ROUTES.admin.revenue} element={<AdminRevenuePage />} />
+            <Route path={ROUTES.admin.payments} element={<AdminPaymentsPage />} />
             <Route path={ROUTES.admin.broadcast} element={<AdminBroadcastPage />} />
             <Route path={ROUTES.admin.banners} element={<AdminBannersPage />} />
             <Route path={ROUTES.admin.featureFlags} element={<AdminFeatureFlagsPage />} />

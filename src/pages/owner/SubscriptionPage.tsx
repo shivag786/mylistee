@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Check, Crown, Receipt, Sparkles } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Check, Crown, Receipt, ShieldCheck, Sparkles } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -16,8 +17,11 @@ import {
   useSubscribe,
   useCancelSubscription,
 } from '@/features/owner/hooks/useOwner'
+import { usePlanCheckout, type CheckoutStage } from '@/features/owner/hooks/usePlanCheckout'
+import { useAppConfig } from '@/hooks/useAppConfig'
 import type { Invoice, Plan, PlanUsageItem, SubscriptionState } from '@/features/owner/types'
 import { featureLabel, formatPrice, intervalSuffix, formatLimit } from '@/features/owner/planDisplay'
+import { ROUTES } from '@/constants/routes'
 import { cn } from '@/utils/cn'
 
 export function SubscriptionPage() {
@@ -26,6 +30,12 @@ export function SubscriptionPage() {
   const { data: invoices } = useInvoices()
   const subscribe = useSubscribe()
   const cancel = useCancelSubscription()
+  const checkout = usePlanCheckout()
+  const { data: appConfig } = useAppConfig()
+
+  // No gateway configured (local dev / demo seed) — the API still accepts a plain
+  // plan switch there, so keep that path working instead of failing at checkout.
+  const paymentsLive = appConfig?.payments?.razorpay ?? true
 
   const [pendingPlan, setPendingPlan] = useState<Plan | null>(null)
   const [confirmCancel, setConfirmCancel] = useState(false)
@@ -44,16 +54,30 @@ export function SubscriptionPage() {
   const current = state.plan
   const isDowngrade = pendingPlan?.isFree ?? false
 
+  /**
+   * Two different actions behind one dialog: dropping to Free is a plain plan
+   * switch, while a paid plan has to go through Razorpay. The dialog closes
+   * before Checkout opens so the payment window is not stacked on top of it.
+   */
   function confirmSwitch() {
-    if (!pendingPlan) return
-    subscribe.mutate(pendingPlan.key, {
-      onSuccess: () => {
-        toast.success(
-          pendingPlan.isFree ? 'Switched to the Free plan.' : `You're now on ${pendingPlan.name}!`,
-        )
-        setPendingPlan(null)
-      },
-      onError: (err) => toast.error(err instanceof Error ? err.message : 'Could not change plan.'),
+    const plan = pendingPlan
+    if (!plan) return
+
+    if (plan.isFree || !paymentsLive) {
+      subscribe.mutate(plan.key, {
+        onSuccess: () => {
+          toast.success(plan.isFree ? 'Switched to the Free plan.' : `You're now on ${plan.name}!`)
+          setPendingPlan(null)
+        },
+        onError: (err) => toast.error(err instanceof Error ? err.message : 'Could not change plan.'),
+      })
+      return
+    }
+
+    setPendingPlan(null)
+    checkout.start(plan, {
+      onSuccess: () => toast.success(`Payment successful — you're now on ${plan.name}!`),
+      onError: (err) => toast.error(err.message || 'The payment could not be completed.'),
     })
   }
 
@@ -84,6 +108,8 @@ export function SubscriptionPage() {
               key={plan.key}
               plan={plan}
               currentKey={current?.key}
+              busy={checkout.activePlanKey === plan.key ? checkout.stage : 'idle'}
+              disabled={checkout.isPending}
               onSelect={() => setPendingPlan(plan)}
             />
           ))}
@@ -92,6 +118,8 @@ export function SubscriptionPage() {
 
       <InvoicesCard invoices={invoices ?? []} />
 
+      {paymentsLive && <BillingTerms />}
+
       <ConfirmationDialog
         open={pendingPlan !== null}
         onOpenChange={(o) => !o && setPendingPlan(null)}
@@ -99,18 +127,27 @@ export function SubscriptionPage() {
         description={
           isDowngrade ? (
             'Your current plan will end and premium limits will no longer apply.'
+          ) : !paymentsLive ? (
+            `You'll get ${pendingPlan?.name ?? ''} features right away. Online payments are not enabled on this environment, so nothing is charged.`
           ) : (
             <>
-              You'll get {pendingPlan?.name} features right away.{' '}
-              <span className="font-medium text-foreground">
-                This is a demo — no real payment is taken.
+              You'll be charged{' '}
+              <span className="font-semibold text-foreground">
+                {pendingPlan && formatPrice(pendingPlan.price, pendingPlan.currency)}
+                {pendingPlan && intervalSuffix(pendingPlan.interval)}
               </span>{' '}
-              In production you'd be charged {pendingPlan && formatPrice(pendingPlan.price, pendingPlan.currency)}
-              {pendingPlan && intervalSuffix(pendingPlan.interval)}.
+              through Razorpay, and {pendingPlan?.name} features unlock as soon as the payment goes
+              through. Renewal is not automatic — we'll remind you before the period ends. See our{' '}
+              <Link to={ROUTES.refund} className="font-medium text-primary underline">
+                Refund Policy
+              </Link>{' '}
+              before you pay.
             </>
           )
         }
-        confirmLabel={isDowngrade ? 'Switch to Free' : 'Confirm upgrade'}
+        confirmLabel={
+          isDowngrade ? 'Switch to Free' : paymentsLive ? 'Continue to payment' : 'Confirm upgrade'
+        }
         isLoading={subscribe.isPending}
         onConfirm={confirmSwitch}
       />
@@ -204,13 +241,26 @@ function UsageRow({ label, item, unit }: { label: string; item: PlanUsageItem; u
   )
 }
 
+/** What the upgrade button says while a payment is in flight. */
+const STAGE_LABELS: Record<Exclude<CheckoutStage, 'idle'>, string> = {
+  creating: 'Starting payment…',
+  awaiting: 'Waiting for payment…',
+  verifying: 'Confirming payment…',
+}
+
 function PlanCard({
   plan,
   currentKey,
+  busy,
+  disabled,
   onSelect,
 }: {
   plan: Plan
   currentKey?: string
+  /** This card's stage in the checkout flow; 'idle' unless it is the one paying. */
+  busy: CheckoutStage
+  /** True while any plan is paying — one checkout at a time. */
+  disabled: boolean
   onSelect: () => void
 }) {
   const isCurrent = plan.key === currentKey
@@ -265,9 +315,15 @@ function PlanCard({
             variant={plan.isFree ? 'outline' : 'primary'}
             size="md"
             onClick={onSelect}
+            isLoading={busy !== 'idle'}
+            disabled={disabled}
             className="w-full"
           >
-            {plan.isFree ? 'Switch to Free' : `Choose ${plan.name}`}
+            {busy === 'idle'
+              ? plan.isFree
+                ? 'Switch to Free'
+                : `Choose ${plan.name}`
+              : STAGE_LABELS[busy]}
           </Button>
         )}
       </div>
@@ -320,5 +376,39 @@ function InvoicesCard({ invoices }: { invoices: Invoice[] }) {
         )}
       </Card>
     </Reveal>
+  )
+}
+
+/**
+ * The payment disclosures an owner should see next to the buy button, rather
+ * than only buried in the policy pages. Razorpay's own onboarding checks expect
+ * these terms to be reachable from wherever money is taken.
+ */
+function BillingTerms() {
+  return (
+    <Card elevation="soft" padding="md" className="space-y-2">
+      <div className="flex items-center gap-2">
+        <ShieldCheck className="size-4 text-success" aria-hidden />
+        <h2 className="text-body-lg font-semibold text-foreground">Payments &amp; refunds</h2>
+      </div>
+      <p className="text-caption text-text-secondary">
+        Payments are processed securely by Razorpay. Listee never sees or stores your card, UPI or
+        bank details. Prices are in Indian Rupees and include applicable taxes.
+      </p>
+      <p className="text-caption text-text-secondary">
+        Plans do not auto-renew — you pay once per billing period and choose whether to renew.
+      </p>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-caption">
+        <Link to={ROUTES.terms} className="font-medium text-primary underline">
+          Terms &amp; Conditions
+        </Link>
+        <Link to={ROUTES.refund} className="font-medium text-primary underline">
+          Refund Policy
+        </Link>
+        <Link to={ROUTES.privacy} className="font-medium text-primary underline">
+          Privacy Policy
+        </Link>
+      </div>
+    </Card>
   )
 }

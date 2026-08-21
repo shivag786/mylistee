@@ -15,6 +15,7 @@ import type {
   AdminCustomer,
   AdminDashboard,
   AdminOffer,
+  AdminPayment,
   AdminReview,
   AuditLog,
   CategoryInput,
@@ -27,6 +28,8 @@ import type {
   ImportLog,
   ImportPreviewResult,
   ListFilters,
+  PaymentFilters,
+  PaymentsPage,
   Plan,
   PlatformSettings,
   RevenueFilters,
@@ -169,6 +172,19 @@ export const adminService = {
     apiClient.getPage<AdminReview>('admin/reviews', { query: toQuery(f) }),
   setReviewStatus: (id: string, status: string) =>
     apiClient.patch<AdminReview>(`admin/reviews/${id}/status`, { status }),
+
+  /** Every gateway payment attempt, newest first — abandoned and failed included. */
+  payments: (f?: PaymentFilters): Promise<PaymentsPage> =>
+    // getPage keeps the envelope's `meta` verbatim, and this endpoint adds the
+    // captured/refunded totals to it — which PaginationMeta does not model.
+    // Narrowed here, at the one place that knows this endpoint's contract.
+    apiClient.getPage<AdminPayment>('admin/payments', {
+      query: toQuery(f),
+    }) as Promise<PaymentsPage>,
+
+  /** Refund all (amount omitted) or part of a captured payment. */
+  refundPayment: (id: string, payload: { amount?: number; reason?: string }) =>
+    apiClient.post<AdminPayment>(`admin/payments/${id}/refund`, payload),
 
   revenue: (f?: RevenueFilters) =>
     apiClient.get<RevenueResponse>('admin/revenue', {

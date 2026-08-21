@@ -23,6 +23,14 @@ export const ROUTES = {
   /** Business profile opened from a QR scan. */
   businessProfile: (slug = ':slug') => `/b/${slug}`,
 
+  /**
+   * Legal pages. Public and signed-out reachable on purpose — payment providers
+   * (and app stores) check these URLs load without an account.
+   */
+  terms: '/terms',
+  privacy: '/privacy',
+  refund: '/refund',
+
   // Business owner
   owner: {
     root: '/business',
@@ -57,6 +65,7 @@ export const ROUTES = {
     reviews: '/admin/reviews',
     plans: '/admin/plans',
     revenue: '/admin/revenue',
+    payments: '/admin/payments',
     broadcast: '/admin/broadcast',
     banners: '/admin/banners',
     featureFlags: '/admin/feature-flags',

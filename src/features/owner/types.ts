@@ -263,3 +263,34 @@ export interface BusinessFormValues {
   logo?: File | null
   cover?: File | null
 }
+
+/**
+ * Everything the browser needs to open Razorpay Checkout for a plan.
+ *
+ * Built server-side (POST business/subscription/checkout) — including `keyId`, so
+ * the frontend ships no gateway configuration and a key rotation never needs a
+ * redeploy. `amount` is in paise, matching what Checkout expects.
+ */
+export interface CheckoutSession {
+  paymentId: string
+  keyId: string
+  orderId: string
+  amount: number
+  amountDisplay: number
+  currency: string
+  planKey: string
+  planName: string
+  name: string
+  description: string
+  themeColor: string | null
+  logo: string | null
+  prefill: { name: string; email: string; contact: string }
+  notes: Record<string, string>
+}
+
+/** The signed handshake Checkout hands back; only the server can validate it. */
+export interface PaymentHandshake {
+  razorpayOrderId: string
+  razorpayPaymentId: string
+  razorpaySignature: string
+}
