@@ -75,6 +75,7 @@ export function LoginPage() {
           isLoading={loading}
           onClick={handleGoogle}
           leftIcon={<GoogleIcon />}
+          className="text-white"
         >
           {MESSAGES.cta.signInGoogle}
         </Button>
