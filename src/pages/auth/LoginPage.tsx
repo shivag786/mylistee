@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Logo } from '@/components/icons/Logo'
+import { GoogleIcon } from '@/components/icons/GoogleIcon'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { REDIRECT_IN_PROGRESS } from '@/features/auth/services/firebaseAuth'
@@ -69,7 +70,12 @@ export function LoginPage() {
         transition={{ delay: 0.08 }}
         className="w-full max-w-sm space-y-3"
       >
-        <Button fullWidth isLoading={loading} onClick={handleGoogle}>
+        <Button
+          fullWidth
+          isLoading={loading}
+          onClick={handleGoogle}
+          leftIcon={<GoogleIcon />}
+        >
           {MESSAGES.cta.signInGoogle}
         </Button>
 
@@ -80,7 +86,12 @@ export function LoginPage() {
         )}
 
         {/* Skip — keep browsing as a guest */}
-        <Button variant="ghost" fullWidth onClick={() => navigate(ROUTES.home, { replace: true })}>
+        <Button
+          variant="ghost"
+          fullWidth
+          className="underline underline-offset-4"
+          onClick={() => navigate(ROUTES.home, { replace: true })}
+        >
           Skip for now
         </Button>
 
