@@ -193,13 +193,15 @@ function ProductRow({
       padding="sm"
     >
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
+        {/* items-start + the dot's nudge keep the veg/non-veg marker on the
+            first line now that long names wrap instead of truncating. */}
+        <div className="flex items-start gap-1.5">
           {product.foodType && (
-            <span className={`grid size-3 shrink-0 place-items-center rounded-[3px] border-2 ${FOOD_DOT[product.foodType] ?? ''}`} aria-label={product.foodType}>
+            <span className={`mt-0.5 grid size-3 shrink-0 place-items-center rounded-[3px] border-2 ${FOOD_DOT[product.foodType] ?? ''}`} aria-label={product.foodType}>
               <span className="size-1 rounded-full bg-current" />
             </span>
           )}
-          <p className="truncate text-caption font-semibold text-foreground">{product.name}</p>
+          <p className="text-caption font-semibold break-words text-foreground">{product.name}</p>
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-1">

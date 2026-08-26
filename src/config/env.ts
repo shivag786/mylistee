@@ -17,6 +17,9 @@ interface AppEnv {
     appId: string
     vapidKey: string
   }
+  /** Google Maps Geocoding key. Optional — without it the header shows a
+   *  generic "Current location" instead of a place name. */
+  googleMapsApiKey: string
 }
 
 const raw = import.meta.env
@@ -34,11 +37,15 @@ export const env: AppEnv = {
     appId: raw.VITE_FIREBASE_APP_ID ?? '',
     vapidKey: raw.VITE_FIREBASE_VAPID_KEY ?? '',
   },
+  googleMapsApiKey: raw.VITE_GOOGLE_MAPS_API_KEY ?? '',
 }
 
 /** True when Firebase has enough config to initialize (avoids crashes in dev). */
 export const isFirebaseConfigured = Boolean(
   env.firebase.apiKey && env.firebase.projectId && env.firebase.appId,
 )
+
+/** True when coordinates can be turned into a readable place name. */
+export const isGeocodingConfigured = Boolean(env.googleMapsApiKey)
 
 export const isProduction = env.appEnv === 'production'

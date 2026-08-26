@@ -33,6 +33,7 @@ import { useDeals, useFestivalDeals } from '@/features/deals/useDeals'
 import { ComboDealCard } from '@/features/combos/components/ComboDealCard'
 import { useComboFeed } from '@/features/combos/useComboFeed'
 import { useAppConfig } from '@/features/system/hooks/useAppConfig'
+import { useAppLocation } from '@/features/location/useAppLocation'
 import { useCoinSummary } from '@/features/wallet/hooks/useCoins'
 import { CoinsProgressCard } from '@/features/wallet/components/CoinsProgressCard'
 import { Card } from '@/components/ui/card'
@@ -66,7 +67,10 @@ export function HomePage() {
   const deals = useDeals()
   // No `withContent` filter: it hides any shop without a live offer / visible
   // product / visible combo, which is every newly added shop.
-  const nearby = useNearbyBusinesses()
+  // Coordinates come from the header chip, so the row re-sorts by distance as
+  // soon as a location is set.
+  const { coords } = useAppLocation()
+  const nearby = useNearbyBusinesses(coords ? { lat: coords.lat, lng: coords.lng } : {})
   const topBanners = useBannerSlot('home_top')
   const afterCombosBanners = useBannerSlot('home_after_combos')
 

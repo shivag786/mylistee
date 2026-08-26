@@ -21,6 +21,18 @@ import { BusinessImageCell } from '@/features/admin/components/BusinessImageCell
 import { useAdminBusinesses, useBusinessActions } from '@/features/admin/hooks/useAdmin'
 import type { AdminBusiness, ListFilters } from '@/features/admin/types'
 
+/** "12 Aug 2026, 06:42 pm" — when the business was registered. */
+function formatRegistered(iso: string | null): { date: string; time: string } | null {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+
+  return {
+    date: d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+    time: d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+  }
+}
+
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
   { value: 'pending', label: 'Pending' },
@@ -116,6 +128,21 @@ export function AdminBusinessesPage() {
           {b.featured && <Badge tone="premium" size="sm">Featured</Badge>}
         </div>
       ),
+    },
+    {
+      key: 'registered',
+      label: 'Registered',
+      className: 'whitespace-nowrap tabular-nums',
+      cell: (b) => {
+        const at = formatRegistered(b.createdAt)
+        if (!at) return <span className="text-text-muted">—</span>
+        return (
+          <div>
+            <p className="text-foreground">{at.date}</p>
+            <p className="text-small text-text-muted">{at.time}</p>
+          </div>
+        )
+      },
     },
     {
       key: 'activity',
