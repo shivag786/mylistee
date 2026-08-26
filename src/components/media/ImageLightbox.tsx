@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import { Dialog as DialogPrimitive } from 'radix-ui'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
@@ -54,6 +54,13 @@ export function ImageLightbox({ images, open, onOpenChange, startIndex = 0, titl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, many, index])
 
+  // Content covers the whole viewport, so it sits on top of the Overlay and
+  // Radix's own outside-click never fires. Anything not marked as chrome
+  // (the photo, its close button, arrows, caption, dots) counts as backdrop.
+  function onBackdropClick(e: MouseEvent<HTMLElement>) {
+    if (!(e.target as HTMLElement).closest('[data-lightbox-keep]')) onOpenChange(false)
+  }
+
   if (images.length === 0) return null
   const current = images[index]
 
@@ -64,39 +71,44 @@ export function ImageLightbox({ images, open, onOpenChange, startIndex = 0, titl
         <DialogPrimitive.Content
           className="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none select-none"
           aria-describedby={undefined}
+          onClick={onBackdropClick}
         >
           <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title>
 
-          {/* Close */}
-          <DialogPrimitive.Close
-            className="absolute right-4 top-4 z-10 grid size-10 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            aria-label="Close"
-          >
-            <X className="size-5" aria-hidden />
-          </DialogPrimitive.Close>
-
           <div className="relative flex h-full w-full max-w-3xl flex-col items-center justify-center gap-4">
             <div className="relative flex w-full flex-1 items-center justify-center overflow-hidden">
-              <AnimatePresence initial={false} custom={dir} mode="popLayout">
-                <motion.img
-                  key={current.url + index}
-                  src={current.url}
-                  alt={current.label ?? ''}
-                  custom={dir}
-                  drag={many ? 'x' : false}
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.2}
-                  onDragEnd={(_, info) => {
-                    if (info.offset.x < -80) go(index + 1)
-                    else if (info.offset.x > 80) go(index - 1)
-                  }}
-                  initial={reduce ? { opacity: 0 } : { opacity: 0, x: dir * 60 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={reduce ? { opacity: 0 } : { opacity: 0, x: dir * -60 }}
-                  transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                  className="max-h-[75vh] max-w-full cursor-grab rounded-2xl object-contain shadow-2xl active:cursor-grabbing"
-                />
-              </AnimatePresence>
+              {/* Shrink-wraps the photo so the close button can sit on it. The
+                  image is capped in viewport units, not %, so this wrapper's
+                  fit-content width has a real size to resolve against. */}
+              <div className="relative flex max-w-full" data-lightbox-keep>
+                <AnimatePresence initial={false} custom={dir} mode="popLayout">
+                  <motion.img
+                    key={current.url + index}
+                    src={current.url}
+                    alt={current.label ?? ''}
+                    custom={dir}
+                    drag={many ? 'x' : false}
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.2}
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x < -80) go(index + 1)
+                      else if (info.offset.x > 80) go(index - 1)
+                    }}
+                    initial={reduce ? { opacity: 0 } : { opacity: 0, x: dir * 60 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={reduce ? { opacity: 0 } : { opacity: 0, x: dir * -60 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="max-h-[75vh] max-w-[calc(100vw-2rem)] cursor-grab rounded-2xl object-contain shadow-2xl active:cursor-grabbing"
+                  />
+                </AnimatePresence>
+
+                <DialogPrimitive.Close
+                  className="absolute right-2 top-2 z-10 grid size-9 place-items-center rounded-full bg-black/50 text-white backdrop-blur transition-colors hover:bg-black/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  aria-label="Close"
+                >
+                  <X className="size-5" aria-hidden />
+                </DialogPrimitive.Close>
+              </div>
 
               {many && (
                 <>
@@ -107,11 +119,13 @@ export function ImageLightbox({ images, open, onOpenChange, startIndex = 0, titl
             </div>
 
             {current.label && (
-              <p className="max-w-full truncate text-center text-body font-medium text-white/90">{current.label}</p>
+              <p className="max-w-full truncate text-center text-body font-medium text-white/90" data-lightbox-keep>
+                {current.label}
+              </p>
             )}
 
             {many && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5" data-lightbox-keep>
                 {images.map((img, i) => (
                   <button
                     key={img.url + i}
@@ -138,6 +152,7 @@ function NavButton({ side, onClick }: { side: 'left' | 'right'; onClick: () => v
     <button
       type="button"
       onClick={onClick}
+      data-lightbox-keep
       aria-label={side === 'left' ? 'Previous image' : 'Next image'}
       className={cn(
         'absolute top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white',

@@ -4,7 +4,7 @@ import { useReducedMotion } from 'framer-motion'
 import { Search } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
 
-const WORDS = ['cafés nearby', 'salons & spas', "today's offers", 'trending shops', 'coins to earn']
+const WORDS = ['cafés nearby', "today's offers", 'trending shops', 'coins to earn']
 
 /**
  * Search entry with a typewriter placeholder that cycles through what you can
