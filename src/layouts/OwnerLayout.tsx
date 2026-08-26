@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
-import { LogOut, Store } from 'lucide-react'
+import { LogOut, Menu, Store } from 'lucide-react'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Logo } from '@/components/icons/Logo'
 import { Avatar } from '@/components/ui/avatar'
 import { IconButton } from '@/components/ui/icon-button'
@@ -24,11 +26,18 @@ import { cn } from '@/utils/cn'
  */
 export function OwnerLayout() {
   const location = useLocation()
+  const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const { data: business, isLoading, isError } = useOwnerBusiness()
   const { data: config } = useAppConfig()
   const nav = visibleOwnerNav(OWNER_NAV, config?.ownerModules)
+
+  // Tapping a drawer link navigates but leaves the drawer mounted, so close it
+  // whenever the route changes.
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [location.pathname])
 
   async function handleSignOut() {
     await signOut()
@@ -67,12 +76,17 @@ export function OwnerLayout() {
       {/* Mobile top bar */}
       <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur lg:hidden">
         <div className="app-container flex h-16 items-center justify-between">
-          <Link to={ROUTES.owner.dashboard} aria-label="Business dashboard" className="flex items-center gap-2">
-            <Logo size={30} />
-            <span className="max-w-40 truncate text-body font-semibold text-foreground">
-              {businessName}
-            </span>
-          </Link>
+          <div className="flex items-center gap-1">
+            <IconButton aria-label="Open menu" onClick={() => setMenuOpen(true)}>
+              <Menu aria-hidden />
+            </IconButton>
+            <Link to={ROUTES.owner.dashboard} aria-label="Business dashboard" className="flex items-center gap-2">
+              <Logo size={30} />
+              <span className="max-w-32 truncate text-body font-semibold text-foreground">
+                {businessName}
+              </span>
+            </Link>
+          </div>
           <div className="flex items-center gap-2">
             <IconButton aria-label="Sign out" onClick={() => void handleSignOut()}>
               <LogOut aria-hidden />
@@ -81,6 +95,22 @@ export function OwnerLayout() {
           </div>
         </div>
       </header>
+
+      {/* Mobile side menu — the bottom bar only holds five tabs, so everything
+          else (Tables & service, Redeem, Reviews, Analytics, Plan & billing, …)
+          lives here rather than being unreachable on a phone. */}
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent side="left" className="w-72 p-0 lg:hidden">
+          <SheetTitle className="sr-only">Business menu</SheetTitle>
+          <OwnerSidebar
+            nav={nav}
+            businessName={businessName}
+            businessLogo={business?.logoUrl}
+            userName={user?.name}
+            onSignOut={() => void handleSignOut()}
+          />
+        </SheetContent>
+      </Sheet>
 
       <main id="main-content" className="app-container max-w-5xl flex-1 py-5 pb-24 lg:pb-8">
         <AnimatePresence mode="wait">

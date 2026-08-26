@@ -11,11 +11,18 @@ export function useRecommendedBusinesses() {
   })
 }
 
-/** Shops onboarded in the last 14 days — the home "New shops" row. */
+/**
+ * Shops onboarded in the last 14 days — the home "New shops" row.
+ *
+ * Deliberately WITHOUT `withContent`: that filter requires a live offer, a
+ * visible product or a visible combo, and a shop that was just added has none
+ * of those yet. It was keeping brand-new shops off the one row that exists to
+ * show them.
+ */
 export function useNewBusinesses() {
   return useQuery({
     queryKey: queryKeys.businesses.new,
-    queryFn: () => businessService.list({ new: 1, withContent: 1, sort: 'newest', perPage: 12 }),
+    queryFn: () => businessService.list({ new: 1, sort: 'newest', perPage: 12 }),
     staleTime: 1000 * 60 * 5,
   })
 }

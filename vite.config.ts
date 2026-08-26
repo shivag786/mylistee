@@ -52,11 +52,18 @@ export default defineConfig({
             urlPattern: ({ url }) =>
               url.pathname.startsWith('/storage/') ||
               /\.(?:png|jpe?g|webp|gif|svg)$/.test(url.pathname),
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'listee-images',
               expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 7 },
-              cacheableResponse: { statuses: [0, 200] },
+              // 200 only -- NOT 0. Images are cross-origin (app on listee.org,
+              // files on the API host), so a plain <img> makes a no-cors request
+              // whose response is opaque and reports status 0 whether it
+              // succeeded or 404'd. Allowing 0 let failed loads into the cache,
+              // and CacheFirst then served that failure for the full week --
+              // the "hard refresh to get images back" bug. Opaque responses are
+              // simply not cached now; the browser's HTTP cache still applies.
+              cacheableResponse: { statuses: [200] },
             },
           },
         ],

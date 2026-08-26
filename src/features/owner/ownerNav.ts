@@ -42,8 +42,12 @@ export interface OwnerNavItem {
   /** Compact label for the mobile bottom nav. */
   shortLabel: string
   icon: LucideIcon
-  /** Hidden from the mobile bottom nav (still on the desktop sidebar). */
-  desktopOnly?: boolean
+  /**
+   * Shown in the horizontal bottom nav on mobile. Everything else lives in the
+   * side menu — the desktop sidebar, or the drawer behind the mobile menu
+   * button — so every page stays reachable on a phone.
+   */
+  bottomNav?: boolean
   /** Admin-toggleable module id; absent ⇒ core item, always shown. */
   module?: OwnerModuleId
 }
@@ -53,24 +57,24 @@ export interface OwnerNavItem {
  * the mobile bottom nav (document/phase/07). Every feature is listed here.
  */
 export const OWNER_NAV: OwnerNavItem[] = [
-  { to: ROUTES.owner.dashboard, label: 'Dashboard', shortLabel: 'Home', icon: LayoutDashboard },
-  { to: ROUTES.owner.orders, label: 'Orders', shortLabel: 'Orders', icon: ClipboardList, module: 'orders' },
-  { to: ROUTES.owner.products, label: 'Products', shortLabel: 'Menu', icon: Package, module: 'products' },
-  { to: ROUTES.owner.tables, label: 'Tables & service', shortLabel: 'Tables', icon: Armchair, desktopOnly: true, module: 'tables' },
-  { to: ROUTES.owner.combos, label: 'Combos', shortLabel: 'Combos', icon: Layers, desktopOnly: true, module: 'combos' },
+  { to: ROUTES.owner.dashboard, label: 'Dashboard', shortLabel: 'Home', icon: LayoutDashboard, bottomNav: true },
+  { to: ROUTES.owner.products, label: 'Products', shortLabel: 'Product', icon: Package, bottomNav: true, module: 'products' },
+  { to: ROUTES.owner.combos, label: 'Combos', shortLabel: 'Combo', icon: Layers, bottomNav: true, module: 'combos' },
+  { to: ROUTES.owner.orders, label: 'Orders', shortLabel: 'Order', icon: ClipboardList, bottomNav: true, module: 'orders' },
+  { to: ROUTES.owner.profile, label: 'Business profile', shortLabel: 'Profile', icon: Store, bottomNav: true },
+  { to: ROUTES.owner.tables, label: 'Tables & service', shortLabel: 'Tables', icon: Armchair, module: 'tables' },
+  { to: ROUTES.owner.redeem, label: 'Redeem', shortLabel: 'Redeem', icon: ScanLine, module: 'redeem' },
+  { to: ROUTES.owner.reviews, label: 'Reviews', shortLabel: 'Reviews', icon: MessageSquare, module: 'reviews' },
+  { to: ROUTES.owner.analytics, label: 'Analytics', shortLabel: 'Stats', icon: BarChart3, module: 'analytics' },
+  { to: ROUTES.owner.subscription, label: 'Plan & billing', shortLabel: 'Plan', icon: CreditCard },
   { to: ROUTES.owner.growSales, label: 'Grow sales', shortLabel: 'Grow', icon: Megaphone, module: 'grow_sales' },
   { to: ROUTES.owner.loyalty, label: 'Loyalty', shortLabel: 'Coins', icon: Coins, module: 'loyalty' },
-  { to: ROUTES.owner.redeem, label: 'Redeem', shortLabel: 'Redeem', icon: ScanLine, module: 'redeem' },
-  { to: ROUTES.owner.offers, label: 'Spin rewards', shortLabel: 'Rewards', icon: Tag, desktopOnly: true, module: 'spin_rewards' },
-  { to: ROUTES.owner.analytics, label: 'Analytics', shortLabel: 'Stats', icon: BarChart3, desktopOnly: true, module: 'analytics' },
-  { to: ROUTES.owner.reviews, label: 'Reviews', shortLabel: 'Reviews', icon: MessageSquare, desktopOnly: true, module: 'reviews' },
-  { to: ROUTES.owner.subscription, label: 'Plan & billing', shortLabel: 'Plan', icon: CreditCard, desktopOnly: true },
-  { to: ROUTES.owner.qr, label: 'QR code', shortLabel: 'QR', icon: QrCode, desktopOnly: true, module: 'qr' },
-  { to: ROUTES.owner.profile, label: 'Business profile', shortLabel: 'Business', icon: Store, desktopOnly: true },
+  { to: ROUTES.owner.offers, label: 'Spin rewards', shortLabel: 'Rewards', icon: Tag, module: 'spin_rewards' },
+  { to: ROUTES.owner.qr, label: 'QR code', shortLabel: 'QR', icon: QrCode, module: 'qr' },
 ]
 
-/** Items shown in the mobile bottom nav (Plan & billing lives on the dashboard/profile there). */
-export const OWNER_MOBILE_NAV = OWNER_NAV.filter((item) => !item.desktopOnly)
+/** The five horizontal tabs: Home, Product, Combo, Order, Profile. */
+export const OWNER_MOBILE_NAV = OWNER_NAV.filter((item) => item.bottomNav)
 
 /** A module is on unless the admin explicitly disabled it (missing ⇒ on). */
 export function isOwnerModuleEnabled(modules: Record<string, boolean> | undefined, id?: OwnerModuleId): boolean {
