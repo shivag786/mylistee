@@ -5,12 +5,16 @@ import { TextField } from '@/components/forms/TextField'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ShopCard } from '@/features/businesses/components/ShopCard'
 import { useNearbyBusinesses } from '@/features/businesses/hooks/useNearbyBusinesses'
+import { useAppLocation } from '@/features/location/useAppLocation'
 import { MESSAGES } from '@/constants/messages'
 
 export function SearchPage() {
   const [searchParams] = useSearchParams()
   const [term, setTerm] = useState(() => searchParams.get('q') ?? '')
-  const { data } = useNearbyBusinesses()
+  // Same coordinates as the header chip, so search results are ordered by
+  // distance from wherever the visitor says they are.
+  const { coords } = useAppLocation()
+  const { data } = useNearbyBusinesses(coords ? { lat: coords.lat, lng: coords.lng } : {})
 
   const results = useMemo(() => {
     const q = term.trim().toLowerCase()

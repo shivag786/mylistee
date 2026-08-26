@@ -6,6 +6,7 @@ import { PageTransition } from '@/components/motion/PageTransition'
 import { SuspenseOutlet } from '@/app/PageLoader'
 import { GlobalCartBar } from '@/features/orders/GlobalCartBar'
 import { LegalFooter } from '@/components/navigation/LegalFooter'
+import { LocationProvider } from '@/features/location/LocationProvider'
 
 /**
  * Shell for the customer-facing app: fixed app bar, scrollable content with
@@ -14,21 +15,25 @@ import { LegalFooter } from '@/components/navigation/LegalFooter'
 export function CustomerLayout() {
   const location = useLocation()
 
+  // Wraps the whole customer shell so the header chip and every shop list read
+  // the same fix — two useUserLocation instances would prompt separately.
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
-      <AppBar />
-      <main id="main-content" className="app-container flex-1 py-4 pb-6">
-        <AnimatePresence mode="wait">
-          <PageTransition key={location.pathname}>
-            <SuspenseOutlet>
-              <Outlet />
-            </SuspenseOutlet>
-          </PageTransition>
-        </AnimatePresence>
-      </main>
-      <LegalFooter />
-      <GlobalCartBar />
-      <BottomNav />
-    </div>
+    <LocationProvider>
+      <div className="flex min-h-dvh flex-col bg-background">
+        <AppBar />
+        <main id="main-content" className="app-container flex-1 py-4 pb-6">
+          <AnimatePresence mode="wait">
+            <PageTransition key={location.pathname}>
+              <SuspenseOutlet>
+                <Outlet />
+              </SuspenseOutlet>
+            </PageTransition>
+          </AnimatePresence>
+        </main>
+        <LegalFooter />
+        <GlobalCartBar />
+        <BottomNav />
+      </div>
+    </LocationProvider>
   )
 }

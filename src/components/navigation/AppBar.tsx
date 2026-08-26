@@ -7,6 +7,7 @@ import { IconButton } from '@/components/ui/icon-button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useUnreadCount } from '@/features/notifications/hooks/useNotifications'
 import { CoinsPill } from '@/features/wallet/components/CoinsPill'
+import { LocationChip } from '@/features/location/LocationChip'
 
 /** Top app bar: logo left, actions right, height 64 (document-00A §18). */
 export function AppBar() {
@@ -16,10 +17,15 @@ export function AppBar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur">
       <div className="app-container flex h-16 items-center justify-between">
-        <Link to={ROUTES.home} aria-label="Listee home">
-          <Logo size={32} showWordmark />
-        </Link>
-        <div className="flex items-center gap-2">
+        {/* The wordmark gives way to the location chip: the chip has to be able
+            to show a long area name, and the mark alone still identifies the app. */}
+        <div className="flex min-w-0 flex-1 items-center gap-1">
+          <Link to={ROUTES.home} aria-label="Listee home" className="shrink-0">
+            <Logo size={32} />
+          </Link>
+          <LocationChip className="min-w-0 max-w-[11rem]" />
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           <CoinsPill />
           <IconButton
             aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}

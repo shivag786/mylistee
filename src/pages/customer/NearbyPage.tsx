@@ -4,14 +4,14 @@ import { Zap, MapPin, LocateFixed, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { useNearbyBusinesses } from '@/features/businesses/hooks/useNearbyBusinesses'
-import { useUserLocation } from '@/features/businesses/hooks/useUserLocation'
+import { useAppLocation } from '@/features/location/useAppLocation'
 import { ShopCard } from '@/features/businesses/components/ShopCard'
 import { ShopCardSkeleton } from '@/features/businesses/components/ShopCardSkeleton'
 
 export function NearbyPage() {
   const [searchParams] = useSearchParams()
   const spinOnly = searchParams.get('spin') === '1'
-  const { coords, status, request } = useUserLocation()
+  const { coords, status, request } = useAppLocation()
 
   // With coordinates the service switches to sort=nearest and the API returns
   // each shop's distance, which ShopCard already renders.
