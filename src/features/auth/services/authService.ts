@@ -82,6 +82,14 @@ export const authService = {
     return apiClient.post<AuthUser>('auth/become-owner')
   },
 
+  /**
+   * Change the signed-in user's PIN. The server verifies the current PIN and
+   * leaves tokens intact, so the session survives — no re-login needed.
+   */
+  async changePin(currentPin: string, newPin: string): Promise<void> {
+    await apiClient.post('auth/change-pin', { currentPin, newPin })
+  },
+
   async fetchMe(): Promise<AuthUser> {
     return apiClient.get<AuthUser>('auth/me')
   },

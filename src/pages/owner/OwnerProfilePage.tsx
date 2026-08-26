@@ -19,6 +19,7 @@ import {
   SocialsFields,
 } from '@/features/owner/components/BusinessFields'
 import { GalleryManager } from '@/features/owner/components/GalleryManager'
+import { ChangePinCard } from '@/features/owner/components/ChangePinCard'
 import type { OwnerBusiness } from '@/features/owner/types'
 
 function toFormValues(b: OwnerBusiness): BusinessSchema {
@@ -56,7 +57,15 @@ export function OwnerProfilePage() {
     return <ErrorState onRetry={() => void refetch()} />
   }
 
-  return <ProfileForm business={business} />
+  // ChangePinCard sits OUTSIDE ProfileForm on purpose: that component renders a
+  // <form>, and nesting forms is invalid HTML — Enter in a PIN field would
+  // submit the business profile instead.
+  return (
+    <div className="space-y-5">
+      <ProfileForm business={business} />
+      <ChangePinCard />
+    </div>
+  )
 }
 
 function ProfileForm({ business }: { business: OwnerBusiness }) {

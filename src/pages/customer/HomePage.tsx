@@ -64,7 +64,9 @@ export function HomePage() {
   const categories = usePublicCategories()
   // Above-the-fold: fetched eagerly so there's immediate content under the hero.
   const deals = useDeals()
-  const nearby = useNearbyBusinesses({ withContent: 1 })
+  // No `withContent` filter: it hides any shop without a live offer / visible
+  // product / visible combo, which is every newly added shop.
+  const nearby = useNearbyBusinesses()
   const topBanners = useBannerSlot('home_top')
   const afterCombosBanners = useBannerSlot('home_after_combos')
 

@@ -30,6 +30,11 @@ export function ImageLightbox({ images, open, onOpenChange, startIndex = 0, titl
   const [dir, setDir] = useState(0)
   const many = images.length > 1
 
+  // Clamped during render, not in an effect: `index` survives between openings,
+  // so opening a 1-image product right after browsing a 4-image combo would
+  // read images[3] === undefined and throw before any effect could reset it.
+  const safeIndex = Math.min(Math.max(index, 0), images.length - 1)
+
   // Reset to the tapped image each time the viewer opens.
   useEffect(() => {
     if (open) setIndex(Math.min(Math.max(startIndex, 0), images.length - 1))
@@ -38,7 +43,7 @@ export function ImageLightbox({ images, open, onOpenChange, startIndex = 0, titl
   function go(next: number) {
     if (!many) return
     const wrapped = (next + images.length) % images.length
-    setDir(next > index ? 1 : -1)
+    setDir(next > safeIndex ? 1 : -1)
     setIndex(wrapped)
   }
 
@@ -46,13 +51,13 @@ export function ImageLightbox({ images, open, onOpenChange, startIndex = 0, titl
   useEffect(() => {
     if (!open || !many) return
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'ArrowRight') go(index + 1)
-      if (e.key === 'ArrowLeft') go(index - 1)
+      if (e.key === 'ArrowRight') go(safeIndex + 1)
+      if (e.key === 'ArrowLeft') go(safeIndex - 1)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, many, index])
+  }, [open, many, safeIndex])
 
   // Content covers the whole viewport, so it sits on top of the Overlay and
   // Radix's own outside-click never fires. Anything not marked as chrome
@@ -62,7 +67,7 @@ export function ImageLightbox({ images, open, onOpenChange, startIndex = 0, titl
   }
 
   if (images.length === 0) return null
-  const current = images[index]
+  const current = images[safeIndex]
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -83,7 +88,7 @@ export function ImageLightbox({ images, open, onOpenChange, startIndex = 0, titl
               <div className="relative flex max-w-full" data-lightbox-keep>
                 <AnimatePresence initial={false} custom={dir} mode="popLayout">
                   <motion.img
-                    key={current.url + index}
+                    key={current.url + safeIndex}
                     src={current.url}
                     alt={current.label ?? ''}
                     custom={dir}
@@ -91,8 +96,8 @@ export function ImageLightbox({ images, open, onOpenChange, startIndex = 0, titl
                     dragConstraints={{ left: 0, right: 0 }}
                     dragElastic={0.2}
                     onDragEnd={(_, info) => {
-                      if (info.offset.x < -80) go(index + 1)
-                      else if (info.offset.x > 80) go(index - 1)
+                      if (info.offset.x < -80) go(safeIndex + 1)
+                      else if (info.offset.x > 80) go(safeIndex - 1)
                     }}
                     initial={reduce ? { opacity: 0 } : { opacity: 0, x: dir * 60 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -112,8 +117,8 @@ export function ImageLightbox({ images, open, onOpenChange, startIndex = 0, titl
 
               {many && (
                 <>
-                  <NavButton side="left" onClick={() => go(index - 1)} />
-                  <NavButton side="right" onClick={() => go(index + 1)} />
+                  <NavButton side="left" onClick={() => go(safeIndex - 1)} />
+                  <NavButton side="right" onClick={() => go(safeIndex + 1)} />
                 </>
               )}
             </div>
@@ -134,7 +139,7 @@ export function ImageLightbox({ images, open, onOpenChange, startIndex = 0, titl
                     onClick={() => go(i)}
                     className={cn(
                       'h-1.5 rounded-full transition-all',
-                      i === index ? 'w-5 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/70',
+                      i === safeIndex ? 'w-5 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/70',
                     )}
                   />
                 ))}
