@@ -54,7 +54,14 @@ export default defineConfig({
               /\.(?:png|jpe?g|webp|gif|svg)$/.test(url.pathname),
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'listee-images',
+              // -v2 is deliberate. Entries cached under the old name were
+              // written while status 0 was allowed, so they may be cached
+              // FAILURES. Reusing the name would keep serving them: with
+              // StaleWhileRevalidate the stale entry is returned first, and the
+              // revalidation cannot replace it because the fresh opaque
+              // response is rejected by cacheableResponse below. A new name
+              // sidesteps the poisoned cache; main.tsx deletes the old one.
+              cacheName: 'listee-images-v2',
               expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 7 },
               // 200 only -- NOT 0. Images are cross-origin (app on listee.org,
               // files on the API host), so a plain <img> makes a no-cors request
