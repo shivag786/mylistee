@@ -7,6 +7,5 @@ export function usePublicCategories() {
   return useQuery<BusinessCategory[]>({
     queryKey: ['categories', 'public'],
     queryFn: () => businessService.categories(),
-    staleTime: 1000 * 60 * 30,
   })
 }

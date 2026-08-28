@@ -7,7 +7,6 @@ export function useRecommendedBusinesses() {
   return useQuery({
     queryKey: queryKeys.businesses.recommended,
     queryFn: () => businessService.list({ verified: 1, withContent: 1, sort: 'rating', perPage: 12 }),
-    staleTime: 1000 * 60 * 5,
   })
 }
 
@@ -23,6 +22,5 @@ export function useNewBusinesses() {
   return useQuery({
     queryKey: queryKeys.businesses.new,
     queryFn: () => businessService.list({ new: 1, sort: 'newest', perPage: 12 }),
-    staleTime: 1000 * 60 * 5,
   })
 }

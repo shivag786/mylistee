@@ -7,6 +7,5 @@ export function useComboFeed(limit = 12) {
   return useQuery<ComboDeal[]>({
     queryKey: ['combos', 'feed', limit],
     queryFn: () => comboFeedService.list(limit),
-    staleTime: 1000 * 60 * 3,
   })
 }
