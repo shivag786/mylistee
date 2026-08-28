@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { MapPin } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -12,6 +13,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { isGeocodingConfigured } from '@/config/env'
+import { geocodeAddress } from '@/features/location/geocodeService'
 import {
   Select,
   SelectContent,
@@ -36,6 +39,8 @@ interface FormState {
   categoryId: string
   description: string
   address: string
+  latitude: string
+  longitude: string
   phone: string
   email: string
   website: string
@@ -54,6 +59,8 @@ function initial(b: AdminBusiness | null): FormState {
     categoryId: b?.categoryId ?? '',
     description: b?.description ?? '',
     address: b?.address ?? '',
+    latitude: b?.latitude != null ? String(b.latitude) : '',
+    longitude: b?.longitude != null ? String(b.longitude) : '',
     phone: b?.phone ?? '',
     email: b?.email ?? '',
     website: b?.website ?? '',
@@ -74,6 +81,35 @@ export function BusinessEditSheet({ open, onOpenChange, business }: BusinessEdit
 
   const [form, setForm] = useState<FormState>(() => initial(business))
   const [error, setError] = useState<string | null>(null)
+  const [locating, setLocating] = useState(false)
+
+  /** Resolve the typed address into coordinates so the shop can be sorted by distance. */
+  async function fillFromAddress() {
+    const address = form.address.trim()
+    if (!address) {
+      toast.error('Enter an address first.')
+      return
+    }
+
+    setLocating(true)
+    try {
+      const coords = await geocodeAddress(address)
+      if (!coords) {
+        toast.error("Couldn't find that address.", 'Enter the coordinates manually.')
+        return
+      }
+      setForm((f) => ({
+        ...f,
+        latitude: coords.lat.toFixed(6),
+        longitude: coords.lng.toFixed(6),
+      }))
+      toast.success('Location found')
+    } catch {
+      toast.error("Couldn't reach the location service.")
+    } finally {
+      setLocating(false)
+    }
+  }
 
   useEffect(() => {
     if (open) {
@@ -100,6 +136,10 @@ export function BusinessEditSheet({ open, onOpenChange, business }: BusinessEdit
           categoryId: form.categoryId || null,
           description: form.description.trim() || null,
           address: form.address.trim() || null,
+          // Blank stays null rather than becoming 0 — 0,0 is a real place in
+          // the Atlantic and would put the shop 7,000 km from every visitor.
+          latitude: form.latitude.trim() ? Number(form.latitude) : null,
+          longitude: form.longitude.trim() ? Number(form.longitude) : null,
           phone: form.phone.trim() || null,
           email: form.email.trim() || null,
           website: form.website.trim() || null,
@@ -167,6 +207,46 @@ export function BusinessEditSheet({ open, onOpenChange, business }: BusinessEdit
           <div className="space-y-1.5">
             <Label htmlFor="b-address">Address</Label>
             <Textarea id="b-address" rows={2} value={form.address} onChange={(e) => set('address', e.target.value)} />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <Label>Map location</Label>
+              {isGeocodingConfigured && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  isLoading={locating}
+                  leftIcon={<MapPin className="size-4" aria-hidden />}
+                  onClick={() => void fillFromAddress()}
+                >
+                  Get from address
+                </Button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                aria-label="Latitude"
+                inputMode="decimal"
+                placeholder="Latitude e.g. 25.4484"
+                value={form.latitude}
+                onChange={(e) => set('latitude', e.target.value)}
+              />
+              <Input
+                aria-label="Longitude"
+                inputMode="decimal"
+                placeholder="Longitude e.g. 78.5685"
+                value={form.longitude}
+                onChange={(e) => set('longitude', e.target.value)}
+              />
+            </div>
+            {(!form.latitude.trim() || !form.longitude.trim()) && (
+              <p className="text-small text-warning">
+                Without both, this shop is left out of distance sorting and sinks to the bottom of
+                every nearby list.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

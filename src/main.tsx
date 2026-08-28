@@ -30,19 +30,32 @@ window.addEventListener('vite:preloadError', (event) => {
 })
 
 /**
- * Drop the pre-v2 image cache. It was filled while the service worker accepted
- * status 0, which for a cross-origin <img> means an opaque response that looks
- * identical whether it loaded or 404'd — so failed images were cached and
- * re-served for a week, and only a hard refresh got past them.
+ * Register the non-caching service worker (public/sw.js).
  *
- * Run unconditionally rather than once: an old service worker may still be
- * active on this device and writing to that cache until it updates. Deleting a
- * cache that isn't there is a cheap no-op.
+ * vite-plugin-pwa used to inject registerSW.js to do this; that plugin is gone,
+ * so registration is explicit. The worker caches nothing — it exists to keep
+ * the app installable and, crucially, to take over the /sw.js URL from the old
+ * Workbox worker so devices that installed it purge what it cached.
+ *
+ * Belt and braces: any Cache Storage found in this tab is deleted here too,
+ * which cleans up even if the worker never activates (unsupported, blocked, or
+ * an unregistered leftover).
  */
-if ('caches' in window) {
-  void caches.delete('listee-images').catch(() => {
-    // Storage partitioned or unavailable — nothing to clean up.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Insecure origin or the browser refused it — the app works without it.
+    })
   })
+}
+
+if ('caches' in window) {
+  void caches
+    .keys()
+    .then((names) => Promise.all(names.map((name) => caches.delete(name))))
+    .catch(() => {
+      // Storage partitioned or unavailable — nothing to clean up.
+    })
 }
 
 createRoot(document.getElementById('root')!).render(

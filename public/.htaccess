@@ -1,33 +1,36 @@
 # ---------------------------------------------------------------------------
-# Cache policy FIRST -- it is the difference between a working visit and the
-# blank screen that only a hard refresh clears.
+# NOTHING IS CACHED.
 #
-# Without an explicit Cache-Control, Apache sends just Last-Modified/ETag and
-# browsers fall back to HEURISTIC caching: they invent a freshness lifetime and
-# reuse index.html without asking the server. That stale index.html still
-# references the previous build's hashed bundles, which the next build deleted,
-# so the module fetch 404s and nothing renders.
+# Stale content caused repeated blank screens and missing images, so caching is
+# switched off outright rather than tuned. `no-store` is stronger than
+# `no-cache`: no-cache lets a browser keep a copy and revalidate, while
+# no-store forbids writing the response down at all.
 #
-# The rule: the entry points must always revalidate, the hashed assets never
-# need to.
+# The cost is real and accepted: every visit re-downloads the JS/CSS bundles
+# and fonts instead of reusing them. If the bandwidth becomes a problem later,
+# the safe thing to re-enable is ONLY /assets/* — those filenames contain a
+# content hash, so a changed file always arrives at a new URL and can never go
+# stale. The un-hashed entry points (index.html, sw.js, the manifest) must stay
+# uncached whatever happens; a stale index.html is what pointed the app at
+# bundles that no longer existed.
 # ---------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
 
-<IfModule mod_setenvif.c>
-  # Everything under /assets/ carries a content hash in its filename, so a
-  # changed file always arrives under a new URL and can be cached forever.
-  SetEnvIf Request_URI "^/assets/" LONG_CACHE=1
+  # A conditional request can still yield a 304 "unchanged" and let the browser
+  # reuse what it has. Dropping the validators forces a full response.
+  Header unset ETag
+  Header unset Last-Modified
 </IfModule>
 
-<IfModule mod_headers.c>
-  Header set Cache-Control "public, max-age=31536000, immutable" env=LONG_CACHE
+FileETag None
 
-  # The un-hashed entry points. `no-cache` does NOT mean "don't cache" -- it
-  # means "cache, but revalidate every time", so these still return a cheap 304
-  # when unchanged. Service worker scripts are here too: a stale sw.js can never
-  # update itself, which strands a device on an old build indefinitely.
-  <FilesMatch "^(index\.html|sw\.js|registerSW\.js|firebase-messaging-sw\.js|manifest\.webmanifest)$">
-    Header set Cache-Control "no-cache, must-revalidate"
-  </FilesMatch>
+<IfModule mod_expires.c>
+  # Overrides any inherited ExpiresDefault from the server config.
+  ExpiresActive On
+  ExpiresDefault "access plus 0 seconds"
 </IfModule>
 
 # ---------------------------------------------------------------------------

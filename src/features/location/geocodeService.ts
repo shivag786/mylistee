@@ -62,3 +62,36 @@ export async function reverseGeocode(coords: Coords, signal?: AbortSignal): Prom
 
   return body.results[0].formatted_address?.split(',')[0] ?? null
 }
+
+/**
+ * Address -> coordinates, for the admin business form.
+ *
+ * A business with no lat/lng is invisible to distance sorting: `distance()`
+ * returns null on the server and null sorts to INF, so it sits at the bottom of
+ * every nearby list regardless of where the visitor is. This turns the address
+ * an admin already typed into a usable position in one click.
+ */
+export async function geocodeAddress(
+  address: string,
+  signal?: AbortSignal,
+): Promise<Coords | null> {
+  if (!isGeocodingConfigured || !address.trim()) return null
+
+  const url = new URL('https://maps.googleapis.com/maps/api/geocode/json')
+  url.searchParams.set('address', address)
+  url.searchParams.set('key', env.googleMapsApiKey)
+  // Biases results to India; without it an ambiguous local address can resolve
+  // to a same-named place on another continent.
+  url.searchParams.set('region', 'in')
+
+  const response = await fetch(url, { signal })
+  if (!response.ok) return null
+
+  const body = (await response.json()) as GeocodeResponse & {
+    results?: Array<{ geometry?: { location?: { lat: number; lng: number } } }>
+  }
+  if (body.status !== 'OK' || !body.results?.length) return null
+
+  const location = body.results[0].geometry?.location
+  return location ? { lat: location.lat, lng: location.lng } : null
+}

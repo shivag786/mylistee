@@ -6,6 +6,5 @@ export function useAppConfig() {
   return useQuery({
     queryKey: ['app', 'config'],
     queryFn: () => configService.get(),
-    staleTime: 5 * 60 * 1000,
   })
 }

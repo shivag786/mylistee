@@ -7,7 +7,6 @@ export function useDeals(limit = 12) {
   return useQuery<Deal[]>({
     queryKey: ['deals', { limit }],
     queryFn: () => dealService.list({ limit }),
-    staleTime: 1000 * 60 * 3,
   })
 }
 
@@ -16,6 +15,5 @@ export function useFestivalDeals(limit = 12) {
   return useQuery<Deal[]>({
     queryKey: ['deals', { limit, type: 'festival' }],
     queryFn: () => dealService.list({ limit, type: 'festival' }),
-    staleTime: 1000 * 60 * 3,
   })
 }

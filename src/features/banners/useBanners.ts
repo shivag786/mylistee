@@ -9,7 +9,6 @@ export function useBanners() {
   return useQuery({
     queryKey: ['banners', 'feed'] as const,
     queryFn: () => apiClient.get<BannerFeed>('banners'),
-    staleTime: 1000 * 60 * 5,
   })
 }
 

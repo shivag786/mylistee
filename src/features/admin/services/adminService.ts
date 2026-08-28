@@ -90,6 +90,8 @@ export const adminService = {
       category_id: input.categoryId ?? null,
       description: input.description ?? null,
       address: input.address ?? null,
+      latitude: input.latitude ?? null,
+      longitude: input.longitude ?? null,
       phone: input.phone ?? null,
       email: input.email ?? null,
       website: input.website ?? null,

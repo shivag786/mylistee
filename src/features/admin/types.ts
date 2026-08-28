@@ -38,6 +38,8 @@ export interface AdminBusiness {
   categoryId: string | null
   description: string | null
   address: string | null
+  latitude: number | null
+  longitude: number | null
   phone: string | null
   email: string | null
   website: string | null
@@ -65,6 +67,9 @@ export interface BusinessUpdateInput {
   categoryId?: string | null
   description?: string | null
   address?: string | null
+  /** Sent as numbers or null — a business without both cannot be distance-sorted. */
+  latitude?: number | null
+  longitude?: number | null
   phone?: string | null
   email?: string | null
   website?: string | null

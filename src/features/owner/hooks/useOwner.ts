@@ -44,7 +44,6 @@ export function useCategories() {
   return useQuery({
     queryKey: ownerKeys.categories,
     queryFn: () => categoryService.list(),
-    staleTime: 1000 * 60 * 60, // categories rarely change
   })
 }
 
@@ -95,7 +94,6 @@ export function usePlans() {
   return useQuery<Plan[]>({
     queryKey: ownerKeys.plans,
     queryFn: () => subscriptionService.listPlans(),
-    staleTime: 1000 * 60 * 30,
   })
 }
 
@@ -241,7 +239,6 @@ export function useOfferSuggestions(enabled: boolean) {
     queryKey: ownerKeys.offerSuggestions,
     queryFn: () => ownerService.getOfferSuggestions(),
     enabled,
-    staleTime: 1000 * 60 * 5,
   })
 }
 
