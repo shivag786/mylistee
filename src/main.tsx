@@ -47,6 +47,32 @@ if ('serviceWorker' in navigator) {
       // Insecure origin or the browser refused it — the app works without it.
     })
   })
+
+  // Backstop for the reload that sw.js performs on activate, for browsers that
+  // refuse WindowClient.navigate(). Only meaningful when this bundle is already
+  // running; on the first visit after the switch the page is still the old one
+  // and the worker has to do it.
+  //
+  // `controllerchange` fires once, when a newly installed worker claims the
+  // page. The sessionStorage flag makes a loop impossible even if a browser
+  // fires it more than once.
+  // Captured before any worker claims: null means this page loaded WITHOUT a
+  // controller, i.e. this is a first-ever registration. Nothing stale was
+  // served, so there is nothing to escape — reloading there would just make
+  // every new visitor's first visit load twice.
+  const hadController = Boolean(navigator.serviceWorker.controller)
+  let reloading = false
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return
+    try {
+      if (sessionStorage.getItem('listee:swReloaded')) return
+      sessionStorage.setItem('listee:swReloaded', '1')
+    } catch {
+      return // Storage blocked — skip rather than risk repeating.
+    }
+    reloading = true
+    window.location.reload()
+  })
 }
 
 if ('caches' in window) {
