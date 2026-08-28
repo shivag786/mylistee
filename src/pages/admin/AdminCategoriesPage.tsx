@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Plus, Pencil, Trash2, ArrowUp, ArrowDown, Grid3x3, Home, Search } from 'lucide-react'
+import { Plus, Pencil, Trash2, ArrowUp, ArrowDown, Grid3x3, Home, Search, Power } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -21,7 +21,7 @@ import type { AdminCategory } from '@/features/admin/types'
 export function AdminCategoriesPage() {
   usePageTitle('Categories')
   const { data, isLoading, isError, refetch } = useAdminCategories()
-  const { remove, reorder, setVisibility } = useCategoryActions()
+  const { update, remove, reorder, setVisibility } = useCategoryActions()
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing] = useState<AdminCategory | null>(null)
@@ -45,6 +45,21 @@ export function AdminCategoriesPage() {
   ) {
     setVisibility.mutate(
       { id: category.id, payload },
+      { onError: (err) => toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic) },
+    )
+  }
+
+  /**
+   * Activate / deactivate a category. Only an active category is offered in the
+   * business registration form — GET /categories filters on status — so this is
+   * what decides whether owners can pick it.
+   *
+   * Name is sent because the endpoint requires it; the server ignores the
+   * fields we omit, so description, icon and image are left alone.
+   */
+  function toggleActive(category: AdminCategory, active: boolean) {
+    update.mutate(
+      { id: category.id, input: { name: category.name, status: active ? 'active' : 'inactive' } },
       { onError: (err) => toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic) },
     )
   }
@@ -130,6 +145,20 @@ export function AdminCategoriesPage() {
                 </div>
 
                 <div className="space-y-1.5 rounded-xl bg-surface-muted/50 px-3 py-2">
+                  <label className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-caption font-medium text-text-secondary">
+                      <Power className="size-3.5" aria-hidden /> Active
+                    </span>
+                    <Switch
+                      checked={category.status === 'active'}
+                      onCheckedChange={(v) => toggleActive(category, v)}
+                      disabled={update.isPending}
+                      aria-label={`${category.status === 'active' ? 'Deactivate' : 'Activate'} ${category.name}`}
+                    />
+                  </label>
+                  <p className="text-small text-text-muted">
+                    Only active categories can be chosen when a business registers.
+                  </p>
                   <label className="flex items-center justify-between gap-2">
                     <span className="inline-flex items-center gap-1.5 text-caption font-medium text-text-secondary">
                       <Home className="size-3.5" aria-hidden /> Show on homepage

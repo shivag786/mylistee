@@ -6,7 +6,7 @@
 export const MESSAGES = {
   errors: {
     generic: "We couldn't complete that. Please try again.",
-    network: "You're offline. Please check your connection.",
+    network: "We couldn't connect. Please try again.",
     login: "Google login couldn't be completed. Please try again.",
     notFound: "We couldn't find that page.",
     qrInvalid: "This QR code isn't valid. Please try scanning again.",

@@ -12,6 +12,7 @@
 import { apiConfig } from '@/config/api.config'
 import { ApiError, type ApiResponse, type Paginated } from '@/types/api'
 import { storage } from '@/utils/storage'
+import { MESSAGES } from '@/constants/messages'
 
 type Query = Record<string, string | number | boolean | undefined | null>
 
@@ -95,7 +96,7 @@ async function rawRequest<T>(
     throw new ApiError(
       aborted
         ? 'The request timed out. Please try again.'
-        : "You're offline. Please check your connection.",
+        : MESSAGES.errors.network,
       0,
     )
   }

@@ -1,4 +1,4 @@
-import { Compass, ServerCrash, WifiOff, ShieldAlert, RotateCw, type LucideIcon } from 'lucide-react'
+import { Compass, ServerCrash, CloudOff, ShieldAlert, RotateCw, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 
@@ -24,10 +24,13 @@ const presets: Record<ErrorVariant, { icon: LucideIcon; title: string; descripti
     title: 'Something went wrong',
     description: "That's on us. Please try again in a moment.",
   },
+  // Used for any failed request, not only a dropped connection — the visitor
+  // is usually online and the server or the request is what went wrong. Copy
+  // stays neutral rather than blaming their connection.
   offline: {
-    icon: WifiOff,
-    title: "You're offline",
-    description: 'Check your connection and try again.',
+    icon: CloudOff,
+    title: "Couldn't load",
+    description: 'We had trouble reaching Listee. Please try again.',
   },
   permission: {
     icon: ShieldAlert,
