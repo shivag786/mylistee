@@ -9,6 +9,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 import { RequireAuth } from '@/features/auth/components/RequireAuth'
 import { RequireRole } from '@/features/auth/components/RequireRole'
 import { RedirectIfAuthenticated } from '@/features/auth/components/RedirectIfAuthenticated'
+import { AppEntryRedirect } from '@/features/auth/components/AppEntryRedirect'
 import { OwnerLayout } from '@/layouts/OwnerLayout'
 import { OwnerEntry } from '@/pages/owner/OwnerEntry'
 import { OwnerModuleGuard } from '@/features/owner/components/OwnerModuleGuard'
@@ -144,7 +145,16 @@ export function AppRouter() {
       {/* Customer app shell */}
       <Route element={<CustomerLayout />}>
         {/* Public browsing (no sign-in required) */}
-        <Route path={ROUTES.home} element={<HomePage />} />
+        {/* Staff who open the app land in their own panel rather than on the
+            customer home — see AppEntryRedirect for why entry only. */}
+        <Route
+          path={ROUTES.home}
+          element={
+            <AppEntryRedirect>
+              <HomePage />
+            </AppEntryRedirect>
+          }
+        />
         <Route path={ROUTES.nearby} element={<NearbyPage />} />
         <Route path={ROUTES.deals} element={<DealsPage />} />
         <Route path={ROUTES.search} element={<SearchPage />} />
