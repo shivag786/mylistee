@@ -14,17 +14,13 @@
  * at how their own listing appears, say) without being thrown back to the
  * dashboard.
  *
- * A visitor with no session goes to the login page for the same reason: opening
- * the app should ask who you are, not drop you into a home page that cannot
- * show you your wallet, orders or rewards.
- *
- * Customers who are signed in are left alone — `/` is already their landing
- * page. And because this is entry only, "Skip for now" still works: that is an
- * in-app navigation to `/`, so the guest gets the home page and can browse.
+ * Customers are left alone: `/` is already their landing page. So is anyone
+ * signed out — browsing without an account is the point of the home page, and
+ * the login screen is a tap away from it. Sending them to /login instead was
+ * tried and reverted.
  */
 import { Navigate, useLocation } from 'react-router-dom'
 import { Spinner } from '@/components/feedback/Spinner'
-import { ROUTES } from '@/constants/routes'
 import type { UserRole } from '@/types/common'
 import { useAuth } from '../hooks/useAuth'
 import { landingPathForRole } from '../roleRoutes'
@@ -56,11 +52,6 @@ export function AppEntryRedirect({ children }: { children: React.ReactNode }) {
   if (user && STAFF_ROLES.includes(user.role)) {
     return <Navigate to={landingPathForRole(user.role)} replace />
   }
-
-  // No session — ask who they are rather than opening on a guest home page.
-  // `replace` matters: it keeps the home page out of history, so Back from the
-  // login screen leaves the app instead of bouncing between the two.
-  if (!user) return <Navigate to={ROUTES.login} replace />
 
   return <>{children}</>
 }
