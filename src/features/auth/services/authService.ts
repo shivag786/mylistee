@@ -6,9 +6,11 @@
  */
 import { apiClient, setAuthToken } from '@/services/apiClient'
 import { isProduction } from '@/config/env'
+import { ApiError } from '@/types/api'
 import type { UserRole } from '@/types/common'
 import {
   consumeRedirectResult,
+  hasPendingRedirect,
   signInWithGoogle as firebaseGoogleSignIn,
   signOutFromFirebase,
 } from './firebaseAuth'
@@ -33,10 +35,23 @@ export const authService = {
   /**
    * Resolve a pending redirect sign-in on boot. Returns the session when the
    * user just returned from Google, or null when nothing is pending.
+   *
+   * Throws when we know the user came back from Google and still got nothing:
+   * that is the browser blocking the cross-domain auth iframe, and swallowing
+   * it silently is what made sign-in look like a dead button on those devices.
    */
   async completeRedirectSignIn(): Promise<AuthSession | null> {
+    const wasRedirecting = hasPendingRedirect()
     const idToken = await consumeRedirectResult()
-    if (!idToken) return null
+    if (!idToken) {
+      if (wasRedirecting) {
+        throw new ApiError(
+          'Google could not complete sign-in in this browser. Please try again, or open Listee in Chrome or Safari.',
+          401,
+        )
+      }
+      return null
+    }
     return exchangeIdToken(idToken)
   },
 
