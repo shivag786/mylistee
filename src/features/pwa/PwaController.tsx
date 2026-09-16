@@ -7,10 +7,21 @@
  * the device, deletes what they cached, and drops the manifest so the browser
  * stops offering to install the app.
  *
+ * The answer is also cached for next time. Whether a page is installable is
+ * settled while the browser parses the head, long before this component or its
+ * config call exist — so index.html reads that cached answer during parse.
+ * Dropping the link here only stops an install from THIS page load; the cache
+ * is what stops the next one.
+ *
+ * What it cannot do is uninstall an app somebody already installed. That icon
+ * keeps opening the site; with no worker and no manifest it is an ordinary
+ * website behind it.
+ *
  * It renders nothing.
  */
 import { useEffect } from 'react'
 import { usePwaEnabled } from './usePwaEnabled'
+import { cachePwaEnabled } from './pwaFlagCache'
 
 /** Drop the manifest link so the browser no longer treats this as installable. */
 function removeManifest(): void {
@@ -45,6 +56,9 @@ export function PwaController() {
     // Not known yet (still loading, or the config call failed). Touch nothing —
     // registering or unregistering on a guess is worse than doing neither.
     if (enabled === undefined) return
+
+    // Let the next page load act on this before the network can answer.
+    cachePwaEnabled(enabled)
 
     if (enabled) {
       restoreManifest()
