@@ -107,6 +107,10 @@ export interface PublicBusiness {
   whatsapp: string | null
   averageRating: number
   totalReviews: number
+  /** How many customers follow this shop. Visible to everyone, signed in or not. */
+  followersCount: number
+  /** Whether the current viewer follows it. Always false when signed out. */
+  isFollowing: boolean
   gallery: PublicGalleryImage[]
   offers: PublicOffer[]
   menu: PublicMenuSection[]

@@ -27,6 +27,7 @@ import { usePublicBusiness, useSpin } from '@/features/businesses/hooks/usePubli
 import { MenuList } from '@/features/businesses/components/MenuList'
 import { BusinessInfo } from '@/features/businesses/components/BusinessInfo'
 import { ReviewsSection } from '@/features/businesses/components/ReviewsSection'
+import { FollowButton } from '@/features/businesses/components/FollowButton'
 import { SpinnerWheel } from '@/features/spinner/components/SpinnerWheel'
 import { RewardModal } from '@/features/spinner/components/RewardModal'
 import { LoyaltyRewardsSection } from '@/features/wallet/components/LoyaltyRewardsSection'
@@ -183,6 +184,13 @@ export function BusinessProfilePage() {
             </span>
           )}
         </div>
+
+        <FollowButton
+          slug={business.slug}
+          name={business.name}
+          isFollowing={business.isFollowing}
+          followersCount={business.followersCount}
+        />
 
         {/* Reward / promotion / offer badges */}
         <div className="flex flex-wrap gap-1.5">

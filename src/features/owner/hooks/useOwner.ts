@@ -14,6 +14,7 @@ import {
   type OwnerCategoryRequest,
 } from '../services/ownerService'
 import { subscriptionService } from '../services/subscriptionService'
+import { followerService } from '../services/followerService'
 import type {
   AnalyticsData,
   BusinessFormValues,
@@ -35,6 +36,7 @@ export const ownerKeys = {
   plans: ['plans'] as const,
   invoices: ['owner', 'invoices'] as const,
   reviews: ['owner', 'reviews'] as const,
+  followers: ['owner', 'followers'] as const,
   offerSuggestions: ['owner', 'offer-suggestions'] as const,
   categories: ['categories'] as const,
   categoryRequests: ['owner', 'category-requests'] as const,
@@ -275,5 +277,13 @@ export function useRequestCategory() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ownerKeys.categoryRequests })
     },
+  })
+}
+
+/** The customers following this shop (owner view). */
+export function useOwnerFollowers() {
+  return useQuery({
+    queryKey: ownerKeys.followers,
+    queryFn: () => followerService.list(),
   })
 }

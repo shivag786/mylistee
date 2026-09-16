@@ -2,7 +2,14 @@
 import { apiClient } from '@/services/apiClient'
 
 export interface AppConfig {
-  flags: { homeCategoryFilter: boolean }
+  flags: {
+    homeCategoryFilter: boolean
+    /**
+     * Whether this app behaves as an installable PWA at all. Off means no
+     * install banner, no service worker, and no manifest — see PwaController.
+     */
+    pwa: boolean
+  }
   /** Admin-set new-order alert sound for owners (null = built-in ding). */
   orderSoundUrl: string | null
   /** Which owner-menu modules are enabled (admin-controlled). Missing key ⇒ on. */
