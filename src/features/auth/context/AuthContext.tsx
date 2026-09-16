@@ -7,8 +7,11 @@
 import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { getAuthToken, setAuthToken, setUnauthorizedHandler } from '@/services/apiClient'
+import { toast } from '@/utils/toast'
+import { ApiError } from '@/types/api'
 import type { UserRole } from '@/types/common'
 import { authService } from '../services/authService'
+import { clearPostLoginTarget } from '../postLoginTarget'
 import type { AuthSession, AuthStatus, AuthUser } from '../types'
 
 interface AuthContextValue {
@@ -44,7 +47,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setStatus('authenticated')
           return
         }
-      } catch {
+      } catch (err) {
+        // Only reached when the user really did come back from Google — either
+        // the browser blocked the result or the backend refused the token. Say
+        // so; silently falling through is what left people tapping a button
+        // that looked like it did nothing.
+        if (active && !getAuthToken()) {
+          toast.error(
+            err instanceof ApiError ? err.message : 'Sign-in could not be completed. Please try again.',
+          )
+        }
         // fall through to token restore
       }
 
@@ -127,6 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await authService.signOut()
+    // Otherwise the next person to sign in on this device inherits wherever the
+    // last one was headed.
+    clearPostLoginTarget()
     setUser(null)
     setStatus('unauthenticated')
     queryClient.clear()

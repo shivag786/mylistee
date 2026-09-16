@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { REDIRECT_IN_PROGRESS } from '@/features/auth/services/firebaseAuth'
 import { landingPathForRole } from '@/features/auth/roleRoutes'
+import { rememberPostLoginTarget } from '@/features/auth/postLoginTarget'
 import { firebaseErrorMessage, isCancelledSignIn } from '@/utils/firebaseErrors'
 import { MESSAGES } from '@/constants/messages'
 import { ROUTES } from '@/constants/routes'
@@ -33,6 +34,11 @@ export function LoginPage() {
   async function handleGoogle() {
     setLoading(true)
     setError(null)
+    // Stash the destination before we start: if this device falls back to the
+    // full-page redirect, `location.state` dies with the page and only this
+    // survives the trip to Google. Written on every attempt, so it can never
+    // be a leftover from an earlier one.
+    rememberPostLoginTarget(from)
     try {
       const user = await signInWithGoogle()
       toast.success(MESSAGES.success.signedIn)

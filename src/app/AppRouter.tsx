@@ -8,6 +8,7 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { RequireAuth } from '@/features/auth/components/RequireAuth'
 import { RequireRole } from '@/features/auth/components/RequireRole'
+import { RedirectIfAuthenticated } from '@/features/auth/components/RedirectIfAuthenticated'
 import { OwnerLayout } from '@/layouts/OwnerLayout'
 import { OwnerEntry } from '@/pages/owner/OwnerEntry'
 import { OwnerModuleGuard } from '@/features/owner/components/OwnerModuleGuard'
@@ -75,25 +76,42 @@ const UiShowcasePage = lazyPage(() => import('@/pages/dev/UiShowcasePage'), 'UiS
 export function AppRouter() {
   return (
     <Routes>
-      <Route path={ROUTES.login} element={<LoginPage />} />
-      <Route
-        path={ROUTES.ownerLogin}
-        element={
-          <SuspenseOutlet>
-            <OwnerLoginPage />
-          </SuspenseOutlet>
-        }
-      />
+      {/* Sign-in pages sit behind RedirectIfAuthenticated: an existing session
+          skips the form and goes straight to that role's landing page — a
+          business owner to their dashboard, an admin to the admin panel — while
+          a visitor with no session gets the login form as before.
+
+          It is also what lands a Google sign-in that fell back to the full-page
+          redirect. That flow returns on a fresh page load, so the navigate()
+          inside the login page's click handler is long gone; without this the
+          user came back signed in and still looking at the sign-in button. */}
+      <Route element={<RedirectIfAuthenticated />}>
+        <Route path={ROUTES.login} element={<LoginPage />} />
+      </Route>
+
+      {/* The staff pages bounce staff only. A signed-in customer keeps the form,
+          so they can sign in with owner credentials (or register a business)
+          without having to sign out of their customer account first. */}
+      <Route element={<RedirectIfAuthenticated roles={['business_owner', 'admin']} />}>
+        <Route
+          path={ROUTES.ownerLogin}
+          element={
+            <SuspenseOutlet>
+              <OwnerLoginPage />
+            </SuspenseOutlet>
+          }
+        />
+        <Route
+          path={ROUTES.ownerSignup}
+          element={
+            <SuspenseOutlet>
+              <OwnerSignupPage />
+            </SuspenseOutlet>
+          }
+        />
+      </Route>
       {/* Admins share the single staff sign-in link with business owners. */}
       <Route path={ROUTES.adminLogin} element={<Navigate to={ROUTES.ownerLogin} replace />} />
-      <Route
-        path={ROUTES.ownerSignup}
-        element={
-          <SuspenseOutlet>
-            <OwnerSignupPage />
-          </SuspenseOutlet>
-        }
-      />
       {/* Legal — outside every app shell so they render standalone for a visitor
           with no account (Razorpay onboarding, app store review). */}
       <Route
