@@ -15,7 +15,9 @@ import type { UserRole } from '@/types/common'
 /** Navigates to `/` on mount, standing in for an owner tapping a home link. */
 function GoHome() {
   const navigate = useNavigate()
-  useEffect(() => navigate('/'), [navigate])
+  useEffect(() => {
+    void navigate('/')
+  }, [navigate])
   return <p>leaving</p>
 }
 
