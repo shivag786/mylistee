@@ -50,6 +50,7 @@ function renderApp(
             }
           />
           <Route path="/business" element={<p>owner entry</p>} />
+          <Route path="/login" element={<p>login page</p>} />
           <Route path="/admin/dashboard" element={<p>admin panel</p>} />
           <Route path="/go-home" element={<GoHome />} />
         </Routes>
@@ -74,8 +75,15 @@ describe('AppEntryRedirect', () => {
     expect(screen.getByText('customer home')).toBeTruthy()
   })
 
-  it('leaves a signed-out visitor on the home page', () => {
+  it('asks a visitor with no session to sign in', () => {
     renderApp('/', { status: 'unauthenticated' })
+    expect(screen.getByText('login page')).toBeTruthy()
+  })
+
+  it('still lets a guest browse after choosing "Skip for now"', () => {
+    // Skip navigates to `/`, which is not app entry — otherwise the guest
+    // would bounce straight back to the login screen and be stuck there.
+    renderApp('/go-home', { status: 'unauthenticated' })
     expect(screen.getByText('customer home')).toBeTruthy()
   })
 
