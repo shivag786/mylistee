@@ -7,8 +7,34 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#E23744" />
-    <!-- Static now that vite-plugin-pwa is gone; it used to generate this. -->
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <!--
+      The manifest is added here rather than written as a plain <link>, because
+      a plain one cannot be taken back. The browser decides whether this page is
+      installable while it parses the head; the admin's `pwa` flag only arrives
+      later, over the network. Removing the link at that point is too late — the
+      app is already installable, which is exactly the bug this replaced.
+
+      So the last known answer is read from storage during parse. Unknown counts
+      as on, so a first-time visitor still gets the app; turning the flag off
+      takes effect from the next load. Keep the key in step with
+      features/pwa/pwaFlagCache.ts.
+    -->
+    <script>
+      (function () {
+        var enabled = true
+        try {
+          enabled = localStorage.getItem('listee:pwa:enabled') !== '0'
+        } catch (e) {
+          /* Storage blocked — fall back to on. */
+        }
+        if (enabled) {
+          var link = document.createElement('link')
+          link.rel = 'manifest'
+          link.href = '/manifest.webmanifest'
+          document.head.appendChild(link)
+        }
+      })()
+    </script>
     <meta
       name="description"
       content="Listee — scan, spin and win rewards at local businesses near you."
