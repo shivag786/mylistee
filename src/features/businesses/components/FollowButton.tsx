@@ -13,10 +13,16 @@
  * props into `useState`, which meant the button kept whatever it was told on
  * first render: after signing in, the follow really was saved, but the button
  * still read "Follow", so the next tap sent an unfollow. `pending` is only an
- * optimistic override for the moment between the tap and the refetch, and it is
- * dropped as soon as the profile comes back.
+ * optimistic override, dropped the moment the profile comes back agreeing with
+ * it.
+ *
+ * `isFollowing` is optional because an API without follow support simply omits
+ * it. Deferring to a server that never answers would snap the button back to
+ * "Follow" after every tap — the follow saves, and the UI insists it did not.
+ * When the field is missing the optimistic value just stays put, so the button
+ * still behaves while a backend catches up.
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { UserPlus, UserCheck } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -29,8 +35,9 @@ import { toast } from '@/utils/toast'
 interface FollowButtonProps {
   slug: string
   name: string
-  isFollowing: boolean
-  followersCount: number
+  /** Omitted by an API that predates follow support. */
+  isFollowing?: boolean
+  followersCount?: number
 }
 
 export function FollowButton({ slug, name, isFollowing, followersCount }: FollowButtonProps) {
@@ -42,24 +49,26 @@ export function FollowButton({ slug, name, isFollowing, followersCount }: Follow
   /** What we are optimistically showing, or null when the server's answer stands. */
   const [pending, setPending] = useState<boolean | null>(null)
 
-  const following = pending ?? isFollowing
-  // Nudge the count only while the server has not caught up with the tap;
-  // once `isFollowing` agrees with `pending`, the real count is already right.
-  const count =
-    followersCount + (pending === null || pending === isFollowing ? 0 : pending ? 1 : -1)
+  const following = pending ?? isFollowing ?? false
+  const serverCount = followersCount ?? 0
+  // Nudge the count only while the server has not caught up with the tap.
+  const count = serverCount + (pending === null || pending === isFollowing ? 0 : pending ? 1 : -1)
+
+  // Hand back to the server the moment it agrees — which is also what keeps the
+  // override in place when the field never arrives at all.
+  useEffect(() => {
+    if (pending !== null && isFollowing === pending) setPending(null)
+  }, [isFollowing, pending])
 
   async function setFollow(next: boolean) {
     setPending(next)
     try {
       await toggle.mutateAsync({ slug, next })
-      // Wait for the profile to come back before dropping the override, so the
-      // button never flickers through a stale value on its way to the truth.
       await qc.invalidateQueries({ queryKey: publicBusinessKeys.profile(slug) })
       if (next) toast.success(`Following ${name}`)
     } catch {
+      setPending(null) // Roll back to whatever the server last said.
       toast.error('Could not update. Please try again.')
-    } finally {
-      setPending(null)
     }
   }
 

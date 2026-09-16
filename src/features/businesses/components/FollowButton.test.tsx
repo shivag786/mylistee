@@ -21,10 +21,23 @@ vi.mock('../services/favoriteService', () => ({
   },
 }))
 
-function renderButton(status: AuthStatus, signInWithGoogle = vi.fn()) {
+function renderButton(
+  status: AuthStatus,
+  signInWithGoogle = vi.fn(),
+  initial: { isFollowing?: boolean; followersCount?: number } = {
+    isFollowing: false,
+    followersCount: 4,
+  },
+) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
-  function Harness({ isFollowing, followersCount }: { isFollowing: boolean; followersCount: number }) {
+  function Harness({
+    isFollowing,
+    followersCount,
+  }: {
+    isFollowing?: boolean
+    followersCount?: number
+  }) {
     return (
       <QueryClientProvider client={client}>
         <AuthContext.Provider
@@ -48,7 +61,9 @@ function renderButton(status: AuthStatus, signInWithGoogle = vi.fn()) {
     )
   }
 
-  const view = render(<Harness isFollowing={false} followersCount={4} />)
+  const view = render(
+    <Harness isFollowing={initial.isFollowing} followersCount={initial.followersCount} />,
+  )
   return {
     signInWithGoogle,
     /** Stand in for the profile refetch landing with the server's new answer. */
@@ -100,6 +115,18 @@ describe('FollowButton', () => {
     expect(await screen.findByRole('button', { name: /Unfollow Chai Point/i })).toBeTruthy()
     expect(screen.getByText('Following')).toBeTruthy()
     expect(screen.getByText('5')).toBeTruthy()
+  })
+
+  it('keeps working against an API that does not report follow state', async () => {
+    // An API without follow support omits `isFollowing` entirely. Deferring to
+    // an answer that never comes would snap the button back to "Follow" after
+    // every tap, so the follow saves and the UI insists it did not.
+    renderButton('authenticated', vi.fn(), {})
+
+    await userEvent.click(screen.getByRole('button', { name: /Follow Chai Point/i }))
+
+    await waitFor(() => expect(addFavorite).toHaveBeenCalledWith('chai-point'))
+    expect(await screen.findByRole('button', { name: /Unfollow Chai Point/i })).toBeTruthy()
   })
 
   it('completes the follow the visitor asked for once sign-in succeeds', async () => {
