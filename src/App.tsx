@@ -6,6 +6,7 @@ import { ConnectionStatus } from '@/components/system/ConnectionStatus'
 import { SkipToContent } from '@/components/a11y/SkipToContent'
 import { OfflineBanner } from '@/components/feedback/OfflineBanner'
 import { InstallBanner } from '@/features/pwa/InstallBanner'
+import { PwaController } from '@/features/pwa/PwaController'
 import { PushRegistrar } from '@/features/notifications/components/PushRegistrar'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -18,6 +19,7 @@ export default function App() {
           <OfflineBanner />
           <AppRouter />
           <InstallBanner />
+          <PwaController />
           <PushRegistrar />
         </BrowserRouter>
         <Toaster />

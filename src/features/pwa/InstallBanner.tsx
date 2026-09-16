@@ -3,6 +3,7 @@ import { Download, X } from 'lucide-react'
 import { Logo } from '@/components/icons/Logo'
 import { Button } from '@/components/ui/button'
 import { useInstallPrompt } from './useInstallPrompt'
+import { usePwaEnabled } from './usePwaEnabled'
 
 /**
  * Dismissible "Add to Home Screen" prompt (document/phase/11 §Install Prompt).
@@ -11,10 +12,16 @@ import { useInstallPrompt } from './useInstallPrompt'
  */
 export function InstallBanner() {
   const { canInstall, promptInstall, dismiss } = useInstallPrompt()
+  const pwaEnabled = usePwaEnabled()
+
+  // Only once the admin's flag has actually come back as on. While it is
+  // unknown, offering an install we may be about to disable would be worse
+  // than a banner that appears a moment late.
+  const show = canInstall && pwaEnabled === true
 
   return (
     <AnimatePresence>
-      {canInstall && (
+      {show && (
         <motion.div
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

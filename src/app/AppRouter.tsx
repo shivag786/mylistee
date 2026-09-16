@@ -42,6 +42,7 @@ const SubscriptionPage = lazyPage(() => import('@/pages/owner/SubscriptionPage')
 const RedeemPage = lazyPage(() => import('@/pages/owner/RedeemPage'), 'RedeemPage')
 const QrPage = lazyPage(() => import('@/pages/owner/QrPage'), 'QrPage')
 const OwnerProfilePage = lazyPage(() => import('@/pages/owner/OwnerProfilePage'), 'OwnerProfilePage')
+const OwnerFollowersPage = lazyPage(() => import('@/pages/owner/OwnerFollowersPage'), 'OwnerFollowersPage')
 
 const AdminDashboardPage = lazyPage(() => import('@/pages/admin/AdminDashboardPage'), 'AdminDashboardPage')
 const AdminBusinessesPage = lazyPage(() => import('@/pages/admin/AdminBusinessesPage'), 'AdminBusinessesPage')
@@ -190,6 +191,8 @@ export function AppRouter() {
             <Route path={ROUTES.owner.redeem} element={<OwnerModuleGuard module="redeem"><RedeemPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.qr} element={<OwnerModuleGuard module="qr"><QrPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.profile} element={<OwnerProfilePage />} />
+            {/* Core, like Dashboard — an owner can always see who follows them. */}
+            <Route path={ROUTES.owner.followers} element={<OwnerFollowersPage />} />
           </Route>
         </Route>
       </Route>

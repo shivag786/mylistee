@@ -48,7 +48,7 @@ export const ROUTES = {
     redeem: '/business/redeem',
     qr: '/business/qr',
     profile: '/business/profile',
-    customers: '/business/customers',
+    followers: '/business/followers',
     subscription: '/business/subscription',
   },
 

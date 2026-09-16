@@ -30,24 +30,20 @@ window.addEventListener('vite:preloadError', (event) => {
 })
 
 /**
- * Register the non-caching service worker (public/sw.js).
+ * Registering the service worker happens in PwaController, not here.
  *
- * vite-plugin-pwa used to inject registerSW.js to do this; that plugin is gone,
- * so registration is explicit. The worker caches nothing — it exists to keep
- * the app installable and, crucially, to take over the /sw.js URL from the old
- * Workbox worker so devices that installed it purge what it cached.
+ * It has to wait for the admin's `pwa` feature flag to load, and this runs
+ * before React and before any API call. Registering unconditionally here would
+ * install the worker on devices where the flag is off, a moment before the
+ * controller tore it back out.
  *
- * Belt and braces: any Cache Storage found in this tab is deleted here too,
- * which cleans up even if the worker never activates (unsupported, blocked, or
- * an unregistered leftover).
+ * What stays here is the reload backstop below, which is about escaping the OLD
+ * Workbox worker and is independent of the flag.
+ *
+ * Belt and braces: any Cache Storage found in this tab is deleted further down,
+ * which cleans up even if no worker ever activates.
  */
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    void navigator.serviceWorker.register('/sw.js').catch(() => {
-      // Insecure origin or the browser refused it — the app works without it.
-    })
-  })
-
   // Backstop for the reload that sw.js performs on activate, for browsers that
   // refuse WindowClient.navigate(). Only meaningful when this bundle is already
   // running; on the first visit after the switch the page is still the old one

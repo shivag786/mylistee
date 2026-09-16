@@ -13,6 +13,7 @@ import {
   Megaphone,
   ClipboardList,
   Armchair,
+  Users,
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
@@ -65,6 +66,7 @@ export const OWNER_NAV: OwnerNavItem[] = [
   { to: ROUTES.owner.tables, label: 'Tables & service', shortLabel: 'Tables', icon: Armchair, module: 'tables' },
   { to: ROUTES.owner.redeem, label: 'Redeem', shortLabel: 'Redeem', icon: ScanLine, module: 'redeem' },
   { to: ROUTES.owner.reviews, label: 'Reviews', shortLabel: 'Reviews', icon: MessageSquare, module: 'reviews' },
+  { to: ROUTES.owner.followers, label: 'Followers', shortLabel: 'Followers', icon: Users },
   { to: ROUTES.owner.analytics, label: 'Analytics', shortLabel: 'Stats', icon: BarChart3, module: 'analytics' },
   { to: ROUTES.owner.subscription, label: 'Plan & billing', shortLabel: 'Plan', icon: CreditCard },
   { to: ROUTES.owner.growSales, label: 'Grow sales', shortLabel: 'Grow', icon: Megaphone, module: 'grow_sales' },
