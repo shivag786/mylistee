@@ -23,9 +23,9 @@ vi.mock('../services/favoriteService', () => ({
 
 function renderButton(status: AuthStatus, signInWithGoogle = vi.fn()) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return {
-    signInWithGoogle,
-    ...render(
+
+  function Harness({ isFollowing, followersCount }: { isFollowing: boolean; followersCount: number }) {
+    return (
       <QueryClientProvider client={client}>
         <AuthContext.Provider
           value={
@@ -37,10 +37,24 @@ function renderButton(status: AuthStatus, signInWithGoogle = vi.fn()) {
             } as never
           }
         >
-          <FollowButton slug="chai-point" name="Chai Point" isFollowing={false} followersCount={4} />
+          <FollowButton
+            slug="chai-point"
+            name="Chai Point"
+            isFollowing={isFollowing}
+            followersCount={followersCount}
+          />
         </AuthContext.Provider>
-      </QueryClientProvider>,
-    ),
+      </QueryClientProvider>
+    )
+  }
+
+  const view = render(<Harness isFollowing={false} followersCount={4} />)
+  return {
+    signInWithGoogle,
+    /** Stand in for the profile refetch landing with the server's new answer. */
+    serverSays: (isFollowing: boolean, followersCount: number) =>
+      view.rerender(<Harness isFollowing={isFollowing} followersCount={followersCount} />),
+    ...view,
   }
 }
 
@@ -70,6 +84,22 @@ describe('FollowButton', () => {
     expect(screen.getByRole('button', { name: /Continue with Google/i })).toBeTruthy()
     // Nothing was followed yet, and nothing navigated.
     expect(addFavorite).not.toHaveBeenCalled()
+  })
+
+  it('takes the refetched profile as the truth, not its first render', async () => {
+    // The reported bug. Signing in clears the query cache, so the profile
+    // refetches and this button is torn down and rebuilt. It used to copy its
+    // props into useState on that first render, so when the refetch landed
+    // saying the follow HAD been saved, the button still read "Follow" — and
+    // the next tap sent an unfollow.
+    const { serverSays } = renderButton('authenticated')
+    expect(screen.getByRole('button', { name: /Follow Chai Point/i })).toBeTruthy()
+
+    serverSays(true, 5)
+
+    expect(await screen.findByRole('button', { name: /Unfollow Chai Point/i })).toBeTruthy()
+    expect(screen.getByText('Following')).toBeTruthy()
+    expect(screen.getByText('5')).toBeTruthy()
   })
 
   it('completes the follow the visitor asked for once sign-in succeeds', async () => {

@@ -8,15 +8,22 @@
  * Signed out, the button does not send anyone to the login page. It opens the
  * Google dialog in place and, once that succeeds, performs the follow the
  * visitor originally asked for — one tap, same page, nothing lost.
+ *
+ * The server is the single source of truth here. An earlier version copied the
+ * props into `useState`, which meant the button kept whatever it was told on
+ * first render: after signing in, the follow really was saved, but the button
+ * still read "Follow", so the next tap sent an unfollow. `pending` is only an
+ * optimistic override for the moment between the tap and the refetch, and it is
+ * dropped as soon as the profile comes back.
  */
 import { useState } from 'react'
 import { UserPlus, UserCheck } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { GoogleSignInDialog } from '@/features/auth/components/GoogleSignInDialog'
 import { useToggleFavorite } from '../hooks/useFavorites'
 import { publicBusinessKeys } from '../hooks/usePublicBusiness'
-import { useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/utils/toast'
 
 interface FollowButtonProps {
@@ -32,23 +39,27 @@ export function FollowButton({ slug, name, isFollowing, followersCount }: Follow
   const toggle = useToggleFavorite()
   const [askSignIn, setAskSignIn] = useState(false)
 
-  // Optimistic: the count and label move on tap rather than after the round
-  // trip, and fall back to the server's answer when the profile refetches.
-  const [following, setFollowing] = useState(isFollowing)
-  const [count, setCount] = useState(followersCount)
+  /** What we are optimistically showing, or null when the server's answer stands. */
+  const [pending, setPending] = useState<boolean | null>(null)
 
-  async function follow(next: boolean) {
-    const previous = { following, count }
-    setFollowing(next)
-    setCount((c) => Math.max(0, c + (next ? 1 : -1)))
+  const following = pending ?? isFollowing
+  // Nudge the count only while the server has not caught up with the tap;
+  // once `isFollowing` agrees with `pending`, the real count is already right.
+  const count =
+    followersCount + (pending === null || pending === isFollowing ? 0 : pending ? 1 : -1)
+
+  async function setFollow(next: boolean) {
+    setPending(next)
     try {
       await toggle.mutateAsync({ slug, next })
-      void qc.invalidateQueries({ queryKey: publicBusinessKeys.profile(slug) })
+      // Wait for the profile to come back before dropping the override, so the
+      // button never flickers through a stale value on its way to the truth.
+      await qc.invalidateQueries({ queryKey: publicBusinessKeys.profile(slug) })
       if (next) toast.success(`Following ${name}`)
     } catch {
-      setFollowing(previous.following)
-      setCount(previous.count)
       toast.error('Could not update. Please try again.')
+    } finally {
+      setPending(null)
     }
   }
 
@@ -57,13 +68,15 @@ export function FollowButton({ slug, name, isFollowing, followersCount }: Follow
       setAskSignIn(true)
       return
     }
-    void follow(!following)
+    void setFollow(!following)
   }
 
   return (
     <>
       <Button
-        variant={following ? 'secondary' : 'primary'}
+        // Following is a done state, not a call to action — outline keeps it
+        // quiet next to the page's real CTAs instead of a second filled block.
+        variant={following ? 'outline' : 'primary'}
         size="sm"
         onClick={handleClick}
         isLoading={toggle.isPending}
@@ -72,7 +85,7 @@ export function FollowButton({ slug, name, isFollowing, followersCount }: Follow
         aria-label={following ? `Unfollow ${name}` : `Follow ${name}`}
       >
         {following ? 'Following' : 'Follow'}
-        {count > 0 && <span className="ml-1.5 opacity-70">{count}</span>}
+        {count > 0 && <span className="ml-1.5 font-normal opacity-70">{count}</span>}
       </Button>
 
       <GoogleSignInDialog
@@ -80,7 +93,7 @@ export function FollowButton({ slug, name, isFollowing, followersCount }: Follow
         onOpenChange={setAskSignIn}
         reason={`Sign in to follow ${name} and get their latest offers.`}
         // Signing in succeeded, so do the thing they tapped Follow for.
-        onSignedIn={() => follow(true)}
+        onSignedIn={() => setFollow(true)}
       />
     </>
   )
