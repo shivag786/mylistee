@@ -7,6 +7,7 @@ import { SkipToContent } from '@/components/a11y/SkipToContent'
 import { OfflineBanner } from '@/components/feedback/OfflineBanner'
 import { InstallBanner } from '@/features/pwa/InstallBanner'
 import { PwaController } from '@/features/pwa/PwaController'
+import { PwaDisabledGate } from '@/features/pwa/PwaDisabledGate'
 import { PushRegistrar } from '@/features/notifications/components/PushRegistrar'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -15,12 +16,18 @@ export default function App() {
     <ErrorBoundary>
       <AppProviders>
         <BrowserRouter>
-          <SkipToContent />
-          <OfflineBanner />
-          <AppRouter />
-          <InstallBanner />
+          {/* Sits inside the providers so it can read the flag, and around the
+              app so a switched-off PWA never renders one — push included. */}
+          <PwaDisabledGate>
+            <SkipToContent />
+            <OfflineBanner />
+            <AppRouter />
+            <InstallBanner />
+            <PushRegistrar />
+          </PwaDisabledGate>
+          {/* Outside the gate: it still has to unregister the worker and cache
+              the flag on a device that is being shown the notice. */}
           <PwaController />
-          <PushRegistrar />
         </BrowserRouter>
         <Toaster />
         <ConnectionStatus />

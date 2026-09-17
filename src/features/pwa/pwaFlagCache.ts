@@ -13,6 +13,16 @@
  */
 const KEY = 'listee:pwa:enabled'
 
+/** The answer from last time, or null when we have never had one. */
+export function readCachedPwaEnabled(): boolean | null {
+  try {
+    const raw = localStorage.getItem(KEY)
+    return raw === null ? null : raw !== '0'
+  } catch {
+    return null
+  }
+}
+
 /** Mirrors the inline reader in index.html — keep the two in step. */
 export function cachePwaEnabled(enabled: boolean): void {
   try {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { storage } from '@/utils/storage'
+import { isStandalone } from './standalone'
 
 /** The non-standard beforeinstallprompt event (Chromium). */
 interface BeforeInstallPromptEvent extends Event {
@@ -8,16 +9,6 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const DISMISS_KEY = 'listee.pwa.install-dismissed'
-
-/** True when the app is currently running as an installed PWA. */
-function isStandalone(): boolean {
-  if (typeof window === 'undefined') return false
-  return (
-    window.matchMedia?.('(display-mode: standalone)').matches ||
-    // iOS Safari
-    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
-  )
-}
 
 /**
  * Captures the browser's install prompt (document/phase/11 §Install Prompt).
