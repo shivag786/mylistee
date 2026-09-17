@@ -27,7 +27,7 @@ import { usePublicBusiness, useSpin } from '@/features/businesses/hooks/usePubli
 import { MenuList } from '@/features/businesses/components/MenuList'
 import { BusinessInfo } from '@/features/businesses/components/BusinessInfo'
 import { ReviewsSection } from '@/features/businesses/components/ReviewsSection'
-import { FollowButton } from '@/features/businesses/components/FollowButton'
+import { FavoriteButton } from '@/features/businesses/components/FavoriteButton'
 import { SpinnerWheel } from '@/features/spinner/components/SpinnerWheel'
 import { RewardModal } from '@/features/spinner/components/RewardModal'
 import { LoyaltyRewardsSection } from '@/features/wallet/components/LoyaltyRewardsSection'
@@ -161,9 +161,11 @@ export function BusinessProfilePage() {
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-subtitle font-bold leading-tight text-foreground">{business.name}</h1>
-          <Badge tone={business.isOpen ? 'success' : 'neutral'} className="shrink-0">
-            {business.isOpen ? 'Open' : 'Closed'}
-          </Badge>
+          <FavoriteButton
+            slug={business.slug}
+            name={business.name}
+            isFavorite={business.isFollowing}
+          />
         </div>
 
         {business.category && (
@@ -184,13 +186,6 @@ export function BusinessProfilePage() {
             </span>
           )}
         </div>
-
-        <FollowButton
-          slug={business.slug}
-          name={business.name}
-          isFollowing={business.isFollowing}
-          followersCount={business.followersCount}
-        />
 
         {/* Reward / promotion / offer badges */}
         <div className="flex flex-wrap gap-1.5">
