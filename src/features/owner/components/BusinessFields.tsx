@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import type { FieldErrors, UseFormRegister, UseFormSetValue } from 'react-hook-form'
-import { LocateFixed } from 'lucide-react'
+import { LocateFixed, MapPin } from 'lucide-react'
 import { TextField } from '@/components/forms/TextField'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/utils/toast'
+import { reverseGeocodeCity } from '@/features/location/geocodeService'
 import type { BusinessSchema } from '../businessSchema'
 import { CategorySelect } from './CategorySelect'
 
@@ -58,6 +59,43 @@ export function ContactLocationFields({
   setValue: SetValue
 }) {
   const [locating, setLocating] = useState(false)
+  const [findingCity, setFindingCity] = useState(false)
+
+  /**
+   * Fill the city from where the owner is standing.
+   *
+   * The city is asked for separately from the address because the address is
+   * one free-text line typed however each owner likes -- it cannot be grouped
+   * or filtered on. Reading the city off Google's answer instead means every
+   * business in one city spells it the same way.
+   */
+  function fetchCity() {
+    if (!('geolocation' in navigator)) {
+      toast.error('Location is not supported on this device.')
+      return
+    }
+    setFindingCity(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        reverseGeocodeCity({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+          .then((city) => {
+            if (!city) {
+              toast.error("Couldn't find your city. Please type it in.")
+              return
+            }
+            setValue('city', city, { shouldValidate: true, shouldDirty: true })
+            toast.success(`City set to ${city}`)
+          })
+          .catch(() => toast.error("Couldn't find your city. Please type it in."))
+          .finally(() => setFindingCity(false))
+      },
+      () => {
+        setFindingCity(false)
+        toast.error("Couldn't get your location. Please type your city in.")
+      },
+      { enableHighAccuracy: false, timeout: 10000 },
+    )
+  }
 
   function useCurrentLocation() {
     if (!('geolocation' in navigator)) {
@@ -86,6 +124,20 @@ export function ContactLocationFields({
       <TextField label="Email" type="email" placeholder="business@email.com" error={errors.email?.message} {...register('email')} />
       <TextField label="Website" placeholder="https://…" error={errors.website?.message} {...register('website')} />
       <TextField label="Address" placeholder="Street, area, city" error={errors.address?.message} {...register('address')} />
+      <div className="space-y-2">
+        <TextField label="City" placeholder="e.g. Mumbai" error={errors.city?.message} {...register('city')} />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          fullWidth
+          isLoading={findingCity}
+          leftIcon={<MapPin className="size-4" aria-hidden />}
+          onClick={fetchCity}
+        >
+          Click here to get your city name
+        </Button>
+      </div>
       <div className="flex items-center justify-between gap-2">
         <span className="text-caption font-medium text-foreground">Map location</span>
         <Button

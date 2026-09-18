@@ -95,3 +95,43 @@ export async function geocodeAddress(
   const location = body.results[0].geometry?.location
   return location ? { lat: location.lat, lng: location.lng } : null
 }
+
+/**
+ * Coordinates -> city name, for the business forms.
+ *
+ * Distinct from {@link reverseGeocode}, which deliberately prefers the smallest
+ * place it can find because a header reads better as "Andheri West" than
+ * "Mumbai". Here the opposite is wanted: the city every business in it will
+ * agree on, so the field can be grouped and filtered. `locality` is Google's
+ * city; the administrative levels are the fallback for places that report no
+ * locality at all.
+ */
+const CITY_TYPES = ['locality', 'administrative_area_level_2', 'administrative_area_level_1']
+
+export async function reverseGeocodeCity(
+  coords: Coords,
+  signal?: AbortSignal,
+): Promise<string | null> {
+  if (!isGeocodingConfigured) return null
+
+  const url = new URL('https://maps.googleapis.com/maps/api/geocode/json')
+  url.searchParams.set('latlng', `${coords.lat},${coords.lng}`)
+  url.searchParams.set('key', env.googleMapsApiKey)
+  url.searchParams.set('result_type', 'locality|administrative_area_level_2')
+
+  const response = await fetch(url, { signal })
+  if (!response.ok) return null
+
+  const body = (await response.json()) as GeocodeResponse
+  // REQUEST_DENIED, OVER_QUERY_LIMIT and ZERO_RESULTS all arrive as HTTP 200.
+  if (body.status !== 'OK' || !body.results?.length) return null
+
+  for (const type of CITY_TYPES) {
+    for (const result of body.results) {
+      const match = result.address_components?.find((c) => c.types.includes(type))
+      if (match) return match.long_name
+    }
+  }
+
+  return null
+}
