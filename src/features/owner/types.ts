@@ -32,6 +32,9 @@ export interface OwnerBusiness {
   logoUrl: string | null
   coverUrl: string | null
   address: string | null
+  /** Filled from the owner's own position, so every business in one city
+   *  spells it the same way. */
+  city: string | null
   latitude: number | null
   longitude: number | null
   openingTime: string | null
@@ -252,6 +255,7 @@ export interface BusinessFormValues {
   email?: string
   website?: string
   address?: string
+  city?: string
   latitude?: string
   longitude?: string
   openingTime?: string

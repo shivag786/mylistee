@@ -34,6 +34,7 @@ import { ComboDealCard } from '@/features/combos/components/ComboDealCard'
 import { useComboFeed } from '@/features/combos/useComboFeed'
 import { useAppConfig } from '@/features/system/hooks/useAppConfig'
 import { useAppLocation } from '@/features/location/useAppLocation'
+import { PermissionsPrompt } from '@/features/permissions/PermissionsPrompt'
 import { useCoinSummary } from '@/features/wallet/hooks/useCoins'
 import { CoinsProgressCard } from '@/features/wallet/components/CoinsProgressCard'
 import { Card } from '@/components/ui/card'
@@ -87,6 +88,10 @@ export function HomePage() {
 
   return (
     <div className="space-y-6">
+      {/* Asks for location and notifications on a first visit. Above the fold:
+          location is what makes the rows below it worth reading. */}
+      <PermissionsPrompt />
+
       {/* Greeting hero */}
       <section className="rounded-cover bg-gradient-to-br from-primary to-secondary px-5 py-6 text-white shadow-premium">
         <div className="flex items-start justify-between gap-3">

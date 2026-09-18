@@ -24,6 +24,7 @@ export const businessSchema = z.object({
   email: optionalEmail,
   website: optionalUrl,
   address: optionalText(500),
+  city: optionalText(120),
   latitude: optionalCoord,
   longitude: optionalCoord,
   openingTime: z.string().optional().or(z.literal('')),
@@ -45,6 +46,7 @@ export const businessFormDefaults: BusinessSchema = {
   email: '',
   website: '',
   address: '',
+  city: '',
   latitude: '',
   longitude: '',
   openingTime: '',
@@ -58,7 +60,7 @@ export const businessFormDefaults: BusinessSchema = {
 /** Fields validated at each wizard step (used with react-hook-form `trigger`). */
 export const wizardStepFields: (keyof BusinessSchema)[][] = [
   ['name', 'category', 'description'],
-  ['phone', 'email', 'website', 'address', 'latitude', 'longitude', 'openingTime', 'closingTime'],
+  ['phone', 'email', 'website', 'address', 'city', 'latitude', 'longitude', 'openingTime', 'closingTime'],
   [], // media step — logo/cover handled outside RHF
   ['facebook', 'instagram', 'whatsapp', 'gst'],
 ]

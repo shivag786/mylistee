@@ -31,6 +31,7 @@ function toFormValues(b: OwnerBusiness): BusinessSchema {
     email: b.email ?? '',
     website: b.website ?? '',
     address: b.address ?? '',
+    city: b.city ?? '',
     latitude: b.latitude != null ? String(b.latitude) : '',
     longitude: b.longitude != null ? String(b.longitude) : '',
     openingTime: b.openingTime?.slice(0, 5) ?? '',
