@@ -1,12 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/constants/queryKeys'
 import { businessService } from '../services/businessService'
+import { useAppLocation } from '@/features/location/useAppLocation'
 
 /** Admin-verified shops, top-rated first — the home "Recommended" row. */
 export function useRecommendedBusinesses() {
+  const { city } = useAppLocation()
   return useQuery({
-    queryKey: queryKeys.businesses.recommended,
-    queryFn: () => businessService.list({ verified: 1, withContent: 1, sort: 'rating', perPage: 12 }),
+    queryKey: queryKeys.businesses.recommended(city),
+    queryFn: () =>
+      businessService.list({
+        ...(city ? { city } : {}),
+        verified: 1,
+        withContent: 1,
+        sort: 'rating',
+        perPage: 12,
+      }),
   })
 }
 
@@ -19,8 +28,10 @@ export function useRecommendedBusinesses() {
  * show them.
  */
 export function useNewBusinesses() {
+  const { city } = useAppLocation()
   return useQuery({
-    queryKey: queryKeys.businesses.new,
-    queryFn: () => businessService.list({ new: 1, sort: 'newest', perPage: 12 }),
+    queryKey: queryKeys.businesses.new(city),
+    queryFn: () =>
+      businessService.list({ ...(city ? { city } : {}), new: 1, sort: 'newest', perPage: 12 }),
   })
 }

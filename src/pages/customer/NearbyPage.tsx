@@ -11,11 +11,15 @@ import { ShopCardSkeleton } from '@/features/businesses/components/ShopCardSkele
 export function NearbyPage() {
   const [searchParams] = useSearchParams()
   const spinOnly = searchParams.get('spin') === '1'
-  const { coords, status, request } = useAppLocation()
+  const { coords, city, status, request } = useAppLocation()
 
   // With coordinates the service switches to sort=nearest and the API returns
   // each shop's distance, which ShopCard already renders.
-  const { data, isLoading } = useNearbyBusinesses(coords ? { lat: coords.lat, lng: coords.lng } : {})
+  const { data, isLoading } = useNearbyBusinesses({
+    // City narrows the list; coordinates order what is left by distance.
+    ...(city ? { city } : {}),
+    ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+  })
 
   // "Spin waiting" entry point (home) → only shops that currently have a spin.
   const shops = useMemo(() => {

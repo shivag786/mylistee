@@ -6,6 +6,12 @@ export interface LocationValue {
   status: LocationStatus
   /** Place name once geocoded, e.g. "Andheri West". Null without a Maps key. */
   label: string | null
+  /**
+   * The city, e.g. "Mumbai" — what the shop list is filtered by. Deliberately
+   * broader than `label`: a header reads better as the neighbourhood, but
+   * filtering on one would hide every shop two streets away.
+   */
+  city: string | null
   request: () => void
 }
 

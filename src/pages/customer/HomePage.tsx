@@ -70,8 +70,12 @@ export function HomePage() {
   // product / visible combo, which is every newly added shop.
   // Coordinates come from the header chip, so the row re-sorts by distance as
   // soon as a location is set.
-  const { coords } = useAppLocation()
-  const nearby = useNearbyBusinesses(coords ? { lat: coords.lat, lng: coords.lng } : {})
+  const { coords, city } = useAppLocation()
+  const nearby = useNearbyBusinesses({
+    // City narrows the list; coordinates order what is left by distance.
+    ...(city ? { city } : {}),
+    ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+  })
   const topBanners = useBannerSlot('home_top')
   const afterCombosBanners = useBannerSlot('home_after_combos')
 

@@ -9,8 +9,10 @@ export const queryKeys = {
   businesses: {
     all: ['businesses'] as const,
     nearby: (params?: Record<string, unknown>) => ['businesses', 'nearby', params ?? {}] as const,
-    recommended: ['businesses', 'recommended'] as const,
-    new: ['businesses', 'new'] as const,
+    // City is part of the key: the same row is a different list in a different
+    // city, and without it a cached Mumbai row would be served in Pune.
+    recommended: (city?: string | null) => ['businesses', 'recommended', city ?? null] as const,
+    new: (city?: string | null) => ['businesses', 'new', city ?? null] as const,
     detail: (slug: string) => ['businesses', 'detail', slug] as const,
   },
   wallet: {

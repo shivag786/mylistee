@@ -15,6 +15,8 @@ export interface Business {
   offerCount: number
   isOpen: boolean
   area: string | null
+  /** The shop's city. Null until its owner sets one. */
+  city: string | null
   isFavorite: boolean
   /** Admin-verified shop (Recommended row). */
   verified: boolean

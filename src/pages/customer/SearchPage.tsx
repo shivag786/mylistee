@@ -13,8 +13,12 @@ export function SearchPage() {
   const [term, setTerm] = useState(() => searchParams.get('q') ?? '')
   // Same coordinates as the header chip, so search results are ordered by
   // distance from wherever the visitor says they are.
-  const { coords } = useAppLocation()
-  const { data } = useNearbyBusinesses(coords ? { lat: coords.lat, lng: coords.lng } : {})
+  const { coords, city } = useAppLocation()
+  const { data } = useNearbyBusinesses({
+    // City narrows the list; coordinates order what is left by distance.
+    ...(city ? { city } : {}),
+    ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+  })
 
   const results = useMemo(() => {
     const q = term.trim().toLowerCase()
