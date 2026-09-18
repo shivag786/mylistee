@@ -9,6 +9,8 @@ import type { Business, BusinessCategory } from '../types'
 export type DiscoveryParams = {
   lat?: number
   lng?: number
+  /** Limits the list to one city. Distance still orders what comes back. */
+  city?: string
   category?: string
   search?: string
   sort?: 'newest' | 'rating' | 'name' | 'nearest'
