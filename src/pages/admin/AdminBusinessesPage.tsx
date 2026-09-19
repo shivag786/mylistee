@@ -84,6 +84,21 @@ export function AdminBusinessesPage() {
     },
     { key: 'category', label: 'Category', cell: (b) => b.category ?? '—' },
     {
+      key: 'address',
+      label: 'Address',
+      // Addresses are one free-text line and run long. Capped and wrapped over
+      // two lines so one verbose entry cannot stretch the row past the others.
+      className: 'min-w-[200px]',
+      cell: (b) =>
+        b.address ? (
+          <p className="line-clamp-2 max-w-[260px] text-text-secondary" title={b.address}>
+            {b.address}
+          </p>
+        ) : (
+          <span className="text-text-muted">—</span>
+        ),
+    },
+    {
       key: 'logo',
       label: 'Logo',
       cell: (b) => (
