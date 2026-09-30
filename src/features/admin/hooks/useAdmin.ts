@@ -152,6 +152,14 @@ export const useAdminRevenue = (filters: import('../types').RevenueFilters) =>
   })
 
 // ---- Gateway payments & refunds ----
+/** Every customer order across shops, with its payment trail. */
+export const useAdminOrders = (filters: import('../types').OrderFilters) =>
+  useQuery({
+    queryKey: ['admin', 'orders', filters] as const,
+    queryFn: () => adminService.orders(filters),
+    placeholderData: keepPreviousData,
+  })
+
 export const useAdminPayments = (filters: import('../types').PaymentFilters) =>
   useQuery({
     queryKey: ['admin', 'payments', filters] as const,

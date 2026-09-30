@@ -261,6 +261,11 @@ export interface AdminPayment {
   failedAt: string | null
   refundedAt: string | null
   createdAt: string | null
+  /** What the money was for: a business plan, or a customer's order. */
+  kind?: 'plan' | 'order'
+  orderToken?: string | null
+  orderUuid?: string | null
+  customerName?: string | null
   planName?: string
   businessName?: string
   invoiceNumber?: string | null
@@ -273,14 +278,74 @@ export interface AdminPayment {
 export interface PaymentsPage {
   items: AdminPayment[]
   meta: PaginationMeta & {
+    /** Plan payments only -- the platform's own money. */
     capturedTotal: number
     refundedTotal: number
+    /** Order payments, taken on behalf of shops and owed to them. */
+    orderCapturedTotal?: number
+    orderRefundedTotal?: number
   }
 }
 
 export interface PaymentFilters {
   search?: string
   status?: string
+  /** Plans and orders share one table; narrow to either. */
+  kind?: 'plan' | 'order'
+  page?: number
+  perPage?: number
+}
+
+// ---- Orders (admin) ----
+
+/** How an order's bill was settled. */
+export type OrderPaymentType = 'cod' | 'online' | 'partial'
+
+export interface AdminOrder {
+  id: string
+  token: string
+  status: string
+  statusLabel: string
+  businessName: string | null
+  businessSlug: string | null
+  customerName: string | null
+  /** Phone for a mobile sign-up, email for a Google one. */
+  customerContact: string | null
+  serviceLabel: string
+  itemCount: number | null
+  total: number
+  paymentType: OrderPaymentType
+  onlineAmount: number
+  convenienceFee: number
+  paidOnline: boolean
+  amountDue: number
+  /** The latest Razorpay attempt, or null for a cash order. */
+  payment: {
+    id: string
+    status: PaymentStatus
+    gatewayPaymentId: string | null
+    gatewayOrderId: string
+    method: string | null
+    amount: number
+    refundedAmount: number
+    errorDescription: string | null
+  } | null
+  placedAt: string | null
+  createdAt: string | null
+}
+
+export interface OrdersPage {
+  items: AdminOrder[]
+  meta: PaginationMeta & {
+    /** Orders still waiting on their online payment, platform-wide. */
+    awaitingPayment: number
+  }
+}
+
+export interface OrderFilters {
+  search?: string
+  status?: string
+  payment?: OrderPaymentType
   page?: number
   perPage?: number
 }

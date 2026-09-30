@@ -65,6 +65,7 @@ export const ROUTES = {
     reviews: '/admin/reviews',
     plans: '/admin/plans',
     revenue: '/admin/revenue',
+    orders: '/admin/orders',
     payments: '/admin/payments',
     broadcast: '/admin/broadcast',
     banners: '/admin/banners',

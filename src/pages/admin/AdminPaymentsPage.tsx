@@ -37,6 +37,11 @@ const STATUS_OPTIONS = [
   { value: 'refunded', label: 'Refunded' },
 ]
 
+const KIND_OPTIONS = [
+  { value: 'plan', label: 'Plan payments' },
+  { value: 'order', label: 'Order payments' },
+]
+
 const STATUS_TONE: Record<PaymentStatus, 'success' | 'neutral' | 'warning' | 'danger'> = {
   captured: 'success',
   authorized: 'warning',
@@ -72,11 +77,16 @@ export function AdminPaymentsPage() {
   const columns: Column<AdminPayment>[] = [
     {
       key: 'business',
-      label: 'Business',
+      label: 'For',
       cell: (p) => (
         <div className="min-w-0">
           <p className="truncate font-medium text-foreground">{p.businessName ?? '—'}</p>
-          <p className="text-small text-text-muted">{p.planName ?? '—'}</p>
+          {/* Plans and orders share this table -- say which one this row is. */}
+          <p className="truncate text-small text-text-muted">
+            {p.kind === 'order'
+              ? `Order ${p.orderToken ?? ''}${p.customerName ? ` · ${p.customerName}` : ''}`
+              : `Plan · ${p.planName ?? '—'}`}
+          </p>
         </div>
       ),
     },
@@ -155,34 +165,53 @@ export function AdminPaymentsPage() {
         {isFetching && <RotateCcw className="size-4 animate-spin text-text-muted" aria-hidden />}
       </div>
       <p className="text-caption text-text-secondary">
-        Razorpay plan payments, including attempts that never completed. Refunds here follow the
-        published Refund &amp; Cancellation Policy and are written to the audit log.
+        Razorpay payments for plans and for customer orders, including attempts that never
+        completed. Refunding an order payment in full also cancels the order, if it has not been
+        handed over yet. Refunds follow the published Refund &amp; Cancellation Policy and are
+        written to the audit log.
       </p>
 
       {totals && (
-        <div className="flex flex-wrap gap-4 text-caption">
-          <span className="text-text-secondary">
-            Captured:{' '}
-            <span className="font-semibold text-foreground">
-              {formatPrice(totals.capturedTotal)}
-            </span>
-          </span>
-          <span className="text-text-secondary">
-            Refunded:{' '}
-            <span className="font-semibold text-foreground">
-              {formatPrice(totals.refundedTotal)}
-            </span>
-          </span>
+        // Two sets of figures, never added together: plan payments are the
+        // platform's revenue, order payments were taken for shops and are owed
+        // to them.
+        <div className="grid gap-2 text-caption sm:grid-cols-2">
+          <div className="rounded-xl bg-surface-muted px-3 py-2">
+            <p className="font-medium text-foreground">Plan revenue</p>
+            <p className="text-text-secondary">
+              Captured <span className="font-semibold text-foreground">{formatPrice(totals.capturedTotal)}</span>
+              {' · '}Refunded <span className="font-semibold text-foreground">{formatPrice(totals.refundedTotal)}</span>
+            </p>
+          </div>
+          <div className="rounded-xl bg-surface-muted px-3 py-2">
+            <p className="font-medium text-foreground">Order payments (owed to shops)</p>
+            <p className="text-text-secondary">
+              Captured{' '}
+              <span className="font-semibold text-foreground">{formatPrice(totals.orderCapturedTotal ?? 0)}</span>
+              {' · '}Refunded{' '}
+              <span className="font-semibold text-foreground">{formatPrice(totals.orderRefundedTotal ?? 0)}</span>
+            </p>
+          </div>
         </div>
       )}
 
       <AdminToolbar
         search={filters.search ?? ''}
         onSearch={(search) => setFilters((f) => ({ ...f, search, page: 1 }))}
-        placeholder="Search business, order or payment id…"
+        placeholder="Search business, order token or Razorpay id…"
         statusOptions={STATUS_OPTIONS}
         status={filters.status}
         onStatus={(status) => setFilters((f) => ({ ...f, status, page: 1 }))}
+        filters={[
+          {
+            label: 'Filter by kind',
+            allLabel: 'Plans and orders',
+            value: filters.kind,
+            options: KIND_OPTIONS,
+            onChange: (kind) =>
+              setFilters((f) => ({ ...f, kind: (kind || undefined) as 'plan' | 'order' | undefined, page: 1 })),
+          },
+        ]}
       />
 
       <AdminTable
@@ -237,10 +266,17 @@ function RefundDialog({ payment, onClose }: { payment: AdminPayment | null; onCl
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Refund {payment.businessName ?? 'this payment'}</DialogTitle>
+          <DialogTitle>
+            {payment.kind === 'order'
+              ? `Refund order ${payment.orderToken ?? ''}`
+              : `Refund ${payment.businessName ?? 'this payment'}`}
+          </DialogTitle>
           <DialogDescription>
             Up to {formatPrice(max, payment.currency)} can be sent back to the original payment
-            method. A full refund also ends the plan immediately; a partial one leaves it running.
+            method.{' '}
+            {payment.kind === 'order'
+              ? 'A full refund also cancels the order and returns its coins, unless the shop has already handed it over; a partial one leaves the order as it is.'
+              : 'A full refund also ends the plan immediately; a partial one leaves it running.'}{' '}
             This cannot be undone.
           </DialogDescription>
         </DialogHeader>
