@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, Play, Trash2, Upload } from 'lucide-react'
+import { Bell, Play, Trash2, Upload, CreditCard, KeyRound, LogIn, CheckCircle2 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,7 +43,20 @@ export function AdminSettingsPage() {
   function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!form) return
-    update.mutate(form, {
+    // Only this form's own fields. Payments and sign-in save from their own
+    // cards; resending them from here would put back whatever this form loaded
+    // with, undoing a change made in one of those cards since.
+    const general: Partial<PlatformSettings> = {
+      brandName: form.brandName,
+      supportEmail: form.supportEmail,
+      supportPhone: form.supportPhone,
+      currency: form.currency,
+      timezone: form.timezone,
+      defaultLanguage: form.defaultLanguage,
+      maintenanceMode: form.maintenanceMode,
+      maintenanceMessage: form.maintenanceMessage,
+    }
+    update.mutate(general, {
       onSuccess: () => toast.success('Settings saved'),
       onError: (err) => toast.error(err instanceof Error ? err.message : 'Could not save settings.'),
     })
@@ -101,7 +114,269 @@ export function AdminSettingsPage() {
         </form>
       </Card>
 
+      <PaymentsCard settings={data ?? form} />
+
+      <LoginMethodsCard settings={data ?? form} />
+
       <OrderSoundCard currentUrl={form.orderSoundUrl} />
+    </div>
+  )
+}
+
+/**
+ * Razorpay keys and the convenience fee.
+ *
+ * Saves only its own fields. The secrets are write-only: the API never sends
+ * them back, so the inputs start empty and a "saved" mark shows one is stored.
+ * Leaving a secret blank keeps the stored one -- which is what makes it safe to
+ * change the fee without re-entering the keys.
+ */
+function PaymentsCard({ settings }: { settings: PlatformSettings }) {
+  const update = useUpdateSettings()
+  const [keyId, setKeyId] = useState(settings.razorpayKeyId ?? '')
+  const [keySecret, setKeySecret] = useState('')
+  const [webhookSecret, setWebhookSecret] = useState('')
+  const [fee, setFee] = useState(String(settings.razorpayFeePercent ?? 2))
+
+  useEffect(() => {
+    setKeyId(settings.razorpayKeyId ?? '')
+    setFee(String(settings.razorpayFeePercent ?? 2))
+  }, [settings.razorpayKeyId, settings.razorpayFeePercent])
+
+  const feeNumber = Number(fee)
+  const feeValid = fee.trim() !== '' && Number.isFinite(feeNumber) && feeNumber >= 0 && feeNumber <= 10
+  const keyIdValid = keyId.trim() === '' || /^rzp_(test|live)_[A-Za-z0-9]+$/.test(keyId.trim())
+  const isLive = keyId.trim().startsWith('rzp_live_')
+
+  function save(e: React.FormEvent) {
+    e.preventDefault()
+    if (!feeValid || !keyIdValid) return
+    update.mutate(
+      {
+        razorpayKeyId: keyId.trim(),
+        // Blank is "keep what is stored", never "clear it".
+        razorpayKeySecret: keySecret.trim(),
+        razorpayWebhookSecret: webhookSecret.trim(),
+        razorpayFeePercent: feeNumber,
+      },
+      {
+        onSuccess: () => {
+          // Drop the typed secrets: they are saved, and holding them in the form
+          // would resend them on the next save for no reason.
+          setKeySecret('')
+          setWebhookSecret('')
+          toast.success('Payment settings saved')
+        },
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not save payment settings.'),
+      },
+    )
+  }
+
+  return (
+    <Card elevation="soft" className="max-w-xl" padding="lg">
+      <form onSubmit={save} className="space-y-4">
+        <div className="flex items-start gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+            <CreditCard className="size-5" aria-hidden />
+          </span>
+          <div>
+            <p className="font-semibold text-foreground">Payments</p>
+            <p className="text-caption text-text-secondary">
+              Razorpay keys for online orders and plan purchases. Left blank, the server&apos;s own
+              keys are used.
+            </p>
+          </div>
+        </div>
+
+        <Field label="Key id" id="rzp-key">
+          <Input
+            id="rzp-key"
+            value={keyId}
+            onChange={(e) => setKeyId(e.target.value)}
+            placeholder="rzp_live_…"
+            autoComplete="off"
+            aria-invalid={!keyIdValid}
+          />
+          {!keyIdValid && (
+            <p className="text-small text-danger">A Razorpay key id starts with rzp_test_ or rzp_live_.</p>
+          )}
+          {isLive && keyIdValid && (
+            <p className="text-small text-text-secondary">Live key -- customers will be charged real money.</p>
+          )}
+        </Field>
+
+        <SecretField
+          id="rzp-secret"
+          label="Key secret"
+          value={keySecret}
+          onChange={setKeySecret}
+          stored={settings.razorpayKeySecretSet}
+        />
+        <SecretField
+          id="rzp-webhook"
+          label="Webhook secret"
+          value={webhookSecret}
+          onChange={setWebhookSecret}
+          stored={settings.razorpayWebhookSecretSet}
+          hint="From Razorpay Dashboard > Webhooks. Without it, a payment made after the customer closes the tab is only picked up by the 30-minute sweep."
+        />
+
+        <Field label="Convenience fee on online payments (%)" id="rzp-fee">
+          <Input
+            id="rzp-fee"
+            type="number"
+            inputMode="decimal"
+            step="0.1"
+            min={0}
+            max={10}
+            value={fee}
+            onChange={(e) => setFee(e.target.value)}
+            aria-invalid={!feeValid}
+            className="max-w-[140px]"
+          />
+          <p className={feeValid ? 'text-small text-text-muted' : 'text-small text-danger'}>
+            {feeValid
+              ? `Added to the customer's bill. On a ₹200 online payment the customer pays ₹${(200 + (200 * feeNumber) / 100).toFixed(2)}.`
+              : 'Enter a percentage between 0 and 10.'}
+          </p>
+        </Field>
+
+        <Button type="submit" isLoading={update.isPending} disabled={!feeValid || !keyIdValid} fullWidth>
+          Save payment settings
+        </Button>
+      </form>
+    </Card>
+  )
+}
+
+function SecretField({
+  id,
+  label,
+  value,
+  onChange,
+  stored,
+  hint,
+}: {
+  id: string
+  label: string
+  value: string
+  onChange: (value: string) => void
+  stored: boolean
+  hint?: string
+}) {
+  return (
+    <Field label={label} id={id}>
+      <Input
+        id={id}
+        type="password"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={stored ? 'Saved -- type to replace' : 'Not set'}
+        autoComplete="new-password"
+      />
+      <p className="inline-flex items-center gap-1 text-small text-text-muted">
+        {stored ? (
+          <>
+            <CheckCircle2 className="size-3.5 text-success" aria-hidden /> A secret is saved. Leave blank to keep it.
+          </>
+        ) : (
+          <>
+            <KeyRound className="size-3.5" aria-hidden /> No secret saved yet.
+          </>
+        )}
+      </p>
+      {hint && <p className="text-small text-text-muted">{hint}</p>}
+    </Field>
+  )
+}
+
+/**
+ * Which sign-in methods the customer login page shows.
+ *
+ * At least one stays on -- the server enforces it, and the last switch is
+ * disabled here so the admin sees why rather than having their change undone.
+ */
+function LoginMethodsCard({ settings }: { settings: PlatformSettings }) {
+  const update = useUpdateSettings()
+
+  function toggle(key: 'loginGoogle' | 'loginMobile', next: boolean) {
+    update.mutate(
+      { [key]: next },
+      {
+        onSuccess: () => toast.success('Sign-in options updated'),
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not update sign-in options.'),
+      },
+    )
+  }
+
+  const onlyGoogle = settings.loginGoogle && !settings.loginMobile
+  const onlyMobile = settings.loginMobile && !settings.loginGoogle
+
+  return (
+    <Card elevation="soft" className="max-w-xl space-y-3" padding="lg">
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <LogIn className="size-5" aria-hidden />
+        </span>
+        <div>
+          <p className="font-semibold text-foreground">Customer sign-in</p>
+          <p className="text-caption text-text-secondary">
+            Choose what the login page offers. Business owners and admins always sign in with mobile
+            and PIN, whatever is chosen here.
+          </p>
+        </div>
+      </div>
+
+      <MethodRow
+        title="Google"
+        body="One tap with a Google account."
+        checked={settings.loginGoogle}
+        disabled={onlyGoogle || update.isPending}
+        onChange={(v) => toggle('loginGoogle', v)}
+      />
+      <MethodRow
+        title="Mobile number + PIN"
+        body="The customer picks a PIN the first time. No OTP."
+        checked={settings.loginMobile}
+        disabled={onlyMobile || update.isPending}
+        onChange={(v) => toggle('loginMobile', v)}
+      />
+
+      {(onlyGoogle || onlyMobile) && (
+        <p className="text-small text-text-muted">At least one method has to stay on.</p>
+      )}
+      {!settings.loginGoogle && (
+        // Switching Google off strands anyone who only ever signed in with it:
+        // they have no PIN. Say so where the switch is.
+        <p className="rounded-lg bg-warning/10 px-3 py-2 text-small text-foreground">
+          Customers who only ever used Google cannot sign in while it is off -- they have no PIN
+          yet.
+        </p>
+      )}
+    </Card>
+  )
+}
+
+function MethodRow({
+  title,
+  body,
+  checked,
+  disabled,
+  onChange,
+}: {
+  title: string
+  body: string
+  checked: boolean
+  disabled: boolean
+  onChange: (next: boolean) => void
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+      <div>
+        <p className="font-medium text-foreground">{title}</p>
+        <p className="text-caption text-text-secondary">{body}</p>
+      </div>
+      <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} aria-label={`${title} sign-in`} />
     </div>
   )
 }

@@ -96,6 +96,13 @@ export const useAdminCustomers = (filters: ListFilters) =>
     placeholderData: keepPreviousData,
   })
 
+/** Reset a locked-out customer's PIN; the new one comes back once, in the result. */
+export function useResetCustomerPin() {
+  return useMutation({
+    mutationFn: (id: string) => adminService.resetCustomerPin(id),
+  })
+}
+
 export function useSetCustomerStatus() {
   const qc = useQueryClient()
   return useMutation({

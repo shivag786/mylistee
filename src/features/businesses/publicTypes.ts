@@ -73,10 +73,26 @@ export interface PublicCombo {
 }
 
 /** A business's fulfilment config for the checkout picker (Phase 7.6). */
+/**
+ * What checkout may offer at a shop. The server has already applied the
+ * gateway's availability to the shop's own choice, so the client never has to
+ * re-derive the rule -- and can never offer something the server would refuse.
+ */
+export interface PublicPaymentOptions {
+  onlineAvailable: boolean
+  codAvailable: boolean
+  paymentMode: 'full' | 'partial'
+  partialPercent: number
+  /** Convenience fee on the online share, in percent. */
+  feePercent: number
+}
+
 export interface PublicServiceConfig {
   modes: ServiceType[]
   defaultMode: ServiceType
   deliveryFee: number
+  /** Absent on an API from before online payment -- treat as cash only. */
+  payment?: PublicPaymentOptions
 }
 
 /** A dine-in table the customer can pick (Phase 7.6). */

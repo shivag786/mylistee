@@ -160,6 +160,24 @@ export interface PlatformSettings {
   maintenanceMessage: string
   /** Custom new-order alert sound owners hear (null = built-in ding). */
   orderSoundUrl: string | null
+
+  /** Razorpay, set here instead of the server's .env. Empty falls back to .env. */
+  razorpayKeyId: string
+  /**
+   * Always '' when read -- the API never returns a secret. Send a value only to
+   * replace the stored one; blank keeps it.
+   */
+  razorpayKeySecret: string
+  razorpayWebhookSecret: string
+  /** Whether a secret is stored, since the value itself is never sent back. */
+  razorpayKeySecretSet: boolean
+  razorpayWebhookSecretSet: boolean
+  /** Convenience fee added to a customer's online payment, in percent. */
+  razorpayFeePercent: number
+
+  /** Customer sign-in methods. The server keeps at least one on. */
+  loginGoogle: boolean
+  loginMobile: boolean
 }
 
 export interface FraudSignals {

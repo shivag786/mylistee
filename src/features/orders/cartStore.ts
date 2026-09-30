@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { storage } from '@/utils/storage'
 import type { ServiceType } from './serviceTypes'
+import type { PublicPaymentOptions } from '@/features/businesses/publicTypes'
 
 /** A line in the cart (Phase 7.5). One shop at a time. */
 export interface CartItem {
@@ -20,6 +21,8 @@ export interface CartService {
   defaultMode: ServiceType
   deliveryFee: number
   tables: { id: string; label: string }[]
+  /** How this shop takes payment. Absent ⇒ cash only, as before. */
+  payment?: PublicPaymentOptions
 }
 
 /** Extra context passed alongside items (service config + a scanned table). */

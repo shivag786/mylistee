@@ -164,6 +164,9 @@ export const adminService = {
     apiClient.getPage<AdminCustomer>('admin/customers', { query: toQuery(f) }),
   setCustomerStatus: (id: string, status: string) =>
     apiClient.patch<AdminCustomer>(`admin/customers/${id}/status`, { status }),
+  /** Issue a new PIN. The response is the only time it is ever shown. */
+  resetCustomerPin: (id: string): Promise<{ pin: string; phone: string }> =>
+    apiClient.post<{ pin: string; phone: string }>(`admin/customers/${id}/reset-pin`),
 
   offers: (f?: ListFilters): Promise<Paginated<AdminOffer>> =>
     apiClient.getPage<AdminOffer>('admin/offers', { query: toQuery(f) }),

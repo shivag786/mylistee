@@ -1,7 +1,14 @@
 /** Order types (Phase 7.5). */
 import type { ServiceType } from '@/features/orders/serviceTypes'
 
-export type OrderStatusKey = 'placed' | 'confirmed' | 'paid' | 'completed' | 'cancelled'
+export type OrderStatusKey =
+  /** Paid online and waiting for the money. The shop never sees these. */
+  | 'awaiting_payment'
+  | 'placed'
+  | 'confirmed'
+  | 'paid'
+  | 'completed'
+  | 'cancelled'
 
 export type PaymentMethodKey = 'cod' | 'online'
 
@@ -29,6 +36,15 @@ export interface Order {
   coinDiscount: number
   deliveryFee: number
   total: number
+  /** What the customer picked at checkout. Null on orders from before online payment. */
+  paymentChoice?: PaymentMethodKey | null
+  /** The part of `total` taken online. */
+  onlineAmount?: number
+  /** Charged on top of the online share -- never part of `total`. */
+  convenienceFee?: number
+  paidOnline?: boolean
+  /** What the shop still collects in person. */
+  amountDue?: number
   coinsEarned: number
   note: string | null
   items: OrderItemLine[]
@@ -46,6 +62,7 @@ export interface Order {
 }
 
 export const ORDER_STATUS_TONE: Record<OrderStatusKey, 'info' | 'warning' | 'success' | 'neutral' | 'danger'> = {
+  awaiting_payment: 'neutral',
   placed: 'warning',
   confirmed: 'info',
   paid: 'success',

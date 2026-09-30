@@ -10,6 +10,8 @@ export interface AuthUser {
   phone: string | null
   role: UserRole
   status: UserStatus
+  /** Whether mobile + PIN sign-in works for this account. Google-only ⇒ false. */
+  hasPin?: boolean
 }
 
 export interface AuthSession {

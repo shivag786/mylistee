@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button'
 import { ReviewPromptDialog } from '@/features/businesses/components/ReviewPromptDialog'
 import { ORDER_STATUS_TONE, type Order, type OrderStatusKey } from '@/features/owner/orderTypes'
 import { SERVICE_META, SERVICE_TONE } from './serviceTypes'
+import { PaymentBreakdown } from './PaymentBreakdown'
 
 const STATUS_LABEL: Record<OrderStatusKey, string> = {
+  awaiting_payment: 'Awaiting payment',
   placed: 'Placed',
   confirmed: 'Confirmed',
   paid: 'Paid',
@@ -93,10 +95,13 @@ export function OrderHistoryCard({ order }: { order: Order }) {
           </div>
         )}
         <div className="flex justify-between text-body font-semibold text-foreground">
-          <span>Total paid</span>
+          {/* "Total", not "Total paid": with an advance, part of it is still owed. */}
+          <span>Total</span>
           <span>₹{order.total}</span>
         </div>
       </div>
+
+      <PaymentBreakdown order={order} />
 
       {/* Rewards */}
       {order.coinsEarned > 0 && (

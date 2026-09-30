@@ -21,6 +21,7 @@ interface AuthContextValue {
   signInWithGoogle: () => Promise<AuthUser>
   pinLogin: (identifier: string, pin: string) => Promise<AuthUser>
   registerOwner: (name: string, mobile: string, pin: string) => Promise<AuthUser>
+  registerCustomer: (name: string, mobile: string, pin: string) => Promise<AuthUser>
   becomeOwner: () => Promise<AuthUser>
   devLogin: (email: string, name?: string, role?: UserRole) => Promise<AuthUser>
   signOut: () => Promise<void>
@@ -123,6 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession],
   )
 
+  const registerCustomer = useCallback(
+    async (name: string, mobile: string, pin: string) =>
+      applySession(await authService.registerCustomer(name, mobile, pin)),
+    [applySession],
+  )
+
   const becomeOwner = useCallback(async () => {
     const updated = await authService.becomeOwner()
     // Role changed — drop cached customer-scoped queries so owner data is fresh.
@@ -155,11 +162,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithGoogle,
       pinLogin,
       registerOwner,
+      registerCustomer,
       becomeOwner,
       devLogin,
       signOut,
     }),
-    [user, status, signInWithGoogle, pinLogin, registerOwner, becomeOwner, devLogin, signOut],
+    [user, status, signInWithGoogle, pinLogin, registerOwner, registerCustomer, becomeOwner, devLogin, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

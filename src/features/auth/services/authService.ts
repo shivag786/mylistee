@@ -55,6 +55,20 @@ export const authService = {
     return exchangeIdToken(idToken)
   },
 
+  /**
+   * Customer sign-up with mobile + PIN, offered when an admin has turned mobile
+   * login on. Signs the new customer in. The server refuses it while that is off.
+   */
+  async registerCustomer(name: string, mobile: string, pin: string): Promise<AuthSession> {
+    const session = await apiClient.post<AuthSession>(
+      'auth/register-customer',
+      { name, mobile, pin },
+      { auth: false },
+    )
+    setAuthToken(session.token)
+    return session
+  },
+
   /** Public business-owner sign-up (mobile + PIN). Signs the new owner in. */
   async registerOwner(name: string, mobile: string, pin: string): Promise<AuthSession> {
     const session = await apiClient.post<AuthSession>(

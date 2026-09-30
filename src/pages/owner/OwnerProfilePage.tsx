@@ -19,7 +19,7 @@ import {
   SocialsFields,
 } from '@/features/owner/components/BusinessFields'
 import { GalleryManager } from '@/features/owner/components/GalleryManager'
-import { ChangePinCard } from '@/features/owner/components/ChangePinCard'
+import { ChangePinCard } from '@/features/auth/components/ChangePinCard'
 import type { OwnerBusiness } from '@/features/owner/types'
 
 function toFormValues(b: OwnerBusiness): BusinessSchema {

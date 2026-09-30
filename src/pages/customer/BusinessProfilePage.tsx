@@ -111,6 +111,7 @@ export function BusinessProfilePage() {
         defaultMode: business!.service.defaultMode,
         deliveryFee: business!.service.deliveryFee,
         tables: business!.tables.map((t) => ({ id: t.id, label: t.label })),
+        payment: business!.service.payment,
       },
       tableId: boundTable?.id ?? null,
     }

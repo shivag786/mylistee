@@ -25,10 +25,13 @@ import {
   useUpdateTable,
   useDeleteTable,
 } from '@/features/owner/hooks/useServiceSettings'
-import type { OwnerTable } from '@/features/owner/services/serviceSettingsService'
+import type { OwnerTable, PaymentMode } from '@/features/owner/services/serviceSettingsService'
 import { SERVICE_TYPES, SERVICE_META, type ServiceType } from '@/features/orders/serviceTypes'
 import { generateQrDataUrl, downloadDataUrl } from '@/utils/qr'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useAppConfig } from '@/hooks/useAppConfig'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/utils/cn'
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { MESSAGES } from '@/constants/messages'
@@ -60,8 +63,147 @@ export function TablesPage() {
 
       <ServiceModesCard />
 
+      <PaymentSettingsCard />
+
       <TablesSection dineInEnabled={settings.data.modes.includes('dine_in')} tables={tables.data ?? []} />
     </div>
+  )
+}
+
+/* ---------------------------------------------------------------- payment -- */
+
+/** Mirrors BusinessServiceSetting::PARTIAL_MIN / PARTIAL_MAX on the server. */
+const PARTIAL_MIN = 10
+const PARTIAL_MAX = 90
+
+/**
+ * How the shop is paid for orders: all of it online, or an advance with the
+ * rest at the counter -- and whether cash is still taken at all.
+ */
+function PaymentSettingsCard() {
+  const { data } = useServiceSettings()
+  const update = useUpdateServiceSettings()
+  const { data: config } = useAppConfig()
+  const gatewayLive = config?.payments.razorpay ?? false
+
+  const [mode, setMode] = useState<PaymentMode>('full')
+  const [percent, setPercent] = useState('50')
+  const [cod, setCod] = useState(true)
+
+  useEffect(() => {
+    if (!data) return
+    setMode(data.paymentMode ?? 'full')
+    setPercent(String(data.partialPercent ?? 50))
+    setCod(data.codEnabled ?? true)
+  }, [data])
+
+  const percentNumber = Number(percent)
+  const percentValid =
+    Number.isInteger(percentNumber) && percentNumber >= PARTIAL_MIN && percentNumber <= PARTIAL_MAX
+
+  function save() {
+    if (!data) return
+    if (mode === 'partial' && !percentValid) {
+      toast.error(`The advance must be between ${PARTIAL_MIN}% and ${PARTIAL_MAX}%.`)
+      return
+    }
+    update.mutate(
+      {
+        // The endpoint also takes the service modes; send the saved ones so this
+        // card changes payment and nothing else.
+        modes: data.modes,
+        defaultMode: data.defaultMode,
+        deliveryFee: data.deliveryFee,
+        paymentMode: mode,
+        partialPercent: mode === 'partial' ? percentNumber : undefined,
+        codEnabled: cod,
+      },
+      {
+        onSuccess: () => toast.success('Payment settings saved'),
+        onError: (e) => toast.error(e instanceof Error ? e.message : 'Could not save payment settings.'),
+      },
+    )
+  }
+
+  return (
+    <Card className="space-y-4" padding="lg">
+      <div>
+        <h2 className="text-body-lg font-semibold text-foreground">How you get paid</h2>
+        <p className="text-caption text-text-secondary">
+          Take the whole amount online, or an advance with the rest at the counter.
+        </p>
+      </div>
+
+      {!gatewayLive && (
+        // Without a gateway the shop's choice has nothing to act on, and the
+        // server offers cash regardless -- say so, rather than let a shop that
+        // turned cash off think it now only takes card.
+        <p className="rounded-xl bg-warning/10 px-3 py-2 text-caption text-foreground">
+          Online payments are not live yet. Until they are, customers pay at the counter
+          whatever you choose here.
+        </p>
+      )}
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        {([
+          { key: 'full', title: 'Full payment', body: 'The whole order is paid online.' },
+          { key: 'partial', title: 'Partial payment', body: 'An advance online, the rest at the counter.' },
+        ] as const).map((opt) => (
+          <button
+            key={opt.key}
+            type="button"
+            onClick={() => setMode(opt.key)}
+            aria-pressed={mode === opt.key}
+            className={cn(
+              'rounded-xl border p-3 text-left transition-colors',
+              mode === opt.key ? 'border-primary bg-primary-soft' : 'border-border hover:bg-surface-muted',
+            )}
+          >
+            <p className="text-caption font-semibold text-foreground">{opt.title}</p>
+            <p className="text-small text-text-secondary">{opt.body}</p>
+          </button>
+        ))}
+      </div>
+
+      {mode === 'partial' && (
+        <div className="space-y-1.5">
+          <Label htmlFor="partial-percent">Advance to take online (%)</Label>
+          <Input
+            id="partial-percent"
+            type="number"
+            inputMode="numeric"
+            min={PARTIAL_MIN}
+            max={PARTIAL_MAX}
+            value={percent}
+            onChange={(e) => setPercent(e.target.value)}
+            aria-invalid={!percentValid}
+            className="max-w-[140px]"
+          />
+          <p className={cn('text-small', percentValid ? 'text-text-muted' : 'text-danger')}>
+            Between {PARTIAL_MIN}% and {PARTIAL_MAX}%. On a ₹200 order,{' '}
+            {percentValid ? `₹${Math.ceil((200 * percentNumber) / 100)} is paid now` : 'enter a valid share'}.
+          </p>
+        </div>
+      )}
+
+      <label className="flex items-center justify-between gap-4 rounded-xl bg-surface-muted p-3">
+        <span className="min-w-0">
+          <span className="block text-caption font-medium text-foreground">Cash on delivery / at counter</span>
+          <span className="text-small text-text-secondary">
+            {cod
+              ? 'Customers can choose to pay the whole order in cash.'
+              : 'Every order is paid online as set above.'}
+          </span>
+        </span>
+        <Switch checked={cod} onCheckedChange={setCod} aria-label="Allow cash on delivery" />
+      </label>
+
+      <div className="flex justify-end">
+        <Button onClick={save} isLoading={update.isPending}>
+          Save payment settings
+        </Button>
+      </div>
+    </Card>
   )
 }
 

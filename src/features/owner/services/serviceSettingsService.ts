@@ -6,16 +6,27 @@
 import { apiClient } from '@/services/apiClient'
 import type { ServiceType } from '@/features/orders/serviceTypes'
 
+/** How the shop takes payment for orders. */
+export type PaymentMode = 'full' | 'partial'
+
 export interface ServiceSettings {
   modes: ServiceType[]
   defaultMode: ServiceType
   deliveryFee: number
+  paymentMode: PaymentMode
+  /** Share taken online up front when paymentMode is 'partial'. 10-90. */
+  partialPercent: number
+  codEnabled: boolean
 }
 
 export interface ServiceSettingsInput {
   modes: ServiceType[]
   defaultMode: ServiceType
   deliveryFee: number
+  /** Optional, so saving service modes alone leaves payment choices alone. */
+  paymentMode?: PaymentMode
+  partialPercent?: number
+  codEnabled?: boolean
 }
 
 export interface OwnerTable {
