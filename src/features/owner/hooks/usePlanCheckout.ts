@@ -13,7 +13,7 @@
  */
 import { useCallback, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { loadRazorpay, type RazorpayHandlerResponse } from '@/features/payments/razorpay'
+import { loadRazorpay, waitForPageInteractive, type RazorpayHandlerResponse } from '@/features/payments/razorpay'
 import { subscriptionService } from '../services/subscriptionService'
 import type { Plan, SubscriptionState } from '../types'
 import { ownerKeys } from './useOwner'
@@ -63,6 +63,12 @@ export function usePlanCheckout() {
       ])
 
       setStage('awaiting')
+
+      // The confirm dialog closed just before this, and Radix keeps the page
+      // unclickable until its exit animation ends. The server call usually
+      // outlasts that; on a fast connection it may not, and Checkout would
+      // open as a window nobody can click.
+      await waitForPageInteractive()
 
       const response = await new Promise<RazorpayHandlerResponse>((resolve, reject) => {
         const checkout = new Razorpay({
