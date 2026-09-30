@@ -20,7 +20,16 @@ export interface AppConfig {
    * a paid upgrade falls back to the pre-gateway simulated switch instead of
    * opening Checkout.
    */
-  payments: { razorpay: boolean }
+  payments: {
+    razorpay: boolean
+    /** Convenience fee on the online share of an order, in percent. */
+    convenienceFeePercent?: number
+  }
+  /**
+   * Which ways in the customer login page offers. The server keeps at least one
+   * on. Absent on an older API, which only had Google.
+   */
+  auth?: { google: boolean; mobile: boolean }
 }
 
 export const configService = {

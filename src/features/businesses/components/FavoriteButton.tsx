@@ -25,7 +25,7 @@ import { Check, Heart } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { GoogleSignInDialog } from '@/features/auth/components/GoogleSignInDialog'
+import { SignInDialog } from '@/features/auth/components/SignInDialog'
 import { useToggleFavorite } from '../hooks/useFavorites'
 import { publicBusinessKeys } from '../hooks/usePublicBusiness'
 import { toast } from '@/utils/toast'
@@ -104,7 +104,7 @@ export function FavoriteButton({ slug, name, isFavorite }: FavoriteButtonProps) 
         )}
       </Button>
 
-      <GoogleSignInDialog
+      <SignInDialog
         open={askSignIn}
         onOpenChange={setAskSignIn}
         reason={`Sign in to save ${name} to your favourites.`}

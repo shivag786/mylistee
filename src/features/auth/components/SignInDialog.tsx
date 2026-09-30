@@ -1,5 +1,6 @@
 /**
- * Sign in with Google without leaving the page.
+ * Sign in without leaving the page -- with Google, mobile + PIN, or both,
+ * whichever the admin has switched on.
  *
  * Built for actions a signed-out visitor takes mid-browse — following a shop,
  * say. Sending them to /login and back would cost them their place on the page
@@ -21,28 +22,39 @@ import { rememberPostLoginTarget } from '../postLoginTarget'
 import { firebaseErrorMessage, isCancelledSignIn } from '@/utils/firebaseErrors'
 import { MESSAGES } from '@/constants/messages'
 import { ApiError } from '@/types/api'
+import { useAppConfig } from '@/hooks/useAppConfig'
+import { CustomerMobileAuth } from './CustomerMobileAuth'
 
-interface GoogleSignInDialogProps {
+interface SignInDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   /** Why they are being asked — shown under the title. */
   reason?: string
   /** Where to return after a redirect-based sign-in. Defaults to the current page. */
   returnTo?: string
-  /** Runs after a successful popup sign-in, so the original action can continue. */
+  /** Runs after a successful sign-in, so the original action can continue. */
   onSignedIn?: () => void | Promise<void>
 }
 
-export function GoogleSignInDialog({
+export function SignInDialog({
   open,
   onOpenChange,
   reason = 'Sign in to continue.',
   returnTo,
   onSignedIn,
-}: GoogleSignInDialogProps) {
+}: SignInDialogProps) {
   const { signInWithGoogle } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { data: config } = useAppConfig()
+  // An older API had no auth block and only ever offered Google.
+  const showGoogle = config?.auth?.google ?? true
+  const showMobile = config?.auth?.mobile ?? false
+
+  async function handleMobileSignedIn() {
+    onOpenChange(false)
+    await onSignedIn?.()
+  }
 
   async function handleSignIn() {
     setLoading(true)
@@ -74,21 +86,33 @@ export function GoogleSignInDialog({
           <DialogDescription>{reason}</DialogDescription>
         </DialogHeader>
 
-        <Button
-          fullWidth
-          isLoading={loading}
-          onClick={handleSignIn}
-          leftIcon={<GoogleIcon />}
-          className="text-white"
-        >
-          {MESSAGES.cta.signInGoogle}
-        </Button>
+        {showGoogle && (
+          <Button
+            fullWidth
+            isLoading={loading}
+            onClick={handleSignIn}
+            leftIcon={<GoogleIcon />}
+            className="text-white"
+          >
+            {MESSAGES.cta.signInGoogle}
+          </Button>
+        )}
 
         {error && (
           <p role="alert" className="text-center text-caption text-danger">
             {error}
           </p>
         )}
+
+        {showGoogle && showMobile && (
+          <div className="flex items-center gap-3 text-small text-text-muted" aria-hidden>
+            <span className="h-px flex-1 bg-border" />
+            or
+            <span className="h-px flex-1 bg-border" />
+          </div>
+        )}
+
+        {showMobile && <CustomerMobileAuth onSignedIn={() => void handleMobileSignedIn()} />}
       </DialogContent>
     </Dialog>
   )

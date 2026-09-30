@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ORDER_STATUS_TONE, type Order, type OrderStatusKey, type PaymentMethodKey } from '../orderTypes'
 import { SERVICE_META, SERVICE_TONE } from '@/features/orders/serviceTypes'
+import { PaymentBreakdown } from '@/features/orders/PaymentBreakdown'
 
 interface OrderCardProps {
   order: Order
@@ -13,6 +14,12 @@ interface OrderCardProps {
 
 /** Owner order card (Phase 7.5) — token, items, totals, and the next action(s). */
 export function OrderCard({ order, onAction, busy }: OrderCardProps) {
+  // Only an advance leaves a specific sum to collect; a cash order has no
+  // online share, so its due is just the total and the old labels still fit.
+  const hasOnlineShare = (order.onlineAmount ?? 0) > 0
+  const due = hasOnlineShare ? (order.amountDue ?? null) : null
+  const fullyPrepaid = hasOnlineShare && Boolean(order.paidOnline) && (order.amountDue ?? 1) <= 0
+
   return (
     <Card className="flex h-full flex-col gap-3" padding="md">
       <div className="flex items-start justify-between gap-3">
@@ -76,6 +83,8 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
         )}
       </div>
 
+      <PaymentBreakdown order={order} />
+
       {order.note && <p className="rounded-lg bg-surface-muted p-2 text-caption text-text-secondary">“{order.note}”</p>}
 
       <div className="mt-auto flex flex-wrap gap-2 pt-1">
@@ -89,10 +98,17 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
             </Button>
           </>
         )}
-        {order.status === 'confirmed' && (
+        {order.status === 'confirmed' && fullyPrepaid && (
+          // Nothing to collect: the money already landed online. Asking "cash or
+          // online?" here would invite a wrong answer on a question that is settled.
+          <Button size="sm" variant="success" leftIcon={<CheckCheck className="size-4" />} onClick={() => onAction(order.id, 'paid', 'online')} disabled={busy}>
+            Paid online
+          </Button>
+        )}
+        {order.status === 'confirmed' && !fullyPrepaid && (
           <>
             <Button size="sm" variant="success" leftIcon={<Banknote className="size-4" />} onClick={() => onAction(order.id, 'paid', 'cod')} disabled={busy}>
-              COD collected
+              {due !== null ? `Cash ₹${due} collected` : 'COD collected'}
             </Button>
             <Button size="sm" leftIcon={<Smartphone className="size-4" />} onClick={() => onAction(order.id, 'paid', 'online')} disabled={busy}>
               Online paid

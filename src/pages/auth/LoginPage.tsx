@@ -16,20 +16,41 @@ import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { fadeInUp } from '@/animations'
 import { DevLoginPanel } from './DevLoginPanel'
+import { CustomerMobileAuth } from '@/features/auth/components/CustomerMobileAuth'
+import { readPostLoginTarget } from '@/features/auth/postLoginTarget'
+import { useAppConfig } from '@/hooks/useAppConfig'
+import type { AuthUser } from '@/features/auth/types'
 
 interface LocationState {
   from?: { pathname: string }
 }
 
-/** Customer sign-in — Google only, with the option to keep browsing as a guest. */
+/**
+ * Customer sign-in, with the option to keep browsing as a guest.
+ *
+ * What it offers is the admin's choice: Google, mobile + PIN, or both. Until the
+ * config arrives it assumes Google, which is all an older API ever had -- so a
+ * slow config call shows the familiar button rather than an empty page.
+ */
 export function LoginPage() {
   const { signInWithGoogle } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { data: config } = useAppConfig()
+
+  const showGoogle = config?.auth?.google ?? true
+  const showMobile = config?.auth?.mobile ?? false
 
   const from = (location.state as LocationState | null)?.from?.pathname
+
+  /** Where to go once signed in, however they signed in. */
+  function finish(user: AuthUser) {
+    toast.success(MESSAGES.success.signedIn)
+    // A cart sent here because Google was off remembered its shop; honour that.
+    navigate(from ?? readPostLoginTarget() ?? landingPathForRole(user.role), { replace: true })
+  }
 
   async function handleGoogle() {
     setLoading(true)
@@ -76,21 +97,33 @@ export function LoginPage() {
         transition={{ delay: 0.08 }}
         className="w-full max-w-sm space-y-3"
       >
-        <Button
-          fullWidth
-          isLoading={loading}
-          onClick={handleGoogle}
-          leftIcon={<GoogleIcon />}
-          className="text-white"
-        >
-          {MESSAGES.cta.signInGoogle}
-        </Button>
+        {showGoogle && (
+          <Button
+            fullWidth
+            isLoading={loading}
+            onClick={handleGoogle}
+            leftIcon={<GoogleIcon />}
+            className="text-white"
+          >
+            {MESSAGES.cta.signInGoogle}
+          </Button>
+        )}
 
         {error && (
           <p role="alert" className="text-center text-caption text-danger">
             {error}
           </p>
         )}
+
+        {showGoogle && showMobile && (
+          <div className="flex items-center gap-3 text-small text-text-muted" aria-hidden>
+            <span className="h-px flex-1 bg-border" />
+            or
+            <span className="h-px flex-1 bg-border" />
+          </div>
+        )}
+
+        {showMobile && <CustomerMobileAuth onSignedIn={finish} />}
 
         {/* Skip — keep browsing as a guest */}
         <Button

@@ -11,6 +11,7 @@ import { authService } from '@/features/auth/services/authService'
 import { ApiError } from '@/types/api'
 import { MESSAGES } from '@/constants/messages'
 import { toast } from '@/utils/toast'
+import { weakPinReason } from '../strongPin'
 
 const pinSchema = z
   .object({
@@ -19,7 +20,12 @@ const pinSchema = z
       .string()
       .min(4, 'Your PIN must be at least 4 digits.')
       .max(8, 'Your PIN can be at most 8 digits.')
-      .regex(/^[0-9]+$/, 'Your PIN must be digits only.'),
+      .regex(/^[0-9]+$/, 'Your PIN must be digits only.')
+      // Same bar as the server's StrongPin, said as they type.
+      .superRefine((pin, ctx) => {
+        const reason = weakPinReason(pin)
+        if (reason) ctx.addIssue({ code: 'custom', message: reason })
+      }),
     confirmPin: z.string().min(1, 'Re-enter your new PIN.'),
   })
   .refine((v) => v.newPin === v.confirmPin, {

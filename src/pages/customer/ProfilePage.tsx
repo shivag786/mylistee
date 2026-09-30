@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ConfirmationDialog } from '@/components/feedback/ConfirmationDialog'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { ChangePinCard } from '@/features/auth/components/ChangePinCard'
 import { ROUTES } from '@/constants/routes'
 import { toast } from '@/utils/toast'
 
@@ -43,7 +44,8 @@ export function ProfilePage() {
         <Avatar name={user.name} src={user.photoUrl} size="lg" />
         <div className="min-w-0 space-y-1">
           <p className="truncate text-body-lg font-semibold text-foreground">{user.name}</p>
-          <p className="truncate text-caption text-text-secondary">{user.email}</p>
+          {/* A customer who signed up by mobile has no email; show the number. */}
+          <p className="truncate text-caption text-text-secondary">{user.email || user.phone}</p>
           {user.role !== 'customer' && (
             <Badge tone="secondary">{ROLE_LABELS[user.role] ?? user.role}</Badge>
           )}
@@ -63,6 +65,10 @@ export function ProfilePage() {
           onClick={() => navigate(ROUTES.notifications)}
         />
       </Card>
+
+      {/* Only for an account that signs in with a PIN -- a Google-only
+          customer has none to change. */}
+      {user.hasPin && <ChangePinCard />}
 
       {/* Legal — reachable from the app, not only from a policy URL someone
           happens to have. */}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Minus, Plus, Trash2, Coins, Utensils } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Minus, Plus, Trash2, Coins, Utensils, Smartphone, Banknote } from 'lucide-react'
 import { SERVICE_META, type ServiceType } from './serviceTypes'
 import { cn } from '@/utils/cn'
 import {
@@ -21,11 +21,31 @@ import { MESSAGES } from '@/constants/messages'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useBusinessLoyalty } from '@/features/wallet/hooks/useCoins'
 import { cart, cartSubtotal, useCart } from './cartStore'
-import { customerOrderService } from './customerOrderService'
+import { useOrderCheckout, isOrderPaymentCancelled } from './useOrderCheckout'
+import { defaultChoice, splitPayment, type PaymentChoice } from './paymentSplit'
+import { useAppConfig } from '@/hooks/useAppConfig'
+import { rememberPostLoginTarget } from '@/features/auth/postLoginTarget'
 import { ROUTES } from '@/constants/routes'
 
 /** ₹ value of one coin — mirrors backend config('loyalty.coin_value') default. */
 const COIN_VALUE = 1
+
+const PAYMENT_OPTIONS = [
+  { key: 'online', icon: Smartphone },
+  { key: 'cod', icon: Banknote },
+] as const satisfies ReadonlyArray<{ key: PaymentChoice; icon: typeof Smartphone }>
+
+/** "Cash on delivery" only reads right for delivery; otherwise it is paid at the counter. */
+function codLabel(serviceType: ServiceType): string {
+  return serviceType === 'delivery' ? 'Cash on delivery' : 'Pay at counter'
+}
+
+function placeLabel(signedIn: boolean, chargedNow: number, stage: string): string {
+  if (stage === 'paying') return 'Complete the payment…'
+  if (stage === 'verifying') return 'Confirming payment…'
+  if (!signedIn) return 'Sign in & place order'
+  return chargedNow > 0 ? `Pay ₹${chargedNow}` : 'Place order'
+}
 
 interface CartSheetProps {
   open: boolean
@@ -55,6 +75,14 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   const [tableId, setTableId] = useState<string | null>(null)
   const [address, setAddress] = useState('')
 
+  // How the shop takes payment -- already reconciled with the gateway on the
+  // server, so whatever is offered here is something it will accept.
+  const payment = service?.payment
+  const [paymentChoice, setPaymentChoice] = useState<PaymentChoice>(() => defaultChoice(payment))
+  const { data: appConfig } = useAppConfig()
+  // An older API had no auth block and only ever offered Google.
+  const googleSignIn = appConfig?.auth?.google ?? true
+
   // The customer's coin balance at this shop (only when signed in).
   const { data: loyalty } = useBusinessLoyalty(current?.businessSlug ?? '', open && isAuthenticated && Boolean(current))
   const balance = loyalty?.businessBalance ?? 0
@@ -68,6 +96,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
       setServiceType(modes.includes(initial) ? initial : modes[0])
       setTableId(preboundTableId)
       setAddress('')
+      setPaymentChoice(defaultChoice(payment))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
@@ -90,6 +119,8 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
     : 0
   const coinDiscount = coinsToApply * COIN_VALUE
   const payable = Math.max(0, subtotal - coinDiscount) + fee
+  const split = splitPayment(payable, paymentChoice, payment)
+  const showPaymentPicker = Boolean(payment?.onlineAvailable && payment?.codAvailable)
 
   // Guard the toggle: alert instead of silently doing nothing when there's
   // nothing to apply.
@@ -101,9 +132,11 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
     setUseCoins(next)
   }
 
-  const place = useMutation({
-    mutationFn: () =>
-      customerOrderService.place({
+  const checkout = useOrderCheckout()
+
+  async function submitOrder() {
+    try {
+      const order = await checkout.placeOrder({
         business: current!.businessSlug,
         items: current!.items.map((i) => ({ type: i.type, id: i.id, quantity: i.quantity })),
         coinsToUse: coinsToApply,
@@ -111,26 +144,47 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
         serviceType,
         table: serviceType === 'dine_in' ? tableId ?? undefined : undefined,
         serviceAddress: serviceType === 'delivery' ? address.trim() || undefined : undefined,
-      }),
-    onSuccess: (order) => {
-      // Order placed → empty the cart, close the sheet, and go to the orders page
-      // (the token shows there). Invalidate so it appears immediately.
+        paymentChoice,
+      })
+
+      // Placed (and paid, if it was online) → empty the cart, close the sheet,
+      // and go to the orders page where the token shows.
       cart.clear()
       void queryClient.invalidateQueries({ queryKey: ['customer', 'orders'] })
-      toast.success(`Order placed! Your token is ${order.token}.`)
+      toast.success(
+        order.paidOnline ? `Paid! Your token is ${order.token}.` : `Order placed! Your token is ${order.token}.`,
+      )
       onOpenChange(false)
       navigate(ROUTES.orders)
-    },
-    onError: (err) => toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic),
-  })
+    } catch (err) {
+      // Closing the payment window is a decision, not an error: the order was
+      // withdrawn and the cart is still here to try again.
+      if (isOrderPaymentCancelled(err)) {
+        toast.info('Payment cancelled. Your cart is still here.')
+        return
+      }
+      toast.error(
+        err instanceof ApiError ? err.message : err instanceof Error ? err.message : MESSAGES.errors.generic,
+      )
+    }
+  }
 
-  // If logged out, sign in with Google first (stays on the same page), then place.
   async function handlePlace() {
     if (needsAddress && !addressReady) {
       toast.info('Please add a delivery address.')
       return
     }
     if (!isAuthenticated) {
+      // With Google switched off by the admin there is no popup to open --
+      // send them to the login page, which offers mobile sign-in, and back to
+      // this shop afterwards. The cart is kept in storage meanwhile.
+      if (!googleSignIn) {
+        rememberPostLoginTarget(window.location.pathname + window.location.search)
+        onOpenChange(false)
+        navigate(ROUTES.login, { state: { from: { pathname: window.location.pathname } } })
+        return
+      }
+
       setSigningIn(true)
       try {
         await signInWithGoogle()
@@ -141,7 +195,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
         setSigningIn(false)
       }
     }
-    place.mutate()
+    await submitOrder()
   }
 
   return (
@@ -317,25 +371,77 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                       </div>
                     )}
                     <div className="flex items-center justify-between text-body font-semibold text-foreground">
-                      <span>To pay</span>
+                      <span>Order total</span>
                       <span>₹{payable}</span>
                     </div>
                   </div>
+
+                  {showPaymentPicker && (
+                    <div className="space-y-2">
+                      <p className="text-caption font-medium text-foreground">How would you like to pay?</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {PAYMENT_OPTIONS.map(({ key, icon: Icon }) => (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => setPaymentChoice(key)}
+                            aria-pressed={paymentChoice === key}
+                            className={cn(
+                              'flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-caption font-medium transition-colors',
+                              paymentChoice === key
+                                ? 'border-primary bg-primary-soft text-primary'
+                                : 'border-border text-text-secondary hover:bg-surface-muted',
+                            )}
+                          >
+                            <Icon className="size-4" aria-hidden />
+                            {key === 'online' ? 'Pay online' : codLabel(serviceType)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {split.online > 0 && (
+                    <div className="space-y-1 rounded-xl bg-surface-muted px-3 py-2.5 text-caption">
+                      <div className="flex justify-between text-text-secondary">
+                        <span>
+                          {split.atCounter > 0 ? `Advance now (${payment?.partialPercent}%)` : 'Pay now'}
+                        </span>
+                        <span className="tabular-nums">₹{split.online}</span>
+                      </div>
+                      {split.fee > 0 && (
+                        <div className="flex justify-between text-text-muted">
+                          <span>Convenience fee ({payment?.feePercent}%)</span>
+                          <span className="tabular-nums">₹{split.fee}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-semibold text-foreground">
+                        <span>Charged now</span>
+                        <span className="tabular-nums">₹{split.chargedNow}</span>
+                      </div>
+                      {split.atCounter > 0 && (
+                        <div className="flex justify-between border-t border-border pt-1 text-text-secondary">
+                          <span>Pay at the counter</span>
+                          <span className="tabular-nums">₹{split.atCounter}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </div>
 
             <SheetFooter className="flex-row gap-2 border-t border-border px-5 py-4">
-              <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={place.isPending}>
+              <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={checkout.isPending}>
                 Add more
               </Button>
               <Button
                 className="flex-1"
                 onClick={() => void handlePlace()}
-                isLoading={place.isPending || signingIn}
+                isLoading={checkout.isPending || signingIn}
                 disabled={!current || current.items.length === 0 || !addressReady}
               >
-                {isAuthenticated ? 'Place order' : 'Sign in & place order'}
+                {placeLabel(isAuthenticated, split.chargedNow, checkout.stage)}
               </Button>
             </SheetFooter>
         </>
