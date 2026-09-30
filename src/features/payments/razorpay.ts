@@ -99,3 +99,31 @@ export function loadRazorpay(): Promise<RazorpayConstructor> {
 
   return loader
 }
+
+/**
+ * Resolve once the page takes clicks again.
+ *
+ * An open Radix modal (our Sheet and Dialog) sets `pointer-events: none` on
+ * <body> so nothing behind it can be clicked. Razorpay mounts its Checkout
+ * straight into <body>, so it inherits that and opens as a window nobody can
+ * click -- until the modal closes. Closing the modal is not enough on its own:
+ * Radix only lets go after its exit animation. So wait for it to let go, and
+ * open Checkout after.
+ *
+ * Capped, never hangs: if something else holds the page, the payment still
+ * opens rather than the customer being left with a spinner.
+ */
+export function waitForPageInteractive(timeoutMs = 1000): Promise<void> {
+  return new Promise((resolve) => {
+    const started = performance.now()
+    const check = () => {
+      const blocked = document.body.style.pointerEvents === 'none'
+      if (!blocked || performance.now() - started > timeoutMs) {
+        resolve()
+        return
+      }
+      requestAnimationFrame(check)
+    }
+    check()
+  })
+}

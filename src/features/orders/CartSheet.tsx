@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Minus, Plus, Trash2, Coins, Utensils, Smartphone, Banknote } from 'lucide-react'
@@ -22,6 +22,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useBusinessLoyalty } from '@/features/wallet/hooks/useCoins'
 import { cart, cartSubtotal, useCart } from './cartStore'
 import { useOrderCheckout, isOrderPaymentCancelled } from './useOrderCheckout'
+import { waitForPageInteractive } from '@/features/payments/razorpay'
 import { defaultChoice, splitPayment, type PaymentChoice } from './paymentSplit'
 import { useAppConfig } from '@/hooks/useAppConfig'
 import { rememberPostLoginTarget } from '@/features/auth/postLoginTarget'
@@ -87,8 +88,21 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   const { data: loyalty } = useBusinessLoyalty(current?.businessSlug ?? '', open && isAuthenticated && Boolean(current))
   const balance = loyalty?.businessBalance ?? 0
 
+  /**
+   * The sheet steps aside while Razorpay is open (see beforePaymentOpens) and
+   * comes back if the payment does not go through. Coming back is not a fresh
+   * cart: the address, note, coins and choices the customer set must survive,
+   * so the reset below is skipped once.
+   */
+  const handedOff = useRef(false)
+  const resuming = useRef(false)
+
   useEffect(() => {
     if (open) {
+      if (resuming.current) {
+        resuming.current = false
+        return
+      }
       setUseCoins(false)
       setNote('')
       // Scanned a table QR ⇒ default to dine-in; else the shop's preferred mode.
@@ -132,7 +146,25 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
     setUseCoins(next)
   }
 
-  const checkout = useOrderCheckout()
+  const checkout = useOrderCheckout({
+    // The sheet is a Radix modal, which blocks clicks on everything outside it
+    // -- including Razorpay, which mounts into <body>. Left open, it leaves the
+    // customer looking at a payment window they cannot touch. So it steps
+    // aside first, and Checkout opens only once the page is clickable again.
+    beforePaymentOpens: async () => {
+      handedOff.current = true
+      onOpenChange(false)
+      await waitForPageInteractive()
+    },
+  })
+
+  /** Put the cart back as the customer left it, after a payment that did not go through. */
+  function resumeCart() {
+    if (!handedOff.current) return
+    handedOff.current = false
+    resuming.current = true
+    onOpenChange(true)
+  }
 
   async function submitOrder() {
     try {
@@ -149,6 +181,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
 
       // Placed (and paid, if it was online) → empty the cart, close the sheet,
       // and go to the orders page where the token shows.
+      handedOff.current = false
       cart.clear()
       void queryClient.invalidateQueries({ queryKey: ['customer', 'orders'] })
       toast.success(
@@ -160,9 +193,11 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
       // Closing the payment window is a decision, not an error: the order was
       // withdrawn and the cart is still here to try again.
       if (isOrderPaymentCancelled(err)) {
+        resumeCart()
         toast.info('Payment cancelled. Your cart is still here.')
         return
       }
+      resumeCart()
       toast.error(
         err instanceof ApiError ? err.message : err instanceof Error ? err.message : MESSAGES.errors.generic,
       )

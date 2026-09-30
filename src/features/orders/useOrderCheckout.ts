@@ -28,7 +28,17 @@ export class OrderPaymentCancelled extends Error {
   }
 }
 
-export function useOrderCheckout() {
+interface OrderCheckoutOptions {
+  /**
+   * Called, and awaited, just before Razorpay opens. Whatever opened checkout
+   * uses it to get out of the way: Checkout mounts into <body>, and an open
+   * modal above it swallows every click, leaving a payment window nobody can
+   * use. See waitForPageInteractive().
+   */
+  beforePaymentOpens?: () => Promise<void> | void
+}
+
+export function useOrderCheckout({ beforePaymentOpens }: OrderCheckoutOptions = {}) {
   const [stage, setStage] = useState<OrderCheckoutStage>('idle')
 
   /**
@@ -59,6 +69,8 @@ export function useOrderCheckout() {
         await customerOrderService.releasePayment(order.id).catch(() => undefined)
         throw error
       })
+
+      await beforePaymentOpens?.()
 
       const response = await new Promise<RazorpayHandlerResponse>((resolve, reject) => {
         const checkout = new Razorpay({
