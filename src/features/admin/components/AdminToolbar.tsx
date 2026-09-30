@@ -7,6 +7,15 @@ export interface StatusOption {
   label: string
 }
 
+/** A further dropdown beside the status one -- e.g. how an order was paid. */
+export interface ToolbarFilter {
+  label: string
+  allLabel: string
+  value: string | undefined
+  options: StatusOption[]
+  onChange: (value: string) => void
+}
+
 interface AdminToolbarProps {
   search: string
   onSearch: (value: string) => void
@@ -14,7 +23,12 @@ interface AdminToolbarProps {
   statusOptions?: StatusOption[]
   status?: string
   onStatus?: (value: string) => void
+  /** Optional extra dropdowns. Pages that pass none look exactly as before. */
+  filters?: ToolbarFilter[]
 }
+
+const SELECT_CLASS =
+  'h-[52px] rounded-input border border-border bg-surface px-3 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30'
 
 /** Search box (debounced) + optional status filter, shown above an admin table. */
 export function AdminToolbar({
@@ -24,6 +38,7 @@ export function AdminToolbar({
   statusOptions,
   status,
   onStatus,
+  filters,
 }: AdminToolbarProps) {
   const [value, setValue] = useState(search)
 
@@ -45,6 +60,22 @@ export function AdminToolbar({
           aria-label="Search"
         />
       </div>
+      {filters?.map((f) => (
+        <select
+          key={f.label}
+          value={f.value ?? ''}
+          onChange={(e) => f.onChange(e.target.value)}
+          aria-label={f.label}
+          className={SELECT_CLASS}
+        >
+          <option value="">{f.allLabel}</option>
+          {f.options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      ))}
       {statusOptions && onStatus && (
         <select
           value={status ?? ''}

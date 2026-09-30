@@ -55,6 +55,7 @@ const AdminReviewsPage = lazyPage(() => import('@/pages/admin/AdminReviewsPage')
 const AdminPlansPage = lazyPage(() => import('@/pages/admin/AdminPlansPage'), 'AdminPlansPage')
 const AdminRevenuePage = lazyPage(() => import('@/pages/admin/AdminRevenuePage'), 'AdminRevenuePage')
 const AdminPaymentsPage = lazyPage(() => import('@/pages/admin/AdminPaymentsPage'), 'AdminPaymentsPage')
+const AdminOrdersPage = lazyPage(() => import('@/pages/admin/AdminOrdersPage'), 'AdminOrdersPage')
 const AdminBroadcastPage = lazyPage(() => import('@/pages/admin/AdminBroadcastPage'), 'AdminBroadcastPage')
 const AdminBannersPage = lazyPage(() => import('@/pages/admin/AdminBannersPage'), 'AdminBannersPage')
 const AdminFeatureFlagsPage = lazyPage(() => import('@/pages/admin/AdminFeatureFlagsPage'), 'AdminFeatureFlagsPage')
@@ -212,6 +213,7 @@ export function AppRouter() {
             <Route path={ROUTES.admin.reviews} element={<AdminReviewsPage />} />
             <Route path={ROUTES.admin.plans} element={<AdminPlansPage />} />
             <Route path={ROUTES.admin.revenue} element={<AdminRevenuePage />} />
+            <Route path={ROUTES.admin.orders} element={<AdminOrdersPage />} />
             <Route path={ROUTES.admin.payments} element={<AdminPaymentsPage />} />
             <Route path={ROUTES.admin.broadcast} element={<AdminBroadcastPage />} />
             <Route path={ROUTES.admin.banners} element={<AdminBannersPage />} />

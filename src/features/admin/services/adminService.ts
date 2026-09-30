@@ -34,6 +34,9 @@ import type {
   PlatformSettings,
   RevenueFilters,
   RevenueResponse,
+  AdminOrder,
+  OrderFilters,
+  OrdersPage,
 } from '../types'
 
 type Query = Record<string, string | number | undefined>
@@ -184,8 +187,15 @@ export const adminService = {
     // captured/refunded totals to it — which PaginationMeta does not model.
     // Narrowed here, at the one place that knows this endpoint's contract.
     apiClient.getPage<AdminPayment>('admin/payments', {
-      query: toQuery(f),
+      // toQuery() knows only the shared filters; `kind` would be dropped.
+      query: { ...toQuery(f), kind: f?.kind || undefined },
     }) as Promise<PaymentsPage>,
+
+  /** Every customer order across shops, with its payment trail. */
+  orders: (f?: OrderFilters): Promise<OrdersPage> =>
+    apiClient.getPage<AdminOrder>('admin/orders', {
+      query: { ...toQuery(f), payment: f?.payment || undefined },
+    }) as Promise<OrdersPage>,
 
   /** Refund all (amount omitted) or part of a captured payment. */
   refundPayment: (id: string, payload: { amount?: number; reason?: string }) =>
