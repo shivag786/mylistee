@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ShoppingCart } from 'lucide-react'
-import { useCart, cartCount, cartSubtotal } from './cartStore'
+import { useCart, cartCount, cartSubtotal, onOpenCartSheet } from './cartStore'
 import { CartSheet } from './CartSheet'
 
 /**
@@ -13,6 +13,8 @@ export function GlobalCartBar() {
   const [open, setOpen] = useState(false)
   const count = cartCount(current)
   const subtotal = cartSubtotal(current)
+
+  useEffect(() => onOpenCartSheet(() => setOpen(true)), [])
 
   return (
     <>

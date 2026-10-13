@@ -16,7 +16,8 @@ import { comboDish, dishKey, productDish, viewableDishes, type Dish } from './di
 import { ComboCard } from './dish/ComboCard'
 import { useAppConfig } from '@/hooks/useAppConfig'
 
-type AddHandler = (item: Omit<CartItem, 'quantity'>) => void
+/** `quiet` skips the "added" toast — the dish viewer shows its own cart button instead. */
+type AddHandler = (item: Omit<CartItem, 'quantity'>, opts?: { quiet?: boolean }) => void
 type OpenHandler = (key: string) => void
 
 /**
@@ -154,7 +155,7 @@ export function MenuList({ menu, combos, businessSlug, onAdd, focusProductId }: 
         openAt={viewerAt}
         onClose={() => setViewerAt(null)}
         qtyOf={(d: Dish) => qtyOf(d.type, d.id)}
-        onAdd={onAdd ? (d: Dish) => onAdd(d.cartItem) : undefined}
+        onAdd={onAdd ? (d: Dish) => onAdd(d.cartItem, { quiet: true }) : undefined}
       />
     </div>
     </TintContext.Provider>

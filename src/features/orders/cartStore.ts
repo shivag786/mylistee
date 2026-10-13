@@ -144,3 +144,17 @@ export function cartCount(c: Cart | null): number {
 export function cartSubtotal(c: Cart | null): number {
   return c?.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0) ?? 0
 }
+
+const sheetListeners = new Set<() => void>()
+
+/** Ask the global cart bar to open its checkout sheet (e.g. from the dish viewer). */
+export function openCartSheet() {
+  sheetListeners.forEach((l) => l())
+}
+
+export function onOpenCartSheet(listener: () => void) {
+  sheetListeners.add(listener)
+  return () => {
+    sheetListeners.delete(listener)
+  }
+}

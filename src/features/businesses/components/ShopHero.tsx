@@ -4,15 +4,8 @@ import { Star, Users } from 'lucide-react'
 import { ExpandableText } from '@/components/data/ExpandableText'
 import { staggerContainer, staggerItem } from '@/animations'
 import { cn } from '@/utils/cn'
+import { formatClockTime as formatTime } from '@/utils/format'
 import type { PublicBusiness } from '../publicTypes'
-
-/** "21:30:00" → "9:30 PM". */
-function formatTime(value: string): string {
-  const [h, m] = value.split(':').map(Number)
-  const suffix = h >= 12 ? 'PM' : 'AM'
-  const hour = h % 12 || 12
-  return m ? `${hour}:${String(m).padStart(2, '0')} ${suffix}` : `${hour} ${suffix}`
-}
 
 /**
  * Top of a shop's page: cover with a gentle parallax, the logo overlapping its

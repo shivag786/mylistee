@@ -1,16 +1,14 @@
 import type { ReactNode } from 'react'
 import { Clock, MapPin, Phone, Globe, AtSign, Link2, MessageCircle } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+import { formatClockTime } from '@/utils/format'
 import type { PublicBusiness } from '../publicTypes'
-
-function hhmm(t: string | null): string | null {
-  return t ? t.slice(0, 5) : null
-}
 
 /** Business info tab (Phase 7.4) — about, timings, address + map, contacts. */
 export function BusinessInfo({ business }: { business: PublicBusiness }) {
-  const open = hhmm(business.openingTime)
-  const close = hhmm(business.closingTime)
+  const open = business.openingTime
+  const close = business.closingTime
+  const allDay = Boolean(open && close && open.slice(0, 5) === close.slice(0, 5))
   const mapsUrl =
     business.latitude != null && business.longitude != null
       ? `https://www.google.com/maps/search/?api=1&query=${business.latitude},${business.longitude}`
@@ -27,20 +25,22 @@ export function BusinessInfo({ business }: { business: PublicBusiness }) {
         </Card>
       )}
 
-      {open && close && (
-        <Card className="flex items-center gap-3" padding="md">
-          <Clock className="size-5 shrink-0 text-text-secondary" aria-hidden />
-          <div>
-            <p className="text-body font-medium text-foreground">Timings</p>
+      <Card className="flex items-center gap-3" padding="md">
+        <Clock className="size-5 shrink-0 text-text-secondary" aria-hidden />
+        <div>
+          <p className="text-body font-medium text-foreground">Timings</p>
+          {open && close ? (
             <p className="text-caption text-text-secondary">
-              {open} – {close}
+              {allDay ? 'Open 24 hours' : `${formatClockTime(open)} – ${formatClockTime(close)}`}
               <span className={`ml-2 font-medium ${business.isOpen ? 'text-success' : 'text-destructive'}`}>
                 {business.isOpen ? 'Open now' : 'Closed now'}
               </span>
             </p>
-          </div>
-        </Card>
-      )}
+          ) : (
+            <p className="text-caption text-text-muted">Timings not added yet.</p>
+          )}
+        </div>
+      </Card>
 
       {business.address && (
         <Card className="space-y-2" padding="md">

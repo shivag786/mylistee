@@ -121,10 +121,10 @@ export function BusinessProfilePage() {
     }
   }
 
-  function handleAdd(item: Omit<CartItem, 'quantity'>) {
+  function handleAdd(item: Omit<CartItem, 'quantity'>, opts?: { quiet?: boolean }) {
     const res = cart.add({ slug, name: business!.name }, item, 1, serviceContext())
     if (res === 'conflict') setConflictItem(item)
-    else toast.success(`${item.name} added`)
+    else if (!opts?.quiet) toast.success(`${item.name} added`)
   }
   const mapsUrl =
     business.latitude != null && business.longitude != null

@@ -7,8 +7,8 @@ import {
   useTransform,
   type PanInfo,
 } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Minus, Plus, X, Smartphone } from 'lucide-react'
-import { cart } from '@/features/orders/cartStore'
+import { ChevronLeft, ChevronRight, Minus, Plus, X, Smartphone, ShoppingCart } from 'lucide-react'
+import { cart, cartCount, cartSubtotal, openCartSheet, useCart } from '@/features/orders/cartStore'
 import { cn } from '@/utils/cn'
 import { useTilt } from '../../hooks/useTilt'
 import type { Dish } from './dish'
@@ -99,6 +99,15 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd }: DishViewer
   )
 
   const qty = dish ? qtyOf(dish) : 0
+  const currentCart = useCart()
+  const inCart = cartCount(currentCart)
+  // The "added" toast would land on top of the viewer, so it shows a cart button instead.
+  const showCartButton = Boolean(onAdd) && inCart > 0
+
+  function viewCart() {
+    onClose()
+    openCartSheet()
+  }
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={(o) => !o && onClose()}>
@@ -133,22 +142,19 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd }: DishViewer
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/85" />
 
           {/* Top bar */}
-          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))]">
+          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-center gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))]">
             <span className="rounded-full bg-black/30 px-3 py-1 text-small font-medium backdrop-blur">
               {dish?.section}
               {many && <span className="text-white/60"> · {safeIndex + 1}/{dishes.length}</span>}
             </span>
-            <DialogPrimitive.Close
-              className="grid size-10 place-items-center rounded-full bg-black/30 backdrop-blur transition-colors hover:bg-black/50"
-              aria-label="Close"
-            >
-              <X className="size-5" aria-hidden />
-            </DialogPrimitive.Close>
           </div>
 
           {/* The dish */}
           <motion.div
-            className="absolute inset-x-0 top-14 bottom-[13.5rem] flex items-center justify-center px-6 [perspective:1100px]"
+            className={cn(
+              'absolute inset-x-0 top-14 flex items-center justify-center px-6 [perspective:1100px]',
+              showCartButton ? 'bottom-[17rem]' : 'bottom-[13.5rem]',
+            )}
             drag={many ? 'x' : false}
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.6}
@@ -196,6 +202,14 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd }: DishViewer
                         <motion.div aria-hidden style={{ background: sheen }} className="pointer-events-none absolute inset-0" />
                       )}
                     </motion.div>
+                    {/* Close sits on the photo's corner, clear of toasts at the top of the screen. */}
+                    <DialogPrimitive.Close
+                      className="absolute -right-2 -top-3 z-20 grid size-10 place-items-center rounded-full bg-black/60 shadow-lg ring-1 ring-white/30 backdrop-blur transition-colors hover:bg-black/80"
+                      aria-label="Close"
+                      onPointerDownCapture={(e) => e.stopPropagation()}
+                    >
+                      <X className="size-5" aria-hidden />
+                    </DialogPrimitive.Close>
                   </motion.div>
                 </motion.div>
               )}
@@ -325,6 +339,26 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd }: DishViewer
                       ))}
                   </div>
                 </motion.div>
+              </AnimatePresence>
+
+              <AnimatePresence initial={false}>
+                {showCartButton && (
+                  <motion.button
+                    type="button"
+                    onClick={viewCart}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 12 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="mx-auto mt-3 flex w-full max-w-[26rem] items-center justify-between gap-3 rounded-full bg-primary px-5 py-3 text-primary-foreground shadow-floating"
+                  >
+                    <span className="inline-flex items-center gap-2 text-body font-semibold">
+                      <ShoppingCart className="size-5 shrink-0" aria-hidden />
+                      {inCart} {inCart === 1 ? 'item' : 'items'} · ₹{cartSubtotal(currentCart)}
+                    </span>
+                    <span className="text-body font-bold">View cart</span>
+                  </motion.button>
+                )}
               </AnimatePresence>
 
               {many && dishes.length <= 12 && (

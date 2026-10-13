@@ -63,3 +63,11 @@ export function initials(name: string): string {
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('')
 }
+
+/** "21:30:00" → "9:30 PM", "09:00" → "9 AM". */
+export function formatClockTime(value: string): string {
+  const [h, m] = value.split(':').map(Number)
+  const suffix = h >= 12 ? 'PM' : 'AM'
+  const hour = h % 12 || 12
+  return m ? `${hour}:${String(m).padStart(2, '0')} ${suffix}` : `${hour} ${suffix}`
+}
