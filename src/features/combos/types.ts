@@ -16,5 +16,13 @@ export interface ComboDeal {
   totalPrice: number
   savings: number
   items: ComboDealItem[]
-  business: { slug: string; name: string; logo: string | null }
+  business: {
+    slug: string
+    name: string
+    logo: string | null
+    /** From the viewer's location; null when it isn't known. */
+    distanceMeters?: number | null
+    /** The viewer follows this shop. */
+    isFollowed?: boolean
+  }
 }

@@ -85,7 +85,7 @@ function SidebarContent({
         <Logo size={28} />
         <div className="flex items-center gap-1.5">
           <span className="text-body font-bold text-foreground">Listee</span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-secondary/10 px-2 py-0.5 text-small font-medium text-secondary">
+          <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2 py-0.5 text-small font-medium text-text-secondary">
             <ShieldCheck className="size-3" aria-hidden /> Admin
           </span>
         </div>

@@ -82,6 +82,17 @@
   --wallet-from: #e23744;
   --wallet-to: #fbbf24;
 
+  /* Admin-themable accents that follow the palette unless set (brandTheme.ts). */
+  --header-bg: var(--surface);
+  --nav-bg: var(--surface);
+  --nav-active: var(--primary);
+  --gradient-from: var(--primary);
+  --gradient-to: var(--secondary);
+  --star: var(--gold);
+  --offer: var(--success);
+  --offer-soft: var(--success-soft);
+  --offer-foreground: var(--success-foreground);
+
   /* Data-viz categorical palette — LIGHT. CVD-validated fixed order (first four
      slots of the dataviz skill's reference palette; assign by identity, never
      cycle). Distinct from the brand/status tokens so a series never impersonates
@@ -169,6 +180,15 @@
 
 /* Colors reference runtime CSS vars so dark mode switches instantly. */
 @theme inline {
+  --color-header: var(--header-bg);
+  --color-nav: var(--nav-bg);
+  --color-nav-active: var(--nav-active);
+  --color-gradient-from: var(--gradient-from);
+  --color-gradient-to: var(--gradient-to);
+  --color-star: var(--star);
+  --color-offer: var(--offer);
+  --color-offer-soft: var(--offer-soft);
+  --color-offer-foreground: var(--offer-foreground);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-active: var(--primary-active);

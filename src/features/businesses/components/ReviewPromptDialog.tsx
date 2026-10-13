@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Star } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -10,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
-import { cn } from '@/utils/cn'
+import { StarInput } from '@/components/forms/StarInput'
 import { useSubmitReview } from '../hooks/useReviews'
 
 interface ReviewPromptDialogProps {
@@ -72,7 +71,7 @@ export function ReviewPromptDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <StarInput value={rating} onChange={setRating} />
+          <StarInput value={rating} onChange={setRating} className="justify-center" />
           <textarea
             rows={3}
             value={comment}
@@ -94,28 +93,3 @@ export function ReviewPromptDialog({
   )
 }
 
-function StarInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const [hover, setHover] = useState(0)
-  return (
-    <div className="flex items-center justify-center gap-1.5">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button
-          key={n}
-          type="button"
-          onMouseEnter={() => setHover(n)}
-          onMouseLeave={() => setHover(0)}
-          onClick={() => onChange(n)}
-          aria-label={`Rate ${n} star${n > 1 ? 's' : ''}`}
-        >
-          <Star
-            className={cn(
-              'size-9 transition-colors',
-              n <= (hover || value) ? 'fill-gold text-gold' : 'text-border-strong',
-            )}
-            aria-hidden
-          />
-        </button>
-      ))}
-    </div>
-  )
-}

@@ -32,11 +32,15 @@ export function AdminReviewsPage() {
       label: 'Review',
       cell: (r) => (
         <div className="min-w-0 max-w-md">
-          <div className="flex items-center gap-1 text-gold">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className={i < r.rating ? 'size-3.5 fill-current' : 'size-3.5 text-border'} aria-hidden />
-            ))}
-          </div>
+          {r.rating !== null ? (
+            <div className="flex items-center gap-1 text-gold">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className={i < r.rating! ? 'size-3.5 fill-current' : 'size-3.5 text-border'} aria-hidden />
+              ))}
+            </div>
+          ) : (
+            <p className="text-small text-text-muted">No star rating</p>
+          )}
           <p className="mt-0.5 line-clamp-2 text-foreground">{r.comment || <span className="text-text-muted">No comment</span>}</p>
         </div>
       ),

@@ -1,5 +1,7 @@
 /** Public app config (GET /config) — feature flags + the order-alert sound. */
 import { apiClient } from '@/services/apiClient'
+import type { BrandTheme } from '@/features/brandTheme/brandTheme'
+import type { HomeSectionSetting } from '@/features/home/homeSections'
 
 export interface AppConfig {
   flags: {
@@ -30,6 +32,10 @@ export interface AppConfig {
    * on. Absent on an older API, which only had Google.
    */
   auth?: { google: boolean; mobile: boolean }
+  /** Admin-set colours/fonts and the menu-card colour switch. Absent on an older API. */
+  theme?: BrandTheme
+  /** Admin-arranged home sections; null/absent = the built-in order. */
+  homeLayout?: HomeSectionSetting[] | null
 }
 
 export const configService = {

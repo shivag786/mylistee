@@ -6,8 +6,9 @@ import { apiClient } from '@/services/apiClient'
 import type { Deal } from './types'
 
 export const dealService = {
-  list: (params: { limit?: number; type?: string } = {}): Promise<Deal[]> =>
+  /** Ranked for the viewer: followed shops, then nearby (lat/lng), max two per shop. */
+  list: (params: { limit?: number; type?: string; lat?: number; lng?: number } = {}): Promise<Deal[]> =>
     apiClient.get<Deal[]>('deals', {
-      query: { limit: params.limit ?? 12, type: params.type || undefined },
+      query: { limit: params.limit ?? 12, type: params.type || undefined, lat: params.lat, lng: params.lng },
     }),
 }

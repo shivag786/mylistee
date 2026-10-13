@@ -26,5 +26,9 @@ export interface Deal {
     name: string
     logo: string | null
     area: string | null
+    /** From the viewer's location; null when it isn't known. */
+    distanceMeters?: number | null
+    /** The viewer follows this shop. */
+    isFollowed?: boolean
   }
 }

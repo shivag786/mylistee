@@ -22,6 +22,17 @@
     color: var(--color-foreground);
   }
 
+  /* Headings can use their own font (admin theme); unset, it is the body font. */
+  h1,
+  h2,
+  h3,
+  .text-display,
+  .text-heading,
+  .text-title,
+  .text-subtitle {
+    font-family: var(--font-heading, var(--font-sans));
+  }
+
   /* Consistent focus ring for accessibility (document/phase/05 §Accessibility) */
   :focus-visible {
     outline: 2px solid var(--color-primary);
@@ -72,6 +83,17 @@
     }
     100% {
       background-position: 0 50%;
+    }
+  }
+
+  /* A light sweep across a highlight chip, then a pause before the next one. */
+  @keyframes sheen {
+    0% {
+      transform: translateX(-100%);
+    }
+    45%,
+    100% {
+      transform: translateX(100%);
     }
   }
 }

@@ -1,12 +1,9 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
-  Star,
   MapPin,
-  Clock,
   Lock,
   Sparkles,
-  Store,
   Phone,
   MessageCircle,
   Navigation,
@@ -21,6 +18,8 @@ import { Skeleton } from '@/components/feedback/Skeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { ConfirmationDialog } from '@/components/feedback/ConfirmationDialog'
+import { Stagger, StaggerItem } from '@/components/motion/Stagger'
+import { ImageLightbox } from '@/components/media/ImageLightbox'
 import { cart, useCart, type CartItem } from '@/features/orders/cartStore'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { usePublicBusiness, useSpin } from '@/features/businesses/hooks/usePublicBusiness'
@@ -28,6 +27,7 @@ import { MenuList } from '@/features/businesses/components/MenuList'
 import { BusinessInfo } from '@/features/businesses/components/BusinessInfo'
 import { ReviewsSection } from '@/features/businesses/components/ReviewsSection'
 import { FavoriteButton } from '@/features/businesses/components/FavoriteButton'
+import { ShopHero } from '@/features/businesses/components/ShopHero'
 import { SpinnerWheel } from '@/features/spinner/components/SpinnerWheel'
 import { RewardModal } from '@/features/spinner/components/RewardModal'
 import { LoyaltyRewardsSection } from '@/features/wallet/components/LoyaltyRewardsSection'
@@ -58,6 +58,7 @@ export function BusinessProfilePage() {
   const [pendingCoins, setPendingCoins] = useState(0)
   const [wonReward, setWonReward] = useState<WonReward | null>(null)
   const [wonCoins, setWonCoins] = useState(0)
+  const [galleryAt, setGalleryAt] = useState<number | null>(null)
 
   const business = data?.business
   const spinState = data?.spin
@@ -98,6 +99,9 @@ export function BusinessProfilePage() {
   }
 
   const activeCombos = business.combos.filter((c) => c.isActiveNow)
+  // Tabs with nothing in them are left out instead of showing an empty state.
+  const showOffers = spinState.available || business.offers.length > 0
+  const galleryImages = business.gallery.filter((image) => image.url)
   const canSpin = spinState.available && !spinState.alreadySpunToday && !spin.isPending && resultIndex === null
 
   // The table bound from a scanned table QR (?table=…), if it belongs to this shop.
@@ -147,58 +151,28 @@ export function BusinessProfilePage() {
 
   return (
     <div className="space-y-4">
-      {/* Cover */}
-      <div className="overflow-hidden rounded-cover bg-surface-muted shadow-soft">
-        {business.coverUrl ? (
-          <img src={business.coverUrl} alt={business.name} loading="lazy" className="h-44 w-full object-cover" />
-        ) : (
-          <div className="grid h-44 w-full place-items-center text-text-muted">
-            <Store className="size-10" aria-hidden />
-          </div>
-        )}
-      </div>
+      <ShopHero
+        business={business}
+        actions={<FavoriteButton slug={business.slug} name={business.name} isFavorite={business.isFollowing} />}
+      />
 
-      {/* Identity (no logo — fits the name properly) */}
-      <div className="space-y-2">
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-subtitle font-bold leading-tight text-foreground">{business.name}</h1>
-          <FavoriteButton
-            slug={business.slug}
-            name={business.name}
-            isFavorite={business.isFollowing}
-          />
-        </div>
-
-        {business.category && (
-          <p className="text-caption font-medium text-text-secondary">{business.category}</p>
-        )}
-
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-text-secondary">
-          {business.totalReviews > 0 && (
-            <span className="inline-flex items-center gap-1 font-medium text-foreground">
-              <Star className="size-4 fill-gold text-gold" aria-hidden />
-              {business.averageRating.toFixed(1)} ({business.totalReviews})
-            </span>
-          )}
-          {business.openingTime && business.closingTime && (
-            <span className="inline-flex items-center gap-1">
-              <Clock className="size-4" aria-hidden />
-              {business.openingTime.slice(0, 5)}–{business.closingTime.slice(0, 5)}
-            </span>
-          )}
-        </div>
-
-        {/* Reward / promotion / offer badges */}
-        <div className="flex flex-wrap gap-1.5">
+      {/* Highlights — each chip only when the shop actually has it. */}
+      {(spinState.available || maxOff > 0 || activeCombos.length > 0) && (
+        <div className="flex flex-wrap gap-1.5 px-1">
           {spinState.available && (
-            <Badge tone="premium" className="gap-1">
+            <Badge tone="premium" className="relative gap-1 overflow-hidden">
               <Gift className="size-3" aria-hidden /> Spin & win
+              <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[sheen_3.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent motion-reduce:hidden" />
             </Badge>
           )}
           {maxOff > 0 && <Badge tone="primary">Up to {maxOff}% off</Badge>}
-          {activeCombos.length > 0 && <Badge tone="success">Combos</Badge>}
+          {activeCombos.length > 0 && (
+            <Badge tone="success">
+              {activeCombos.length} {activeCombos.length === 1 ? 'combo' : 'combos'}
+            </Badge>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Table QR binding — the customer scanned a specific table's code. */}
       {boundTable && (
@@ -236,13 +210,13 @@ export function BusinessProfilePage() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="menu">Menu</TabsTrigger>
-          <TabsTrigger value="offers">Offers</TabsTrigger>
+          {showOffers && <TabsTrigger value="offers">Offers</TabsTrigger>}
           <TabsTrigger value="reviews">Reviews</TabsTrigger>
-          <TabsTrigger value="gallery">Gallery</TabsTrigger>
+          {galleryImages.length > 0 && <TabsTrigger value="gallery">Gallery</TabsTrigger>}
           <TabsTrigger value="info">Info</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="menu" className="mt-4">
+        <TabsContent value="menu" className="mt-4 space-y-5">
           <MenuList
             menu={business.menu}
             combos={business.combos}
@@ -250,6 +224,8 @@ export function BusinessProfilePage() {
             onAdd={handleAdd}
             focusProductId={focusItem}
           />
+          {/* No Offers tab to hold it, so loyalty rewards (if any) sit here. */}
+          {!showOffers && isAuthenticated && <LoyaltyRewardsSection slug={slug} />}
         </TabsContent>
 
         <TabsContent value="offers" className="mt-4 space-y-5">
@@ -329,17 +305,32 @@ export function BusinessProfilePage() {
         </TabsContent>
 
         <TabsContent value="gallery" className="mt-4">
-          {business.gallery.length > 0 ? (
-            <div className="grid grid-cols-3 gap-2">
-              {business.gallery.map((image) => (
-                <div key={image.id} className="aspect-square overflow-hidden rounded-xl bg-surface-muted">
-                  {image.url && <img src={image.url} alt="" loading="lazy" className="size-full object-cover" />}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState icon={<Store className="size-7" />} title="No photos yet" />
-          )}
+          <Stagger className="grid grid-cols-3 gap-2">
+            {galleryImages.map((image, i) => (
+              <StaggerItem key={image.id}>
+                <button
+                  type="button"
+                  onClick={() => setGalleryAt(i)}
+                  className="block aspect-square w-full overflow-hidden rounded-xl bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label={`Open photo ${i + 1}`}
+                >
+                  <img
+                    src={image.url!}
+                    alt=""
+                    loading="lazy"
+                    className="size-full object-cover transition-transform duration-500 hover:scale-110"
+                  />
+                </button>
+              </StaggerItem>
+            ))}
+          </Stagger>
+          <ImageLightbox
+            open={galleryAt !== null}
+            onOpenChange={(o) => !o && setGalleryAt(null)}
+            images={galleryImages.map((image) => ({ url: image.url! }))}
+            startIndex={galleryAt ?? 0}
+            title={`${business.name} photos`}
+          />
         </TabsContent>
 
         <TabsContent value="info" className="mt-4">

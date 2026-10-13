@@ -5,11 +5,13 @@ import { queryClient } from './queryClient'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { AuthProvider } from '@/features/auth/context/AuthContext'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { BrandThemeSync } from '@/features/brandTheme/BrandThemeSync'
 
 /** Composes all global providers in the correct order. */
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
+      <BrandThemeSync />
       <ThemeProvider>
         <AuthProvider>
           <TooltipProvider delayDuration={200}>{children}</TooltipProvider>

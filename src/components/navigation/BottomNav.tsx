@@ -22,7 +22,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="sticky bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur"
+      className="sticky bottom-0 z-40 border-t border-border bg-nav/95 backdrop-blur"
     >
       <ul className="app-container flex h-[72px] items-stretch justify-between px-1">
         {TABS.map(({ to, label, icon: Icon }) => (
@@ -33,7 +33,7 @@ export function BottomNav() {
               className={({ isActive }) =>
                 cn(
                   'flex h-full min-w-12 flex-col items-center justify-center gap-1 rounded-md text-small font-medium transition-colors duration-150',
-                  isActive ? 'text-primary' : 'text-text-muted hover:text-text-secondary',
+                  isActive ? 'text-nav-active' : 'text-text-muted hover:text-text-secondary',
                 )
               }
             >

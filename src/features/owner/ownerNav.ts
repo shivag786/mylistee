@@ -14,6 +14,8 @@ import {
   ClipboardList,
   Armchair,
   Users,
+  Contact,
+  Clapperboard,
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
@@ -34,6 +36,8 @@ export type OwnerModuleId =
   | 'spin_rewards'
   | 'analytics'
   | 'reviews'
+  | 'customers'
+  | 'reels'
   | 'qr'
 
 export interface OwnerNavItem {
@@ -65,6 +69,8 @@ export const OWNER_NAV: OwnerNavItem[] = [
   { to: ROUTES.owner.profile, label: 'Business profile', shortLabel: 'Profile', icon: Store, bottomNav: true },
   { to: ROUTES.owner.tables, label: 'Tables & service', shortLabel: 'Tables', icon: Armchair, module: 'tables' },
   { to: ROUTES.owner.redeem, label: 'Redeem', shortLabel: 'Redeem', icon: ScanLine, module: 'redeem' },
+  { to: ROUTES.owner.reels, label: 'Reels', shortLabel: 'Reels', icon: Clapperboard, module: 'reels' },
+  { to: ROUTES.owner.customers, label: 'Customers', shortLabel: 'Customers', icon: Contact, module: 'customers' },
   { to: ROUTES.owner.reviews, label: 'Reviews', shortLabel: 'Reviews', icon: MessageSquare, module: 'reviews' },
   { to: ROUTES.owner.followers, label: 'Followers', shortLabel: 'Followers', icon: Users },
   { to: ROUTES.owner.analytics, label: 'Analytics', shortLabel: 'Stats', icon: BarChart3, module: 'analytics' },

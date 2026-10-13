@@ -9,11 +9,21 @@ import type { BusinessFormValues, BusinessQr, DashboardData, GalleryImage, Owner
 
 export interface OwnerReview {
   id: string
-  rating: number
+  /** Null when a review-link reviewer skipped the overall star. */
+  rating: number | null
   comment: string | null
   reply: string | null
   repliedAt: string | null
   customerName: string | null
+  items: { type: 'product' | 'combo'; name: string; rating: number }[]
+  /** Reviewer's mobile — review-link reviews only. */
+  phone: string | null
+  /** 'link' = through the shop's review link; 'app' = signed-in customer after an order. */
+  source: 'link' | 'app'
+  /** Hidden by the owner from their public page (still counts in the rating). */
+  isHidden: boolean
+  /** Removed by an admin — the owner can't show it again. */
+  isRemovedByAdmin: boolean
   createdAt: string | null
 }
 
@@ -105,6 +115,10 @@ export const ownerService = {
 
   async replyToReview(id: string, reply: string): Promise<OwnerReview> {
     return apiClient.post<OwnerReview>(`business/reviews/${id}/reply`, { reply })
+  },
+
+  async setReviewHidden(id: string, hidden: boolean): Promise<OwnerReview> {
+    return apiClient.patch<OwnerReview>(`business/reviews/${id}/visibility`, { hidden })
   },
 
   async getCategoryRequests(): Promise<OwnerCategoryRequest[]> {

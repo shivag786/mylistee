@@ -1,3 +1,4 @@
+import type { HomeSectionSetting } from '@/features/home/homeSections'
 import type { Plan } from '@/features/owner/types'
 import type { PaginationMeta } from '@/types/api'
 
@@ -111,7 +112,8 @@ export interface AdminOffer {
 
 export interface AdminReview {
   id: string
-  rating: number
+  /** Null when a review-link reviewer skipped the overall star. */
+  rating: number | null
   comment: string | null
   status: string
   customerName: string | null
@@ -178,6 +180,42 @@ export interface PlatformSettings {
   /** Customer sign-in methods. The server keeps at least one on. */
   loginGoogle: boolean
   loginMobile: boolean
+
+  /** App theme — "#rrggbb" colours and Google Font names (see brandTheme.ts). */
+  themePrimary: string
+  themeSecondary: string
+  themeAccent: string
+  themeSuccess: string
+  themeInfo: string
+  themeWarning: string
+  themeDanger: string
+  themeBackground: string
+  themeSurface: string
+  themeText: string
+  themeFont: string
+  themeHeadingFont: string
+  /** Tint shop-page menu cards with each dish's colours. */
+  menuCardColors: boolean
+  /** Customer home sections in order; null = the built-in order. */
+  homeLayout: HomeSectionSetting[] | null
+
+  /** Optional theme colours; '' or null = follow the main palette. */
+  themeHeader: string | null
+  themeNav: string | null
+  themeNavActive: string | null
+  themeGradientFrom: string | null
+  themeGradientTo: string | null
+  themeStar: string | null
+  themeOffer: string | null
+  themeMode: 'light' | 'dark' | 'system'
+  themeDarkBackground: string
+  themeDarkSurface: string
+  themeDarkText: string
+  themeRadius: 'sharp' | 'rounded' | 'pill'
+  themeTextSize: 'small' | 'normal' | 'large'
+  /** App icon: drawn from the theme ('auto') or an uploaded image ('upload'). */
+  appIconMode: 'auto' | 'upload'
+  appIconVersion: string | null
 }
 
 export interface FraudSignals {

@@ -10,6 +10,10 @@ import '@fontsource/poppins/700.css'
 
 import './index.css'
 import App from './App.tsx'
+import { bootTheme } from './features/brandTheme/brandTheme'
+
+// Paint in the admin's last-known theme from the first frame, not after /config.
+bootTheme()
 
 /**
  * A deploy replaces the hashed bundles and deletes the old ones, but a tab (or

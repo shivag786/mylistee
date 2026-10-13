@@ -41,7 +41,7 @@ export function Rating({
           style={{ width: `${(clamped / max) * 100}%` }}
         >
           {Array.from({ length: max }).map((_, i) => (
-            <Star key={i} className={cn(starSize, 'shrink-0 fill-gold text-gold')} />
+            <Star key={i} className={cn(starSize, 'shrink-0 fill-star text-star')} />
           ))}
         </span>
       </span>

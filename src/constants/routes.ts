@@ -22,6 +22,8 @@ export const ROUTES = {
   ownerSignup: '/get-started',
   /** Business profile opened from a QR scan. */
   businessProfile: (slug = ':slug') => `/b/${slug}`,
+  /** A shop's public review link — shared by the owner, no sign-in needed. */
+  reviewLink: (slug = ':slug') => `/review/${slug}`,
 
   /**
    * Legal pages. Public and signed-out reachable on purpose — payment providers
@@ -49,6 +51,8 @@ export const ROUTES = {
     qr: '/business/qr',
     profile: '/business/profile',
     followers: '/business/followers',
+    customers: '/business/customers',
+    reels: '/business/reels',
     subscription: '/business/subscription',
   },
 
@@ -69,6 +73,7 @@ export const ROUTES = {
     payments: '/admin/payments',
     broadcast: '/admin/broadcast',
     banners: '/admin/banners',
+    homeLayout: '/admin/home-layout',
     featureFlags: '/admin/feature-flags',
     ownerMenu: '/admin/owner-menu',
     settings: '/admin/settings',

@@ -17,6 +17,7 @@ import {
   useRemoveOrderSound,
 } from '@/features/admin/hooks/useAdmin'
 import type { PlatformSettings } from '@/features/admin/types'
+import { AppIconCard, MenuCardColorsCard, ThemeCard } from '@/features/admin/components/AppearanceSettings'
 
 export function AdminSettingsPage() {
   const { data, isLoading, isError, refetch } = useAdminSettings()
@@ -66,7 +67,7 @@ export function AdminSettingsPage() {
     <div className="space-y-4">
       <header>
         <h1 className="text-title font-bold text-foreground">Platform settings</h1>
-        <p className="text-caption text-text-secondary">Brand, locale and maintenance mode</p>
+        <p className="text-caption text-text-secondary">Brand, theme, locale and maintenance mode</p>
       </header>
 
       <Card elevation="soft" className="max-w-xl" padding="lg">
@@ -113,6 +114,12 @@ export function AdminSettingsPage() {
           </Button>
         </form>
       </Card>
+
+      <ThemeCard settings={data ?? form} />
+
+      <AppIconCard settings={data ?? form} />
+
+      <MenuCardColorsCard settings={data ?? form} />
 
       <PaymentsCard settings={data ?? form} />
 

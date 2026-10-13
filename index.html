@@ -30,7 +30,8 @@
         if (enabled) {
           var link = document.createElement('link')
           link.rel = 'manifest'
-          link.href = '/manifest.webmanifest'
+          // Served by the API so its colours and icons follow the admin theme.
+          link.href = '%VITE_API_BASE_URL%/app/manifest.webmanifest'
           document.head.appendChild(link)
         }
       })()

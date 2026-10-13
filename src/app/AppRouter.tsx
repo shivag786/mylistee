@@ -43,6 +43,9 @@ const RedeemPage = lazyPage(() => import('@/pages/owner/RedeemPage'), 'RedeemPag
 const QrPage = lazyPage(() => import('@/pages/owner/QrPage'), 'QrPage')
 const OwnerProfilePage = lazyPage(() => import('@/pages/owner/OwnerProfilePage'), 'OwnerProfilePage')
 const OwnerFollowersPage = lazyPage(() => import('@/pages/owner/OwnerFollowersPage'), 'OwnerFollowersPage')
+const OwnerCustomersPage = lazyPage(() => import('@/pages/owner/OwnerCustomersPage'), 'OwnerCustomersPage')
+const OwnerReelsPage = lazyPage(() => import('@/pages/owner/OwnerReelsPage'), 'OwnerReelsPage')
+const ReviewLinkPage = lazyPage(() => import('@/pages/customer/ReviewLinkPage'), 'ReviewLinkPage')
 
 const AdminDashboardPage = lazyPage(() => import('@/pages/admin/AdminDashboardPage'), 'AdminDashboardPage')
 const AdminBusinessesPage = lazyPage(() => import('@/pages/admin/AdminBusinessesPage'), 'AdminBusinessesPage')
@@ -58,6 +61,7 @@ const AdminPaymentsPage = lazyPage(() => import('@/pages/admin/AdminPaymentsPage
 const AdminOrdersPage = lazyPage(() => import('@/pages/admin/AdminOrdersPage'), 'AdminOrdersPage')
 const AdminBroadcastPage = lazyPage(() => import('@/pages/admin/AdminBroadcastPage'), 'AdminBroadcastPage')
 const AdminBannersPage = lazyPage(() => import('@/pages/admin/AdminBannersPage'), 'AdminBannersPage')
+const AdminHomeLayoutPage = lazyPage(() => import('@/pages/admin/AdminHomeLayoutPage'), 'AdminHomeLayoutPage')
 const AdminFeatureFlagsPage = lazyPage(() => import('@/pages/admin/AdminFeatureFlagsPage'), 'AdminFeatureFlagsPage')
 const AdminOwnerMenuPage = lazyPage(() => import('@/pages/admin/AdminOwnerMenuPage'), 'AdminOwnerMenuPage')
 const AdminCmsPage = lazyPage(() => import('@/pages/admin/AdminCmsPage'), 'AdminCmsPage')
@@ -142,6 +146,17 @@ export function AppRouter() {
         }
       />
 
+      {/* A shop's review link — standalone like the legal pages: whoever opens
+          it from WhatsApp has no account and shouldn't land in the app shell. */}
+      <Route
+        path={ROUTES.reviewLink()}
+        element={
+          <SuspenseOutlet>
+            <ReviewLinkPage />
+          </SuspenseOutlet>
+        }
+      />
+
       {import.meta.env.DEV && <Route path="/dev/ui" element={<UiShowcasePage />} />}
 
       {/* Customer app shell */}
@@ -188,6 +203,8 @@ export function AppRouter() {
             <Route path={ROUTES.owner.loyalty} element={<OwnerModuleGuard module="loyalty"><LoyaltyPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.analytics} element={<OwnerModuleGuard module="analytics"><AnalyticsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.reviews} element={<OwnerModuleGuard module="reviews"><OwnerReviewsPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.customers} element={<OwnerModuleGuard module="customers"><OwnerCustomersPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.reels} element={<OwnerModuleGuard module="reels"><OwnerReelsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.subscription} element={<SubscriptionPage />} />
             <Route path={ROUTES.owner.redeem} element={<OwnerModuleGuard module="redeem"><RedeemPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.qr} element={<OwnerModuleGuard module="qr"><QrPage /></OwnerModuleGuard>} />
@@ -217,6 +234,7 @@ export function AppRouter() {
             <Route path={ROUTES.admin.payments} element={<AdminPaymentsPage />} />
             <Route path={ROUTES.admin.broadcast} element={<AdminBroadcastPage />} />
             <Route path={ROUTES.admin.banners} element={<AdminBannersPage />} />
+            <Route path={ROUTES.admin.homeLayout} element={<AdminHomeLayoutPage />} />
             <Route path={ROUTES.admin.featureFlags} element={<AdminFeatureFlagsPage />} />
             <Route path={ROUTES.admin.ownerMenu} element={<AdminOwnerMenuPage />} />
             <Route path={ROUTES.admin.cms} element={<AdminCmsPage />} />

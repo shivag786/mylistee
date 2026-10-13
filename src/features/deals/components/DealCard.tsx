@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Utensils, Store, Tag, Clock } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
+import { FeedShopTags } from '@/features/businesses/components/FeedShopTags'
 import { Card } from '@/components/ui/card'
 import type { Deal } from '../types'
 
@@ -48,12 +50,7 @@ export function DealCard({ deal, hideOfferBadge }: DealCardProps) {
             <span className="truncate">{deal.offer.label}</span>
           </span>
         )}
-        {endingSoon && (
-          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-warning px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
-            <Clock className="size-2.5" aria-hidden />
-            {hoursLeft! <= 1 ? 'Ends soon' : `Ends in ${Math.ceil(hoursLeft!)}h`}
-          </span>
-        )}
+        {endingSoon && <EndsIn iso={deal.offer!.endsAt!} />}
       </div>
 
       <div className="p-3">
@@ -94,7 +91,34 @@ export function DealCard({ deal, hideOfferBadge }: DealCardProps) {
           </span>
           <span className="truncate">{deal.business.name}</span>
         </p>
+        <div className="mt-0.5">
+          <FeedShopTags isFollowed={deal.business.isFollowed} distanceMeters={deal.business.distanceMeters} />
+        </div>
       </div>
     </Card>
+  )
+}
+
+/** "Ends in 2h 13m", ticking every half minute; pulses in the last hour. */
+function EndsIn({ iso }: { iso: string }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(t)
+  }, [])
+
+  const minutes = Math.max(0, Math.floor((new Date(iso).getTime() - now) / 60_000))
+  if (minutes <= 0) return null
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  const lastHour = h === 0
+
+  return (
+    <span
+      className={`absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-warning px-2 py-0.5 text-[10px] font-bold text-warning-foreground shadow-sm ${lastHour ? 'motion-safe:animate-pulse' : ''}`}
+    >
+      <Clock className="size-2.5" aria-hidden />
+      Ends in {h > 0 ? `${h}h ${m}m` : `${m}m`}
+    </span>
   )
 }

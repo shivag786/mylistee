@@ -1,13 +1,23 @@
 /** Business reviews (document/phase/11 §Review Endpoints). */
 import { apiClient } from '@/services/apiClient'
 
+export interface ReviewItemRating {
+  type: 'product' | 'combo'
+  name: string
+  rating: number
+}
+
 export interface Review {
   id: string
-  rating: number
+  /** Null when a review-link reviewer skipped the overall star. */
+  rating: number | null
   comment: string | null
   reply: string | null
   customerName: string | null
+  /** Left by a signed-in customer after a fulfilled order (not via the review link). */
+  isVerified: boolean
   isMine: boolean
+  items: ReviewItemRating[]
   createdAt: string | null
 }
 

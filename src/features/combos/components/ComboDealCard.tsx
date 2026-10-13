@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Utensils, Layers } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
+import { FeedShopTags } from '@/features/businesses/components/FeedShopTags'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { ComboDeal } from '../types'
@@ -62,10 +63,13 @@ export function ComboDealCard({ combo }: ComboDealCardProps) {
           {combo.totalPrice > combo.comboPrice && (
             <span className="text-caption text-text-muted line-through">₹{combo.totalPrice}</span>
           )}
-          {combo.savings > 0 && <Badge tone="success" size="sm">Save ₹{combo.savings}</Badge>}
+          {combo.savings > 0 && <Badge size="sm" className="bg-offer-soft text-offer">Save ₹{combo.savings}</Badge>}
         </div>
 
         <p className="mt-1 truncate text-caption text-text-secondary">{combo.business.name}</p>
+        <div className="mt-0.5">
+          <FeedShopTags isFollowed={combo.business.isFollowed} distanceMeters={combo.business.distanceMeters} />
+        </div>
       </div>
     </Card>
   )

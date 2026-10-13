@@ -113,7 +113,7 @@ export function ShopCard({ business }: ShopCardProps) {
           <div className="mt-1 flex items-center gap-2.5 text-caption text-text-secondary">
             {hasRating && (
               <span className="inline-flex items-center gap-1 font-medium text-foreground">
-                <Star className="size-3.5 fill-gold text-gold" aria-hidden />
+                <Star className="size-3.5 fill-star text-star" aria-hidden />
                 {business.rating.toFixed(1)}
                 <span className="font-normal text-text-muted">({business.reviewCount})</span>
               </span>

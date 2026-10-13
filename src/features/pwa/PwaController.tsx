@@ -20,6 +20,7 @@
  * It renders nothing.
  */
 import { useEffect } from 'react'
+import { apiConfig } from '@/config/api.config'
 import { usePwaEnabled } from './usePwaEnabled'
 import { cachePwaEnabled } from './pwaFlagCache'
 
@@ -34,7 +35,8 @@ function restoreManifest(): void {
   if (document.querySelector('link[rel="manifest"]')) return
   const link = document.createElement('link')
   link.rel = 'manifest'
-  link.href = '/manifest.webmanifest'
+  // Served by the API so its colours and icons follow the admin theme.
+  link.href = `${apiConfig.baseUrl.replace(/\/$/, '')}/app/manifest.webmanifest`
   document.head.appendChild(link)
 }
 

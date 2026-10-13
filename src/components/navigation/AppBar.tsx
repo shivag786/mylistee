@@ -15,7 +15,7 @@ export function AppBar() {
   const { data: unread = 0 } = useUnreadCount()
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-border bg-header/95 backdrop-blur">
       <div className="app-container flex h-16 items-center justify-between">
         {/* The wordmark gives way to the location chip: the chip has to be able
             to show a long area name, and the mark alone still identifies the app. */}

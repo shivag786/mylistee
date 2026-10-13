@@ -262,6 +262,18 @@ export function useReplyToReview() {
   })
 }
 
+export function useSetReviewHidden() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, hidden }: { id: string; hidden: boolean }) => ownerService.setReviewHidden(id, hidden),
+    onSuccess: (updated) => {
+      qc.setQueryData<OwnerReview[]>(ownerKeys.reviews, (list) =>
+        list?.map((r) => (r.id === updated.id ? updated : r)),
+      )
+    },
+  })
+}
+
 export function useOwnerCategoryRequests() {
   return useQuery<OwnerCategoryRequest[]>({
     queryKey: ownerKeys.categoryRequests,

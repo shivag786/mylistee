@@ -247,6 +247,12 @@ export const adminService = {
     return apiClient.post<PlatformSettings>('admin/settings/order-sound', body)
   },
   removeOrderSound: () => apiClient.delete<PlatformSettings>('admin/settings/order-sound'),
+  uploadAppIcon: (file: File) => {
+    const body = new FormData()
+    body.append('icon', file)
+    return apiClient.post<PlatformSettings>('admin/settings/app-icon', body)
+  },
+  removeAppIcon: () => apiClient.delete<PlatformSettings>('admin/settings/app-icon'),
 
   cmsPages: () => apiClient.get<CmsPage[]>('admin/cms'),
   updateCms: (slug: string, payload: { title: string; body?: string; status?: string }) =>

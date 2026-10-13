@@ -249,7 +249,13 @@ export function useUpdateSettings() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (payload: Partial<PlatformSettings>) => adminService.updateSettings(payload),
-    onSuccess: (data) => qc.setQueryData(adminKeys.settings, data),
+    onSuccess: (data) => {
+      qc.setQueryData(adminKeys.settings, data)
+      // Public config carries the theme and other admin switches — refresh it so
+      // a change shows straight away on this device too.
+      void qc.invalidateQueries({ queryKey: ['app', 'config'] })
+      void qc.invalidateQueries({ queryKey: ['system', 'config'] })
+    },
   })
 }
 
@@ -267,6 +273,20 @@ export function useRemoveOrderSound() {
     mutationFn: () => adminService.removeOrderSound(),
     onSuccess: (data) => qc.setQueryData(adminKeys.settings, data),
   })
+}
+
+/** Upload / remove the app icon; both change what /config serves. */
+export function useAppIconActions() {
+  const qc = useQueryClient()
+  const onSuccess = (data: PlatformSettings) => {
+    qc.setQueryData(adminKeys.settings, data)
+    void qc.invalidateQueries({ queryKey: ['app', 'config'] })
+    void qc.invalidateQueries({ queryKey: ['system', 'config'] })
+  }
+  return {
+    upload: useMutation({ mutationFn: (file: File) => adminService.uploadAppIcon(file), onSuccess }),
+    remove: useMutation({ mutationFn: () => adminService.removeAppIcon(), onSuccess }),
+  }
 }
 
 // ---- CMS ----

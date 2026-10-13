@@ -33,13 +33,25 @@ export function ReviewsSection({ slug }: { slug: string }) {
             <Card key={review.id} padding="md" className="space-y-1">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1 text-body font-medium text-foreground">
-                  <BadgeCheck className="size-3.5 fill-success text-white" aria-label="Verified order" />
+                  {review.isVerified && (
+                    <BadgeCheck className="size-3.5 fill-success text-white" aria-label="Verified order" />
+                  )}
                   {review.customerName ?? 'Customer'}
                   {review.isMine && <span className="ml-1 text-small text-text-muted">(you)</span>}
                 </span>
-                <Stars value={review.rating} />
+                {review.rating !== null && <Stars value={review.rating} />}
               </div>
               {review.comment && <p className="text-caption text-text-secondary">{review.comment}</p>}
+              {review.items.length > 0 && (
+                <ul className="space-y-0.5">
+                  {review.items.map((item) => (
+                    <li key={`${item.type}:${item.name}`} className="flex items-center justify-between gap-3 text-small">
+                      <span className="truncate text-text-secondary">{item.name}</span>
+                      <Stars value={item.rating} />
+                    </li>
+                  ))}
+                </ul>
+              )}
               {review.createdAt && <p className="text-small text-text-muted">{formatDate(review.createdAt)}</p>}
               {review.reply && (
                 <div className="mt-1 rounded-lg bg-surface-muted p-2.5">
@@ -61,7 +73,7 @@ function Stars({ value }: { value: number }) {
       {[1, 2, 3, 4, 5].map((n) => (
         <Star
           key={n}
-          className={cn('size-4', n <= value ? 'fill-gold text-gold' : 'text-border-strong')}
+          className={cn('size-4', n <= value ? 'fill-star text-star' : 'text-border-strong')}
           aria-hidden
         />
       ))}
