@@ -32,7 +32,10 @@ export function usePushRegistration({ registerEffects = true }: PushRegistration
   // page (via the app-wide registrar), so the device token is saved as soon as a
   // signed-in user with granted permission opens the app anywhere.
   useEffect(() => {
-    if (!registerEffects || !isAuthenticated || permission !== 'granted') return
+    // Read the browser's live answer, not this instance's state: "Allow" may have
+    // been tapped elsewhere (e.g. the home card, before signing in), and the
+    // token can only be saved once signed in.
+    if (!registerEffects || !isAuthenticated || pushPermission() !== 'granted') return
     let active = true
     void requestPushToken(false).then((token) => {
       if (active && token) void notificationService.registerDevice(token).catch(() => undefined)
