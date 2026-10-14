@@ -377,7 +377,7 @@ export function ThemeCard({ settings }: { settings: PlatformSettings }) {
               ))}
             </div>
             <p className="text-small text-text-muted">
-              Fonts other than Poppins load from Google Fonts. Without internet the app falls back to Poppins.
+              Fonts other than Metropolis load from Google Fonts. Without internet the app falls back to Metropolis.
             </p>
           </div>
         </div>

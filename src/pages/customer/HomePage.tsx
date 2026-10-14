@@ -127,7 +127,7 @@ export function HomePage() {
             <Sparkles className="size-4" aria-hidden />
             Menus, offers & rewards near you
           </p>
-          <h1 className="mt-1 text-title font-bold">
+          <h1 className="mt-1 text-subtitle font-bold tracking-tight sm:text-title">
             {user ? `${greeting}, ${user.name.split(' ')[0]}` : 'Rewards around you'}
           </h1>
         </div>
@@ -214,7 +214,7 @@ export function HomePage() {
         </SectionHeading>
 
         {nearby.isLoading ? (
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {Array.from({ length: 4 }).map((_, i) => (
               <ShopCardSkeleton key={i} />
             ))}
@@ -238,7 +238,7 @@ export function HomePage() {
             onAction={() => nearby.refetch()}
           />
         ) : (
-          <Stagger className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Stagger className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {(shops ?? []).map((business) => (
               <StaggerItem key={business.id}>
                 <ShopCard business={business} />
@@ -252,7 +252,7 @@ export function HomePage() {
   const layout = visibleSections(brandConfig.data?.homeLayout)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7 lg:space-y-9">
       {/* Asks for location and notifications on a first visit. Above the fold:
           location is what makes the rows below it worth reading. */}
       <PermissionsPrompt />
@@ -290,7 +290,7 @@ function SectionHeading({
       whileInView="visible"
       viewport={{ once: true, margin: '-20px' }}
     >
-      <h2 className="inline-flex items-center gap-1.5 text-subtitle font-semibold text-foreground">
+      <h2 className="inline-flex items-center gap-2 text-body-lg font-bold tracking-tight text-foreground sm:text-subtitle">
         <motion.span
           className="grid size-7 place-items-center rounded-full bg-primary-soft"
           initial={reduce ? false : { rotate: -30, scale: 0.6 }}
@@ -571,12 +571,12 @@ function ShopRow({
       <HorizontalScroller>
         {isLoading
           ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="w-40 shrink-0 sm:w-44">
+              <div key={i} className="w-44 shrink-0 sm:w-52 lg:w-56">
                 <ShopCardSkeleton />
               </div>
             ))
           : data!.map((business) => (
-              <div key={business.id} className="w-40 shrink-0 snap-start sm:w-44">
+              <div key={business.id} className="w-44 shrink-0 snap-start sm:w-52 lg:w-56">
                 <ShopCard business={business} />
               </div>
             ))}

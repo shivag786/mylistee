@@ -72,8 +72,8 @@ export const DEFAULT_THEME: BrandTheme = {
   dark: { background: '#1e1e1e', surface: '#262626', text: '#f3f4f6' },
   radius: 'rounded',
   textSize: 'normal',
-  font: 'Poppins',
-  headingFont: 'Poppins',
+  font: 'Metropolis',
+  headingFont: 'Metropolis',
   menuCardColors: true,
   icon: { mode: 'auto', version: null },
 }
@@ -90,6 +90,7 @@ const TEXT_SCALE: Record<ThemeTextSize, string | null> = { small: '93.75%', norm
 
 /** Must match SettingService::THEME_FONTS on the server. */
 export const THEME_FONTS = [
+  'Metropolis',
   'Poppins',
   'Inter',
   'Nunito',
@@ -117,7 +118,7 @@ export const THEME_PRESETS: { name: string; colors: Partial<BrandColors> }[] = [
 ]
 
 /** The one stock font that ships with the app (self-hosted, works offline). */
-const BUNDLED_FONT = 'Poppins'
+const BUNDLED_FONT = 'Metropolis'
 /** Lato has no 500/600; asking Google for a missing weight fails the whole request. */
 const FONT_WEIGHTS: Record<string, string> = { Lato: '300;400;700;900' }
 
@@ -171,7 +172,7 @@ function surfaceVars(surface: string, text: string): string[] {
   ]
 }
 
-const fontStack = (font: string) => `'${font}', 'Poppins', system-ui, -apple-system, sans-serif`
+const fontStack = (font: string) => `'${font}', 'Metropolis', system-ui, -apple-system, sans-serif`
 
 /** The CSS for a theme — only the parts that differ from the default. */
 export function themeCss(theme: BrandTheme): string {

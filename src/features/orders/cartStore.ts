@@ -115,6 +115,11 @@ export const cart = {
     commit(null)
   },
 
+  /** Put back a cart saved before clearing it (the cart bar's Undo). */
+  restore(saved: Cart) {
+    commit(saved)
+  },
+
   /** Replace the cart with a single item from a new shop (after a conflict). */
   replace(
     business: { slug: string; name: string },

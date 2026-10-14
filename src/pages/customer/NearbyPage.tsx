@@ -34,7 +34,7 @@ export function NearbyPage() {
       <LocationBar status={status} onRequest={request} />
 
       {isLoading ? (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {Array.from({ length: 6 }).map((_, i) => (
             <ShopCardSkeleton key={i} />
           ))}
@@ -46,7 +46,7 @@ export function NearbyPage() {
           description={spinOnly ? 'Check back soon — new spin rewards appear here.' : undefined}
         />
       ) : (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {shops.map((business) => (
             <ShopCard key={business.id} business={business} />
           ))}

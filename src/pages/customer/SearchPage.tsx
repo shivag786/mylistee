@@ -48,7 +48,7 @@ export function SearchPage() {
           description={MESSAGES.empty.search.description}
         />
       ) : (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {results.map((b) => (
             <ShopCard key={b.id} business={b} />
           ))}

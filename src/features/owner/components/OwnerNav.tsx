@@ -1,7 +1,6 @@
-import { NavLink } from 'react-router-dom'
+import { TabBar } from '@/components/navigation/TabBar'
 import { OWNER_MOBILE_NAV, visibleOwnerNav } from '@/features/owner/ownerNav'
 import { useAppConfig } from '@/hooks/useAppConfig'
-import { cn } from '@/utils/cn'
 
 /**
  * Bottom navigation for the business-owner app on mobile. On desktop the sidebar
@@ -10,35 +9,9 @@ import { cn } from '@/utils/cn'
  */
 export function OwnerNav() {
   const { data: config } = useAppConfig()
-  const items = visibleOwnerNav(OWNER_MOBILE_NAV, config?.ownerModules)
-
-  return (
-    <nav
-      aria-label="Business navigation"
-      className="sticky bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur lg:hidden"
-    >
-      <ul className="app-container flex h-[72px] items-stretch justify-between px-1">
-        {items.map(({ to, shortLabel, icon: Icon }) => (
-          <li key={to} className="flex-1">
-            <NavLink
-              to={to}
-              className={({ isActive }) =>
-                cn(
-                  'flex h-full min-w-12 flex-col items-center justify-center gap-1 rounded-md text-small font-medium transition-colors duration-150',
-                  isActive ? 'text-primary' : 'text-text-muted hover:text-text-secondary',
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon className="size-6" strokeWidth={isActive ? 2.4 : 2} aria-hidden />
-                  <span>{shortLabel}</span>
-                </>
-              )}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
-    </nav>
+  const items = visibleOwnerNav(OWNER_MOBILE_NAV, config?.ownerModules).map(
+    ({ to, shortLabel, icon }) => ({ to, label: shortLabel, icon }),
   )
+
+  return <TabBar items={items} label="Business navigation" id="owner-tab" />
 }

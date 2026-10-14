@@ -20,6 +20,25 @@ export function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)} km`
 }
 
+export type ProximityTone = 'here' | 'walk' | 'near' | 'far'
+
+/**
+ * How close a shop feels, in words: "You're right here" (≤ 150 m), "Walking
+ * distance" (≤ 1 km), "Nearby" (≤ 3 km), else just the distance. `eta` is a
+ * rough walk time up to 1.5 km and a ride time beyond — enough to decide on,
+ * not a route.
+ */
+export function describeProximity(meters: number): { label: string; eta: string; tone: ProximityTone } {
+  const walk = meters <= 1500
+  // ~5 km/h on foot, ~24 km/h through town by bike or auto.
+  const minutes = Math.max(1, Math.round(meters / (walk ? 80 : 400)))
+  const eta = `${minutes} min ${walk ? 'walk' : 'ride'}`
+  if (meters <= 150) return { label: "You're right here", eta, tone: 'here' }
+  if (meters <= 1000) return { label: 'Walking distance', eta, tone: 'walk' }
+  if (meters <= 3000) return { label: 'Nearby', eta, tone: 'near' }
+  return { label: formatDistance(meters), eta, tone: 'far' }
+}
+
 /** "17 Jul 2026" */
 export function formatDate(value: string | Date): string {
   const date = typeof value === 'string' ? new Date(value) : value

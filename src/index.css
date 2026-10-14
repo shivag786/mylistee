@@ -31,6 +31,7 @@
   .text-title,
   .text-subtitle {
     font-family: var(--font-heading, var(--font-sans));
+    letter-spacing: -0.01em;
   }
 
   /* Consistent focus ring for accessibility (document/phase/05 §Accessibility) */
@@ -63,6 +64,18 @@
     max-width: 1280px;
     margin-inline: auto;
     padding-inline: 1rem;
+  }
+
+  /* More breathing room on tablets and laptops. */
+  @media (min-width: 768px) {
+    .app-container {
+      padding-inline: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .app-container {
+      padding-inline: 2rem;
+    }
   }
 
   /* Shimmer for skeleton loaders (document/phase/05 §Loading States) */

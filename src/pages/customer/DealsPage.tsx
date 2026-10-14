@@ -25,7 +25,7 @@ export function DealsPage() {
       </header>
 
       {isLoading ? (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {Array.from({ length: 8 }).map((_, i) => (
             <DealCardSkeleton key={i} />
           ))}
@@ -39,7 +39,7 @@ export function DealsPage() {
           description="Check back soon — shops run offers throughout the day."
         />
       ) : (
-        <Stagger className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stagger className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {data.map((deal) => (
             <StaggerItem key={deal.id}>
               <DealCard deal={deal} />

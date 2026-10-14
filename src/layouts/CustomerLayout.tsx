@@ -30,7 +30,7 @@ export function CustomerLayout() {
     <LocationProvider>
       <div className="flex min-h-dvh flex-col bg-background">
         {store ? <StoreAppBar scope={store} /> : <AppBar />}
-        <main id="main-content" className="app-container flex-1 py-4 pb-6">
+        <main id="main-content" className="app-container flex-1 py-4 pb-24 sm:py-6 lg:pb-12">
           <AnimatePresence mode="wait">
             <PageTransition key={location.pathname}>
               <SuspenseOutlet>

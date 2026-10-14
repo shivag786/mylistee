@@ -262,7 +262,7 @@
 /* Static scales — generate rounded-*, text-*, shadow-*, font-* utilities. */
 @theme {
   /* Typography */
-  --font-sans: 'Poppins', 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Metropolis', 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
 
   /* Type scale (document/phase/05 §Font Scale + phase/16) */
   --text-display: 3rem; /* 48 */

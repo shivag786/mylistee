@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router-dom'
-import { UtensilsCrossed, ReceiptIndianRupee, User, Store, type LucideIcon } from 'lucide-react'
+import { UtensilsCrossed, ReceiptIndianRupee, User, Store } from 'lucide-react'
+import { TabBar, type TabBarItem } from '@/components/navigation/TabBar'
 import { ROUTES } from '@/constants/routes'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -26,9 +27,12 @@ export function StoreAppBar({ scope }: { scope: StoreScope }) {
           </span>
           <span className="truncate text-body-lg font-bold text-foreground">{scope.name}</span>
         </Link>
-        <Link to={ROUTES.profile} aria-label="Your account" className="shrink-0">
-          <Avatar name={user?.name ?? 'Guest'} src={user?.photoUrl} size="md" />
-        </Link>
+        <div className="flex shrink-0 items-center gap-3">
+          <StoreDesktopLinks scope={scope} />
+          <Link to={ROUTES.profile} aria-label="Your account" className="shrink-0">
+            <Avatar name={user?.name ?? 'Guest'} src={user?.photoUrl} size="md" />
+          </Link>
+        </div>
       </div>
     </header>
   )
@@ -36,36 +40,37 @@ export function StoreAppBar({ scope }: { scope: StoreScope }) {
 
 /** Bottom tabs for store mode: this shop's menu, the customer's orders here, their account. */
 export function StoreBottomNav({ scope }: { scope: StoreScope }) {
-  const tabs: { to: string; label: string; icon: LucideIcon }[] = [
+  const tabs: TabBarItem[] = [
     { to: ROUTES.businessProfile(scope.slug), label: 'Menu', icon: UtensilsCrossed },
     { to: ROUTES.orders, label: 'My orders', icon: ReceiptIndianRupee },
     { to: ROUTES.profile, label: 'Account', icon: User },
   ]
 
+  return <TabBar items={tabs} label="Shop" id="store-tab" />
+}
+
+/** Desktop links in the store header — the bottom tabs are phone-only. */
+function StoreDesktopLinks({ scope }: { scope: StoreScope }) {
+  const links = [
+    { to: ROUTES.businessProfile(scope.slug), label: 'Menu' },
+    { to: ROUTES.orders, label: 'My orders' },
+  ]
   return (
-    <nav aria-label="Shop" className="sticky bottom-0 z-40 border-t border-border bg-nav/95 backdrop-blur">
-      <ul className="app-container flex h-[72px] items-stretch justify-around px-1">
-        {tabs.map(({ to, label, icon: Icon }) => (
-          <li key={to} className="flex-1">
-            <NavLink
-              to={to}
-              className={({ isActive }) =>
-                cn(
-                  'flex h-full flex-col items-center justify-center gap-1 text-small font-medium transition-colors',
-                  isActive ? 'text-nav-active' : 'text-text-muted hover:text-text-secondary',
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon className="size-6" strokeWidth={isActive ? 2.4 : 2} aria-hidden />
-                  <span>{label}</span>
-                </>
-              )}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
+    <nav aria-label="Shop" className="hidden items-center gap-1 lg:flex">
+      {links.map(({ to, label }) => (
+        <NavLink
+          key={to}
+          to={to}
+          className={({ isActive }) =>
+            cn(
+              'rounded-full px-4 py-2 text-caption font-semibold transition-colors',
+              isActive ? 'bg-primary-soft text-primary' : 'text-text-secondary hover:bg-surface-muted hover:text-foreground',
+            )
+          }
+        >
+          {label}
+        </NavLink>
+      ))}
     </nav>
   )
 }
