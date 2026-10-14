@@ -40,6 +40,8 @@ export interface OwnerBusiness {
   openingTime: string | null
   closingTime: string | null
   isOpen: boolean
+  /** Premium store mode — the shop's QR/link shows only this shop. */
+  storeMode?: boolean
   phone: string | null
   email: string | null
   website: string | null

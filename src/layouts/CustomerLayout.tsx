@@ -1,4 +1,5 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { ROUTES } from '@/constants/routes'
 import { AnimatePresence } from 'framer-motion'
 import { AppBar } from '@/components/navigation/AppBar'
 import { BottomNav } from '@/components/navigation/BottomNav'
@@ -7,6 +8,8 @@ import { SuspenseOutlet } from '@/app/PageLoader'
 import { GlobalCartBar } from '@/features/orders/GlobalCartBar'
 import { LegalFooter } from '@/components/navigation/LegalFooter'
 import { LocationProvider } from '@/features/location/LocationProvider'
+import { isAllowedInStore, useStoreScope } from '@/features/store/storeScope'
+import { StoreAppBar, StoreBottomNav } from '@/features/store/StoreChrome'
 
 /**
  * Shell for the customer-facing app: fixed app bar, scrollable content with
@@ -14,13 +17,19 @@ import { LocationProvider } from '@/features/location/LocationProvider'
  */
 export function CustomerLayout() {
   const location = useLocation()
+  // Premium store mode: only this shop, its orders and the account are reachable.
+  const store = useStoreScope()
+
+  if (store && !isAllowedInStore(location.pathname, store.slug)) {
+    return <Navigate to={ROUTES.businessProfile(store.slug)} replace />
+  }
 
   // Wraps the whole customer shell so the header chip and every shop list read
   // the same fix — two useUserLocation instances would prompt separately.
   return (
     <LocationProvider>
       <div className="flex min-h-dvh flex-col bg-background">
-        <AppBar />
+        {store ? <StoreAppBar scope={store} /> : <AppBar />}
         <main id="main-content" className="app-container flex-1 py-4 pb-6">
           <AnimatePresence mode="wait">
             <PageTransition key={location.pathname}>
@@ -32,7 +41,7 @@ export function CustomerLayout() {
         </main>
         <LegalFooter />
         <GlobalCartBar />
-        <BottomNav />
+        {store ? <StoreBottomNav scope={store} /> : <BottomNav />}
       </div>
     </LocationProvider>
   )

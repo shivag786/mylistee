@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Download, FileText, Link2, ScanLine } from 'lucide-react'
+import { Download, FileText, Link2, ScanLine, Crown, ShieldCheck } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ROUTES } from '@/constants/routes'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/feedback/Spinner'
@@ -77,6 +79,33 @@ export function QrPage() {
           Print it, place it on your counter, and let customers scan to win.
         </p>
       </div>
+
+      {business.storeMode ? (
+        <Card padding="md" className="flex items-start gap-3 border-success/40 bg-success-soft">
+          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-success" aria-hidden />
+          <div>
+            <p className="text-caption font-semibold text-foreground">Store mode is on</p>
+            <p className="text-small text-text-secondary">
+              Customers who scan this QR or open your link see only your shop — your menu, their orders here
+              and their account. No other shops anywhere.
+            </p>
+          </div>
+        </Card>
+      ) : (
+        <Card padding="md" className="flex items-start gap-3 bg-gradient-to-br from-gold-soft to-primary-soft">
+          <Crown className="mt-0.5 size-5 shrink-0 text-premium" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="text-caption font-semibold text-foreground">Show only your shop when customers scan</p>
+            <p className="text-small text-text-secondary">
+              Right now, customers can browse other shops from your QR. With a premium plan they stay in your
+              shop only.
+            </p>
+            <Link to={ROUTES.owner.subscription} className="mt-1.5 inline-block text-caption font-semibold text-primary hover:underline">
+              See premium plans →
+            </Link>
+          </div>
+        </Card>
+      )}
 
       <PlanUsageBanner metric="qrCodes" />
 

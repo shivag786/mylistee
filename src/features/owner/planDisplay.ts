@@ -16,6 +16,7 @@ export const FEATURE_LABELS: Record<string, string> = {
   priority_support: 'Priority support',
   multi_branch: 'Multi-branch',
   white_label: 'White-label branding',
+  store_mode: 'Store mode — your QR/link shows only your shop',
   api_access: 'API access',
   dedicated_support: 'Dedicated account manager',
 }

@@ -1,5 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   MapPin,
   Lock,
@@ -37,6 +37,7 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import type { WonReward } from '@/features/businesses/publicTypes'
+import { storeScope } from '@/features/store/storeScope'
 
 export function BusinessProfilePage() {
   const { slug = '' } = useParams<{ slug: string }>()
@@ -62,6 +63,20 @@ export function BusinessProfilePage() {
 
   const business = data?.business
   const spinState = data?.spin
+
+  // Premium store mode: opened straight from the shop's link or QR (not by
+  // tapping through the app) → keep this visit inside this shop.
+  const location = useLocation()
+  const arrivedDirectly = location.key === 'default' || tableParam !== null
+  useEffect(() => {
+    if (!business) return
+    const current = storeScope.get()
+    if (business.storeMode && (arrivedDirectly || current?.slug === business.slug)) {
+      storeScope.enter({ slug: business.slug, name: business.name, logoUrl: business.logoUrl })
+    } else if (!business.storeMode && current?.slug === business.slug) {
+      storeScope.leave()
+    }
+  }, [business, arrivedDirectly])
 
   // Highest discount across the menu, for a header "up to X% off" badge.
   const maxOff = useMemo(() => {

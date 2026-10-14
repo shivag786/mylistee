@@ -11,6 +11,7 @@ import { ROUTES } from '@/constants/routes'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { cn } from '@/utils/cn'
 import type { Order } from '@/features/owner/orderTypes'
+import { useStoreScope } from '@/features/store/storeScope'
 
 type Range = 'today' | 'all'
 
@@ -37,14 +38,21 @@ export function OrdersHistoryPage() {
   const navigate = useNavigate()
   const { data, isLoading, isError, refetch } = useCustomerOrders()
   const [range, setRange] = useState<Range>('all')
+  // In store mode only this shop's orders show — never another shop's name.
+  const store = useStoreScope()
+
+  const mine = useMemo(
+    () => (store ? (data ?? []).filter((o) => o.businessSlug === store.slug) : (data ?? [])),
+    [data, store],
+  )
 
   // Newest first, then optional "today" filter.
   const orders = useMemo(() => {
-    const sorted = [...(data ?? [])].sort((a, b) => orderTime(b) - orderTime(a))
+    const sorted = [...mine].sort((a, b) => orderTime(b) - orderTime(a))
     return range === 'today' ? sorted.filter(isToday) : sorted
-  }, [data, range])
+  }, [mine, range])
 
-  const total = data?.length ?? 0
+  const total = mine.length
 
   return (
     <div className="space-y-5">
@@ -86,8 +94,12 @@ export function OrdersHistoryPage() {
               ? 'Switch to “All” to see earlier orders.'
               : 'When you place an order, it shows up here.'
           }
-          actionLabel={range === 'today' && total > 0 ? undefined : 'Explore shops'}
-          onAction={range === 'today' && total > 0 ? undefined : () => navigate(ROUTES.home)}
+          actionLabel={range === 'today' && total > 0 ? undefined : store ? 'See the menu' : 'Explore shops'}
+          onAction={
+            range === 'today' && total > 0
+              ? undefined
+              : () => navigate(store ? ROUTES.businessProfile(store.slug) : ROUTES.home)
+          }
         />
       ) : (
         <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

@@ -3,6 +3,7 @@ import { Download, X } from 'lucide-react'
 import { Logo } from '@/components/icons/Logo'
 import { Button } from '@/components/ui/button'
 import { useInstallPrompt } from './useInstallPrompt'
+import { useStoreScope } from '@/features/store/storeScope'
 import { usePwaEnabled } from './usePwaEnabled'
 
 /**
@@ -17,7 +18,9 @@ export function InstallBanner() {
   // Only once the admin's flag has actually come back as on. While it is
   // unknown, offering an install we may be about to disable would be worse
   // than a banner that appears a moment late.
-  const show = canInstall && pwaEnabled === true
+  // Not inside a premium shop's store mode: installing opens the full marketplace.
+  const store = useStoreScope()
+  const show = canInstall && pwaEnabled === true && !store
 
   return (
     <AnimatePresence>

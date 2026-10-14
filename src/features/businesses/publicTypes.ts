@@ -120,6 +120,8 @@ export interface PublicBusiness {
   openingTime: string | null
   closingTime: string | null
   isOpen: boolean
+  /** Premium: arriving by link/QR keeps the customer inside this shop. */
+  storeMode?: boolean
   phone: string | null
   website: string | null
   facebook: string | null
