@@ -11,6 +11,12 @@ function toFormData(values: Partial<ComboFormValues>): FormData {
   const { image, items, ...fields } = values
 
   for (const [key, value] of Object.entries(fields)) {
+    // An explicit null clears a schedule field, or a name (so the server names
+    // the combo after its items). Laravel reads '' as null.
+    if (value === null && (key === 'starts_at' || key === 'ends_at' || key === 'name')) {
+      form.append(key, '')
+      continue
+    }
     if (value === undefined || value === null || value === '') continue
     if (typeof value === 'boolean') {
       form.append(key, value ? '1' : '0')

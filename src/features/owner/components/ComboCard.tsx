@@ -12,8 +12,17 @@ interface ComboCardProps {
   busy?: boolean
 }
 
+/** "14 Oct, 11:59 PM" */
+function formatEnd(iso: string): string {
+  return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(
+    new Date(iso),
+  )
+}
+
 /** Owner combo card (Phase 7.3) — item thumbnails, price vs total, savings. */
 export function ComboCard({ combo, onEdit, onToggleVisible, busy }: ComboCardProps) {
+  const expired = combo.autoDisable && combo.endsAt !== null && new Date(combo.endsAt).getTime() <= Date.now()
+
   return (
     <Card className="flex h-full flex-col gap-2" padding="sm">
       <div className="flex items-start gap-2.5">
@@ -71,7 +80,8 @@ export function ComboCard({ combo, onEdit, onToggleVisible, busy }: ComboCardPro
           </Badge>
         ) : null}
         {combo.walletCoinsAccepted && <Badge tone="info">Wallet coins ok</Badge>}
-        {combo.isActiveNow ? <Badge tone="success">Live</Badge> : <Badge tone="neutral">Off</Badge>}
+        {combo.isActiveNow ? <Badge tone="success">Live</Badge> : <Badge tone="neutral">{expired ? 'Ended' : 'Off'}</Badge>}
+        {combo.isActiveNow && combo.endsAt && <Badge tone="warning">Ends {formatEnd(combo.endsAt)}</Badge>}
       </div>
 
       <div className="mt-auto flex items-center justify-between gap-1 border-t border-border pt-2">

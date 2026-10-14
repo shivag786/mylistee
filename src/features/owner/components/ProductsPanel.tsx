@@ -8,6 +8,7 @@ import { Stagger, StaggerItem } from '@/components/motion/Stagger'
 import { ProductCard } from './ProductCard'
 import { ProductForm } from './ProductForm'
 import { PromotionForm } from './PromotionForm'
+import { QuickOfferSheet } from './QuickOfferSheet'
 import { useProgressiveReveal } from '@/hooks/useProgressiveReveal'
 import { useProducts, useProductActions } from '../hooks/useProducts'
 import { usePromotions } from '../hooks/usePromotions'
@@ -26,6 +27,8 @@ export function ProductsPanel() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
   const [offerFor, setOfferFor] = useState<Product | null>(null)
+  // "Add offer" opens the 3-tap sheet; its Advanced link opens the full form.
+  const [quickFor, setQuickFor] = useState<Product | null>(null)
   const [editingPromo, setEditingPromo] = useState<Promotion | null>(null)
 
   const products = data ?? []
@@ -96,7 +99,7 @@ export function ProductsPanel() {
                   product={product}
                   onEdit={openEdit}
                   onToggleVisible={toggleVisible}
-                  onSmartOffer={setOfferFor}
+                  onSmartOffer={setQuickFor}
                   promotion={promoByProduct.get(product.id) ?? null}
                   onEditOffer={setEditingPromo}
                   busy={toggle.isPending}
@@ -113,6 +116,15 @@ export function ProductsPanel() {
       )}
 
       <ProductForm open={formOpen} onOpenChange={setFormOpen} product={editing} />
+
+      <QuickOfferSheet
+        product={quickFor}
+        onOpenChange={(open) => !open && setQuickFor(null)}
+        onAdvanced={(product) => {
+          setQuickFor(null)
+          setOfferFor(product)
+        }}
+      />
 
       <PromotionForm
         open={promoOpen}

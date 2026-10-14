@@ -14,6 +14,9 @@ export interface Business {
   distanceMeters: number | null
   offerCount: number
   isOpen: boolean
+  /** "09:00:00"; null when the shop hasn't set hours. */
+  openingTime?: string | null
+  closingTime?: string | null
   area: string | null
   /** The shop's city. Null until its owner sets one. */
   city: string | null

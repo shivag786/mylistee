@@ -2,12 +2,13 @@ import { Fragment, type ReactNode } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Coins, Expand, Flame, Layers, Plus, Utensils } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+import { ComboTimer } from '@/features/combos/components/ComboTimer'
 import { cn } from '@/utils/cn'
 import type { PublicCombo, PublicComboItem } from '../../publicTypes'
 
 /** What the card needs — a shop's own combo or one from the home feed. */
 export type ComboCardData = Pick<PublicCombo, 'name' | 'imageUrl' | 'comboPrice' | 'totalPrice' | 'savings' | 'items'> &
-  Partial<Pick<PublicCombo, 'orderCount' | 'isPopular' | 'coinsEarned'>>
+  Partial<Pick<PublicCombo, 'orderCount' | 'isPopular' | 'coinsEarned' | 'endsAt'>>
 
 interface ComboCardProps {
   combo: ComboCardData
@@ -34,9 +35,12 @@ export function ComboCard({ combo, subtitle, control, onOpen, tint, className }:
   const washSrc = combo.imageUrl ?? withPhotos[0]?.imageUrl ?? null
   const canOpen = Boolean(washSrc)
   const count = combo.items.reduce((n, i) => n + Math.max(1, i.quantity), 0)
+  // 4–5 items: one even row of smaller photos, no "+" between them, so the
+  // card stays the same height as a 2–3 item combo.
+  const compact = combo.items.length > 3
 
   return (
-    <Card className={cn('relative overflow-hidden', className)} padding="none">
+    <Card className={cn('relative flex flex-col overflow-hidden', className)} padding="none">
       {tint && washSrc && (
         <img
           src={washSrc}
@@ -81,6 +85,7 @@ export function ComboCard({ combo, subtitle, control, onOpen, tint, className }:
             <Expand className="size-3.5" />
           </span>
         )}
+        <ComboTimer endsAt={combo.endsAt} className="absolute bottom-3 left-3" />
         {combo.savings > 0 && (
           <motion.span
             initial={reduce ? false : { scale: 0, rotate: -12 }}
@@ -95,12 +100,15 @@ export function ComboCard({ combo, subtitle, control, onOpen, tint, className }:
         )}
       </motion.button>
 
-      <div className="relative space-y-3 p-3">
+      <div className="relative flex flex-1 flex-col gap-3 p-3">
         {/* What's inside */}
         <div>
           <p className="mb-1.5 text-small font-semibold uppercase tracking-wide text-text-muted">What's inside</p>
           <motion.ul
-            className="flex flex-wrap items-start gap-x-1 gap-y-2"
+            className={cn(
+              compact ? 'grid items-start gap-1' : 'flex flex-wrap items-start gap-x-1 gap-y-2',
+              compact && (combo.items.length === 4 ? 'grid-cols-4' : 'grid-cols-5'),
+            )}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-20px' }}
@@ -108,7 +116,7 @@ export function ComboCard({ combo, subtitle, control, onOpen, tint, className }:
           >
             {combo.items.map((item, i) => (
               <Fragment key={`${item.productId ?? 'x'}-${i}`}>
-                {i > 0 && (
+                {i > 0 && !compact && (
                   <motion.li
                     aria-hidden
                     variants={{ hidden: { opacity: 0, rotate: -90 }, visible: { opacity: 1, rotate: 0 } }}
@@ -120,10 +128,15 @@ export function ComboCard({ combo, subtitle, control, onOpen, tint, className }:
                 <motion.li
                   variants={{ hidden: { opacity: 0, y: 10, scale: 0.8 }, visible: { opacity: 1, y: 0, scale: 1 } }}
                   transition={{ type: 'spring', stiffness: 320, damping: 20 }}
-                  className="flex w-[4.25rem] flex-col items-center gap-1 text-center"
+                  className={cn('flex flex-col items-center gap-1 text-center', !compact && 'w-[4.25rem]')}
                 >
                   <span className="relative">
-                    <span className="grid size-12 place-items-center overflow-hidden rounded-full bg-surface-muted ring-2 ring-surface shadow-soft">
+                    <span
+                      className={cn(
+                        'grid place-items-center overflow-hidden rounded-full bg-surface-muted ring-2 ring-surface shadow-soft',
+                        compact ? 'size-10' : 'size-12',
+                      )}
+                    >
                       {item.imageUrl ? (
                         <img src={item.imageUrl} alt="" loading="lazy" className="size-full object-cover" />
                       ) : (
@@ -146,9 +159,9 @@ export function ComboCard({ combo, subtitle, control, onOpen, tint, className }:
         </div>
 
         {/* The deal */}
-        <div className="flex items-end justify-between gap-3 border-t border-border/70 pt-3">
+        <div className="mt-auto flex items-end justify-between gap-3 border-t border-border/70 pt-3">
           <div className="min-w-0">
-            <p className="text-body font-bold leading-snug text-foreground">{combo.name}</p>
+            <p className="line-clamp-2 text-body font-bold leading-snug text-foreground">{combo.name}</p>
             {subtitle}
             <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <span className="text-body-lg font-black text-foreground">₹{combo.comboPrice}</span>
@@ -180,9 +193,9 @@ export function ComboCard({ combo, subtitle, control, onOpen, tint, className }:
 }
 
 /** A combo without its own photo: its items' photos tiled, joined by "+". */
-function Collage({ items }: { items: PublicComboItem[] }) {
+export function Collage({ items }: { items: PublicComboItem[] }) {
   const reduce = useReducedMotion()
-  const tiles = items.slice(0, 4)
+  const tiles = items.slice(0, 5)
 
   if (tiles.length === 0) {
     return (
@@ -199,7 +212,10 @@ function Collage({ items }: { items: PublicComboItem[] }) {
         ? 'grid-cols-2'
         : tiles.length === 3
           ? 'grid-cols-2 grid-rows-2 [&>*:first-child]:row-span-2'
-          : 'grid-cols-2 grid-rows-2'
+          : tiles.length === 4
+            ? 'grid-cols-2 grid-rows-2'
+            : // 5: one big photo with four small ones beside it.
+              'grid-cols-3 grid-rows-2 [&>*:first-child]:row-span-2'
 
   return (
     <span className={cn('relative grid size-full gap-0.5', layout)}>
@@ -221,7 +237,7 @@ function Collage({ items }: { items: PublicComboItem[] }) {
           )}
         </motion.span>
       ))}
-      {tiles.length > 1 && (
+      {tiles.length === 2 && (
         <span className="pointer-events-none absolute left-1/2 top-1/2 grid size-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-surface text-primary shadow-floating" aria-hidden>
           <Plus className="size-4" strokeWidth={3} />
         </span>

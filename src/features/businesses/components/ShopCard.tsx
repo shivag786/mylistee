@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card'
 import { IconButton } from '@/components/ui/icon-button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { cn } from '@/utils/cn'
-import { formatDistance } from '@/utils/format'
+import { formatClockTime, formatDistance } from '@/utils/format'
 import { toast } from '@/utils/toast'
 import { useToggleFavorite } from '../hooks/useFavorites'
 import type { Business } from '../types'
@@ -109,6 +109,8 @@ export function ShopCard({ business }: ShopCardProps) {
           <p className="truncate text-small text-text-secondary">{business.category}</p>
         )}
 
+        <OpenLine business={business} />
+
         {(hasRating || business.distanceMeters != null) && (
           <div className="mt-1 flex items-center gap-2.5 text-caption text-text-secondary">
             {hasRating && (
@@ -128,5 +130,19 @@ export function ShopCard({ business }: ShopCardProps) {
         )}
       </div>
     </Card>
+  )
+}
+
+/** "● Open · till 10 PM" / "● Closed · opens 9 AM"; nothing when hours aren't set. */
+function OpenLine({ business }: { business: Business }) {
+  const { openingTime: open, closingTime: close, isOpen } = business
+  if (!open || !close) return null
+  const allDay = open.slice(0, 5) === close.slice(0, 5)
+
+  return (
+    <p className={cn('mt-0.5 inline-flex items-center gap-1 text-small font-semibold', isOpen ? 'text-success' : 'text-destructive')}>
+      <span className="size-1.5 rounded-full bg-current" aria-hidden />
+      {allDay ? 'Open 24 hours' : isOpen ? `Open · till ${formatClockTime(close)}` : `Closed · opens ${formatClockTime(open)}`}
+    </p>
   )
 }

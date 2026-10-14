@@ -38,7 +38,8 @@ export interface ComboItemInput {
 }
 
 export interface ComboFormValues {
-  name: string
+  /** null = let the server name it after its items. */
+  name: string | null
   combo_price: number
   product_category_id?: string | null
   coins_earned?: number | null

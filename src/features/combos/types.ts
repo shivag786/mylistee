@@ -15,6 +15,8 @@ export interface ComboDeal {
   comboPrice: number
   totalPrice: number
   savings: number
+  /** When the combo stops showing (ISO); null = runs until turned off. */
+  endsAt?: string | null
   items: ComboDealItem[]
   business: {
     slug: string

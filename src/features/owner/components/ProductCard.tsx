@@ -120,6 +120,16 @@ export function ProductCard({
           {!product.inStock && <Badge tone="danger">Out of stock</Badge>}
         </div>
 
+        {!promotion && (
+          <button
+            type="button"
+            onClick={() => onSmartOffer(product)}
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-dashed border-primary/50 py-1.5 text-small font-semibold text-primary transition-colors hover:bg-primary-soft"
+          >
+            <Tag className="size-3.5" aria-hidden /> Add offer
+          </button>
+        )}
+
         <div className="mt-auto flex items-center justify-between gap-1 border-t border-border pt-2">
           <Switch
             checked={product.isVisible}
@@ -128,11 +138,6 @@ export function ProductCard({
             aria-label="Visible on menu"
           />
           <div className="flex items-center gap-0.5">
-            {!promotion && (
-              <IconButton aria-label={`Create offer for ${product.name}`} size="sm" onClick={() => onSmartOffer(product)}>
-                <Tag className="size-4" aria-hidden />
-              </IconButton>
-            )}
             <IconButton aria-label={`Edit ${product.name}`} size="sm" onClick={() => onEdit(product)}>
               <Pencil className="size-4" aria-hidden />
             </IconButton>

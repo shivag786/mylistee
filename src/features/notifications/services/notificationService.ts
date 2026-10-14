@@ -6,6 +6,7 @@ export type NotificationType =
   | 'reward_redeemed'
   | 'spin_activity'
   | 'offer_expiring'
+  | 'shop_update'
   | 'system'
 
 export interface AppNotification {

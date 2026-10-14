@@ -14,6 +14,8 @@ import { DishPhoto } from './dish/DishPhoto'
 import { DishViewer } from './dish/DishViewer'
 import { comboDish, dishKey, productDish, viewableDishes, type Dish } from './dish/dish'
 import { ComboCard } from './dish/ComboCard'
+import { ComboSheet } from './dish/ComboSheet'
+import { ComboTimer } from '@/features/combos/components/ComboTimer'
 import { useAppConfig } from '@/hooks/useAppConfig'
 
 /** `quiet` skips the "added" toast — the dish viewer shows its own cart button instead. */
@@ -60,7 +62,10 @@ export function MenuList({ menu, combos, businessSlug, onAdd, focusProductId }: 
     inShop ? (cartData?.items.find((i) => i.type === type && i.id === id)?.quantity ?? 0) : 0
 
   const activeCombos = combos.filter((c) => c.isActiveNow)
-  const dishes = useMemo(() => viewableDishes(menu, combos), [menu, combos])
+  // Combos open their own sheet (every item listed), so the photo viewer is products only.
+  const dishes = useMemo(() => viewableDishes(menu), [menu])
+  const [openComboId, setOpenComboId] = useState<string | null>(null)
+  const openCombo = activeCombos.find((c) => c.id === openComboId) ?? null
   const mustTry = useMemo(() => {
     const picks = menu
       .flatMap((s) => s.products.map((p) => ({ p, s })))
@@ -125,7 +130,7 @@ export function MenuList({ menu, combos, businessSlug, onAdd, focusProductId }: 
                 delay={Math.min(i, 3) * 0.08}
                 className={cn(activeCombos.length > 1 && 'w-[85%] max-w-sm shrink-0 snap-start')}
               >
-                <ComboItem combo={combo} qty={qtyOf('combo', combo.id)} onAdd={onAdd} onOpen={openDish} />
+                <ComboItem combo={combo} qty={qtyOf('combo', combo.id)} onAdd={onAdd} onOpen={() => setOpenComboId(combo.id)} />
               </RevealCard>
             ))}
           </div>
@@ -149,6 +154,22 @@ export function MenuList({ menu, combos, businessSlug, onAdd, focusProductId }: 
           </div>
         </section>
       ))}
+
+      <ComboSheet
+        combo={openCombo}
+        onOpenChange={(o) => !o && setOpenComboId(null)}
+        action={
+          openCombo &&
+          onAdd && (
+            <AddControl
+              qty={qtyOf('combo', openCombo.id)}
+              onAdd={() => onAdd(comboDish(openCombo).cartItem)}
+              onInc={() => cart.setQuantity('combo', openCombo.id, qtyOf('combo', openCombo.id) + 1)}
+              onDec={() => cart.setQuantity('combo', openCombo.id, qtyOf('combo', openCombo.id) - 1)}
+            />
+          )
+        }
+      />
 
       <DishViewer
         dishes={dishes}
@@ -456,6 +477,7 @@ function ProductCard({
                   <Tag className="size-2.5" aria-hidden /> {product.promo.label}
                 </Badge>
               )}
+              {product.promo?.endsAt && <ComboTimer endsAt={product.promo.endsAt} className="px-2 py-0.5 shadow-none" />}
             </div>
           )}
 
@@ -485,7 +507,7 @@ function ComboItem({
   combo: PublicCombo
   qty: number
   onAdd?: AddHandler
-  onOpen: OpenHandler
+  onOpen: () => void
 }) {
   const tint = useContext(TintContext)
   const dish = comboDish(combo)
@@ -498,5 +520,5 @@ function ComboItem({
     />
   )
 
-  return <ComboCard combo={combo} control={control} tint={tint} onOpen={() => onOpen(dish.key)} className="h-full" />
+  return <ComboCard combo={combo} control={control} tint={tint} onOpen={onOpen} className="h-full" />
 }

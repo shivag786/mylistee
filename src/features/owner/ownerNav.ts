@@ -16,6 +16,7 @@ import {
   Users,
   Contact,
   Clapperboard,
+  BellRing,
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
@@ -39,6 +40,7 @@ export type OwnerModuleId =
   | 'customers'
   | 'reels'
   | 'qr'
+  | 'notifications'
 
 export interface OwnerNavItem {
   to: string
@@ -76,6 +78,7 @@ export const OWNER_NAV: OwnerNavItem[] = [
   { to: ROUTES.owner.analytics, label: 'Analytics', shortLabel: 'Stats', icon: BarChart3, module: 'analytics' },
   { to: ROUTES.owner.subscription, label: 'Plan & billing', shortLabel: 'Plan', icon: CreditCard },
   { to: ROUTES.owner.growSales, label: 'Grow sales', shortLabel: 'Grow', icon: Megaphone, module: 'grow_sales' },
+  { to: ROUTES.owner.notify, label: 'Notify customers', shortLabel: 'Notify', icon: BellRing, module: 'notifications' },
   { to: ROUTES.owner.loyalty, label: 'Loyalty', shortLabel: 'Coins', icon: Coins, module: 'loyalty' },
   { to: ROUTES.owner.offers, label: 'Spin rewards', shortLabel: 'Rewards', icon: Tag, module: 'spin_rewards' },
   { to: ROUTES.owner.qr, label: 'QR code', shortLabel: 'QR', icon: QrCode, module: 'qr' },

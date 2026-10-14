@@ -45,6 +45,7 @@ const OwnerProfilePage = lazyPage(() => import('@/pages/owner/OwnerProfilePage')
 const OwnerFollowersPage = lazyPage(() => import('@/pages/owner/OwnerFollowersPage'), 'OwnerFollowersPage')
 const OwnerCustomersPage = lazyPage(() => import('@/pages/owner/OwnerCustomersPage'), 'OwnerCustomersPage')
 const OwnerReelsPage = lazyPage(() => import('@/pages/owner/OwnerReelsPage'), 'OwnerReelsPage')
+const OwnerNotifyPage = lazyPage(() => import('@/pages/owner/OwnerNotifyPage'), 'OwnerNotifyPage')
 const ReviewLinkPage = lazyPage(() => import('@/pages/customer/ReviewLinkPage'), 'ReviewLinkPage')
 
 const AdminDashboardPage = lazyPage(() => import('@/pages/admin/AdminDashboardPage'), 'AdminDashboardPage')
@@ -205,6 +206,7 @@ export function AppRouter() {
             <Route path={ROUTES.owner.reviews} element={<OwnerModuleGuard module="reviews"><OwnerReviewsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.customers} element={<OwnerModuleGuard module="customers"><OwnerCustomersPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.reels} element={<OwnerModuleGuard module="reels"><OwnerReelsPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.notify} element={<OwnerModuleGuard module="notifications"><OwnerNotifyPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.subscription} element={<SubscriptionPage />} />
             <Route path={ROUTES.owner.redeem} element={<OwnerModuleGuard module="redeem"><RedeemPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.qr} element={<OwnerModuleGuard module="qr"><QrPage /></OwnerModuleGuard>} />

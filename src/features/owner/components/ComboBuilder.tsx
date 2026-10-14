@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Plus, Minus, X, Check, Utensils, ShoppingBasket } from 'lucide-react'
+import { Plus, Minus, X, Check, Utensils, ShoppingBasket, Timer, ChevronDown } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -39,12 +39,59 @@ interface ComboBuilderProps {
   combo: Combo | null
 }
 
-const MAX = 3
+const MAX = 5
 const MIN = 2
 
+/** How long a combo runs — chips instead of a date picker, so it's one tap. */
+type Duration = 'keep' | 'today' | '1d' | '2d' | '3d' | '7d' | 'always'
+
+const DURATIONS: { value: Exclude<Duration, 'keep'>; label: string }[] = [
+  { value: 'today', label: 'Till tonight' },
+  { value: '1d', label: '1 day' },
+  { value: '2d', label: '2 days' },
+  { value: '3d', label: '3 days' },
+  { value: '7d', label: '7 days' },
+  { value: 'always', label: 'Always' },
+]
+
+/** The end time a chip stands for, as ISO; null = no end. */
+function endFor(duration: Exclude<Duration, 'keep'>): string | null {
+  const now = new Date()
+  if (duration === 'always') return null
+  if (duration === 'today') {
+    const end = new Date(now)
+    end.setHours(23, 59, 59, 0)
+    return end.toISOString()
+  }
+  const days = Number(duration.replace('d', ''))
+  return new Date(now.getTime() + days * 86_400_000).toISOString()
+}
+
+/** The line under the chips saying what the choice means. */
+function durationHint(duration: Duration, currentEnd: string | null): string {
+  if (duration === 'keep') {
+    if (!currentEnd) return 'Runs until you turn it off.'
+    const over = new Date(currentEnd).getTime() <= Date.now()
+    return `${over ? 'Ended' : 'Ends'} ${formatEnd(currentEnd)}.${over ? ' Pick a chip to run it again.' : ''}`
+  }
+  const end = endFor(duration)
+  return end ? `Customers see a countdown. It hides itself at ${formatEnd(end)}.` : 'Runs until you turn it off.'
+}
+
+/** "14 Oct, 11:59 PM" */
+function formatEnd(iso: string): string {
+  return new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(iso))
+}
+
 /**
- * Combo Builder (Phase 7.3) — pick a section, tap 2–3 products (they pop into
- * the basket), then name and price the combo. Totals + savings update live.
+ * Combo Builder (Phase 7.3) — tap 2–5 products (they pop into the basket), set
+ * a price and how long it runs. The name is optional (built from the items);
+ * the rarer extras sit under "More options". Totals + savings update live.
  */
 export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
   const reduce = useReducedMotion()
@@ -65,6 +112,8 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
   const [bonus, setBonus] = useState('')
   const [image, setImage] = useState<File | null>(null)
   const [visible, setVisible] = useState(true)
+  const [duration, setDuration] = useState<Duration>('always')
+  const [showMore, setShowMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -78,6 +127,10 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
     setBonus(combo?.bonusReward ?? '')
     setImage(null)
     setVisible(combo?.isVisible ?? true)
+    // An existing end date stays as it is unless the owner picks a new chip.
+    setDuration(combo?.endsAt ? 'keep' : 'always')
+    // Open the extras straight away when this combo already uses one.
+    setShowMore(Boolean(combo && (combo.coinsEarned || combo.walletCoinsAccepted || combo.nextVisitCoupon || combo.bonusReward)))
     setError(null)
     setPicked(
       combo
@@ -116,6 +169,8 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
   const priceNum = Number(comboPrice) || 0
   const savings = Math.max(0, totalPrice - priceNum)
   const pending = create.isPending || update.isPending
+  // What the server will call it when the name is left blank.
+  const autoName = picked.map((p) => (p.quantity > 1 ? `${p.quantity}× ${p.name}` : p.name)).join(' + ')
 
   function setQuantity(productId: string, delta: number) {
     setPicked((prev) =>
@@ -149,12 +204,12 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
   }
 
   async function handleSave() {
-    if (!name.trim()) return setError('Give the combo a name.')
     if (picked.length < MIN) return setError(`Pick at least ${MIN} products.`)
     if (!comboPrice || priceNum <= 0) return setError('Set a combo price.')
 
     const values: ComboFormValues = {
-      name: name.trim(),
+      // Blank → named after its items on the server.
+      name: name.trim() || null,
       combo_price: priceNum,
       coins_earned: coins ? Number(coins) : null,
       wallet_coins_accepted: walletCoins,
@@ -162,6 +217,8 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
       next_visit_coupon: coupon.trim() || null,
       bonus_reward: bonus.trim() || null,
       is_visible: visible,
+      // A fresh duration also restarts the combo from now.
+      ...(duration !== 'keep' && { starts_at: null, ends_at: endFor(duration), auto_disable: true }),
       items: picked.map((p) => ({ product_id: p.productId, quantity: p.quantity })),
       image,
     }
@@ -187,7 +244,7 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
       <SheetContent side="right" className="flex w-full max-w-lg flex-col gap-0 p-0">
         <SheetHeader className="border-b border-border px-5 py-4">
           <SheetTitle>{isEdit ? 'Edit combo' : 'Build a combo'}</SheetTitle>
-          <SheetDescription>Tap {MIN}–{MAX} products, then name and price your combo.</SheetDescription>
+          <SheetDescription>Tap {MIN}–{MAX} products, set a price and how long it runs.</SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
@@ -331,66 +388,110 @@ export function ComboBuilder({ open, onOpenChange, combo }: ComboBuilderProps) {
             </p>
           )}
 
-          {/* Combo details */}
+          {/* Combo details — only what every combo needs; the rest is under "More options". */}
           <div className="space-y-4 border-t border-border pt-5">
             <div className="space-y-1.5">
-              <Label htmlFor="combo-name">Combo name</Label>
-              <Input id="combo-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Burger + Fries + Coke" />
+              <Label htmlFor="combo-price">Combo price (₹)</Label>
+              <Input id="combo-price" inputMode="decimal" value={comboPrice} onChange={(e) => setComboPrice(e.target.value)} placeholder="199" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="combo-price">Combo price (₹)</Label>
-                <Input id="combo-price" inputMode="decimal" value={comboPrice} onChange={(e) => setComboPrice(e.target.value)} placeholder="199" />
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Timer className="size-4" aria-hidden /> How long should it show?
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {DURATIONS.map((d) => (
+                  <SectionChip
+                    key={d.value}
+                    label={d.label}
+                    active={duration === d.value}
+                    onClick={() => setDuration(d.value)}
+                  />
+                ))}
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="combo-coins">Coins earned (optional)</Label>
-                <Input id="combo-coins" inputMode="numeric" value={coins} onChange={(e) => setCoins(e.target.value)} placeholder="20" />
-              </div>
+              <p className="text-small text-text-muted">
+                {durationHint(duration, combo?.endsAt ?? null)}
+              </p>
             </div>
-
-            <ImageCropField
-              label="Combo image (optional)"
-              shape="rect"
-              aspect={4 / 3}
-              value={image}
-              previewUrl={combo?.imageUrl}
-              onChange={setImage}
-              hint="Leave empty to show the item photos."
-            />
 
             <div className="space-y-1.5">
-              <Label htmlFor="combo-coupon">Next-visit coupon (optional)</Label>
-              <Input id="combo-coupon" value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="e.g. 10% off next visit" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="combo-bonus">Bonus reward (optional)</Label>
-              <Input id="combo-bonus" value={bonus} onChange={(e) => setBonus(e.target.value)} placeholder="e.g. Free dessert" />
+              <Label htmlFor="combo-name">Combo name (optional)</Label>
+              <Input
+                id="combo-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={autoName || 'e.g. Burger + Fries + Coke'}
+              />
+              {!name.trim() && autoName && (
+                <p className="text-small text-text-muted">Left blank, it’s called “{autoName}”.</p>
+              )}
             </div>
 
-            <label className="flex items-center justify-between gap-4 py-0.5">
-              <span className="text-caption font-medium text-foreground">Accept wallet coins</span>
-              <Switch checked={walletCoins} onCheckedChange={setWalletCoins} />
-            </label>
-            {walletCoins && (
-              <div className="space-y-1.5">
-                <Label htmlFor="combo-coins-accepted">Accept up to (coins)</Label>
-                <Input
-                  id="combo-coins-accepted"
-                  inputMode="numeric"
-                  value={coinsAccepted}
-                  onChange={(e) => setCoinsAccepted(e.target.value)}
-                  placeholder="e.g. 15"
-                />
-                <p className="text-small text-text-muted">
-                  Most Listee coins a customer can spend on this combo (₹1 per coin).
-                </p>
-              </div>
-            )}
             <label className="flex items-center justify-between gap-4 py-0.5">
               <span className="text-caption font-medium text-foreground">Visible to customers</span>
               <Switch checked={visible} onCheckedChange={setVisible} />
             </label>
+
+            <button
+              type="button"
+              onClick={() => setShowMore((v) => !v)}
+              aria-expanded={showMore}
+              className="flex w-full items-center justify-between rounded-xl bg-surface-muted px-3 py-2.5 text-caption font-medium text-foreground"
+            >
+              More options
+              <span className="inline-flex items-center gap-1 text-small text-text-muted">
+                Photo, coins, rewards
+                <ChevronDown className={cn('size-4 transition-transform', showMore && 'rotate-180')} aria-hidden />
+              </span>
+            </button>
+
+            {showMore && (
+              <div className="space-y-4">
+                <ImageCropField
+                  label="Combo image"
+                  shape="rect"
+                  aspect={4 / 3}
+                  value={image}
+                  previewUrl={combo?.imageUrl}
+                  onChange={setImage}
+                  hint="Leave empty to show the item photos."
+                />
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="combo-coins">Coins earned</Label>
+                  <Input id="combo-coins" inputMode="numeric" value={coins} onChange={(e) => setCoins(e.target.value)} placeholder="e.g. 20" />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="combo-coupon">Next-visit coupon</Label>
+                  <Input id="combo-coupon" value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="e.g. 10% off next visit" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="combo-bonus">Bonus reward</Label>
+                  <Input id="combo-bonus" value={bonus} onChange={(e) => setBonus(e.target.value)} placeholder="e.g. Free dessert" />
+                </div>
+
+                <label className="flex items-center justify-between gap-4 py-0.5">
+                  <span className="text-caption font-medium text-foreground">Accept wallet coins</span>
+                  <Switch checked={walletCoins} onCheckedChange={setWalletCoins} />
+                </label>
+                {walletCoins && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="combo-coins-accepted">Accept up to (coins)</Label>
+                    <Input
+                      id="combo-coins-accepted"
+                      inputMode="numeric"
+                      value={coinsAccepted}
+                      onChange={(e) => setCoinsAccepted(e.target.value)}
+                      placeholder="e.g. 15"
+                    />
+                    <p className="text-small text-text-muted">
+                      Most Listee coins a customer can spend on this combo (₹1 per coin).
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {error && <p className="text-caption text-destructive">{error}</p>}
           </div>

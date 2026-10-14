@@ -63,6 +63,7 @@ function PlanEditor({ plan }: { plan: Plan }) {
     maxActiveCombos: plan.limits.maxActiveCombos,
     maxActivePromotions: plan.limits.maxActivePromotions,
     maxPushPerMonth: plan.limits.maxPushPerMonth,
+    pushReachPerMonth: plan.limits.pushReachPerMonth ?? null,
     maxOfferDays: plan.limits.maxOfferDays,
     maxQrCodes: plan.limits.maxQrCodes,
     maxGalleryImages: plan.limits.maxGalleryImages,
@@ -104,7 +105,8 @@ function PlanEditor({ plan }: { plan: Plan }) {
         <LabeledInput label="Max active offers" value={numStr(limits.maxActiveOffers)} onChange={(v) => setLimit('maxActiveOffers', v)} type="number" placeholder="∞" />
         <LabeledInput label="Max active combos" value={numStr(limits.maxActiveCombos)} onChange={(v) => setLimit('maxActiveCombos', v)} type="number" placeholder="∞" />
         <LabeledInput label="Max active promotions" value={numStr(limits.maxActivePromotions)} onChange={(v) => setLimit('maxActivePromotions', v)} type="number" placeholder="∞" />
-        <LabeledInput label="Push / month" value={numStr(limits.maxPushPerMonth)} onChange={(v) => setLimit('maxPushPerMonth', v)} type="number" placeholder="∞" />
+        <LabeledInput label="Notifications / month" value={numStr(limits.maxPushPerMonth)} onChange={(v) => setLimit('maxPushPerMonth', v)} type="number" placeholder="∞" />
+        <LabeledInput label="Customers reached / month" value={numStr(limits.pushReachPerMonth)} onChange={(v) => setLimit('pushReachPerMonth', v)} type="number" placeholder="∞" />
         <LabeledInput label="Max offer days" value={numStr(limits.maxOfferDays)} onChange={(v) => setLimit('maxOfferDays', v)} type="number" placeholder="∞" />
         <LabeledInput label="Max QR codes" value={numStr(limits.maxQrCodes)} onChange={(v) => setLimit('maxQrCodes', v)} type="number" placeholder="∞" />
         <LabeledInput label="Max gallery images" value={numStr(limits.maxGalleryImages)} onChange={(v) => setLimit('maxGalleryImages', v)} type="number" placeholder="∞" />

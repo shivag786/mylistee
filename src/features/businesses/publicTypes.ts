@@ -29,7 +29,7 @@ export interface PublicProduct {
   effectivePrice?: number
   activeOffer?: { id: string; name: string; type: string } | null
   /** Any active promotion (all types) with its type + short label. */
-  promo?: { name: string; type: string; typeLabel: string; label: string } | null
+  promo?: { name: string; type: string; typeLabel: string; label: string; endsAt?: string | null } | null
   foodType: 'veg' | 'non_veg' | 'egg' | null
   isTodaysSpecial: boolean
   isBestseller: boolean
@@ -51,6 +51,8 @@ export interface PublicComboItem {
   productId: string | null
   name: string | null
   imageUrl: string | null
+  /** The item's own price, for "bought separately". */
+  sellingPrice?: number | null
   quantity: number
 }
 
@@ -70,6 +72,8 @@ export interface PublicCombo {
   isPopular?: boolean
   items: PublicComboItem[]
   isActiveNow: boolean
+  /** When the combo stops showing (ISO); null = runs until turned off. */
+  endsAt?: string | null
 }
 
 /** A business's fulfilment config for the checkout picker (Phase 7.6). */

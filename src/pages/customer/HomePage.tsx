@@ -1,4 +1,4 @@
-import { Fragment, useMemo, type ReactNode } from 'react'
+import { Fragment, useMemo, useState, type ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
   Search,
@@ -12,8 +12,9 @@ import {
   Layers,
   Zap,
   ChevronRight,
+  Clock,
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import type { UseQueryResult } from '@tanstack/react-query'
 import { MESSAGES } from '@/constants/messages'
@@ -50,12 +51,15 @@ import { LastOrderReviewNudge } from '@/features/orders/LastOrderReviewNudge'
 import { useHomeSpotlight } from '@/features/home/useHomeSpotlight'
 import { HeroCarousel3D } from '@/features/home/HeroCarousel3D'
 import { StoryRail } from '@/features/home/StoryRail'
+import { HowItWorks } from '@/features/home/HowItWorks'
 import { ReelsRow } from '@/features/reels/ReelsRow'
 import { visibleSections, type HomeSectionId } from '@/features/home/homeSections'
 import { ComboCard } from '@/features/businesses/components/dish/ComboCard'
+import { ComboSheet } from '@/features/businesses/components/dish/ComboSheet'
 import { FeedShopTags } from '@/features/businesses/components/FeedShopTags'
 import { Button } from '@/components/ui/button'
 import { fadeInUp } from '@/animations'
+import { cn } from '@/utils/cn'
 import type { Business, BusinessCategory } from '@/features/businesses/types'
 import type { Deal } from '@/features/deals/types'
 import type { ComboDeal } from '@/features/combos/types'
@@ -93,6 +97,16 @@ export function HomePage() {
   const topBanners = useBannerSlot('home_top')
   const afterCombosBanners = useBannerSlot('home_after_combos')
   const spotlight = useHomeSpotlight()
+  // "Open now" chip: narrows the nearby grid to shops open at this moment.
+  const [openOnly, setOpenOnly] = useState(false)
+  const shops = openOnly ? (nearby.data ?? []).filter((b) => b.isOpen) : nearby.data
+  const coinValue = brandConfig.data?.coins?.value ?? 1
+
+  function toggleOpenOnly() {
+    const next = !openOnly
+    setOpenOnly(next)
+    if (next) document.getElementById('nearby-shops')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   // Admin-controlled: hide the whole category quick-filter row when the flag is off.
   const showCategoryChips = appConfig.data?.flags.homeCategoryFilter ?? true
@@ -111,7 +125,7 @@ export function HomePage() {
         <div className="min-w-0">
           <p className="inline-flex items-center gap-1.5 text-caption font-medium opacity-90">
             <Sparkles className="size-4" aria-hidden />
-            Every visit rewards you
+            Menus, offers & rewards near you
           </p>
           <h1 className="mt-1 text-title font-bold">
             {user ? `${greeting}, ${user.name.split(' ')[0]}` : 'Rewards around you'}
@@ -126,6 +140,7 @@ export function HomePage() {
           >
             <Coins className="size-4" aria-hidden />
             {coins.data.total}
+            {coins.data.total > 0 && <span className="font-normal opacity-80">· ₹{coins.data.total * coinValue}</span>}
           </Link>
         )}
       </div>
@@ -155,7 +170,9 @@ export function HomePage() {
         <SpinPrompt count={spinCount} />
       </>
     ),
-    categories: () => showCategoryChips && <CategoryChips query={categories} />,
+    categories: () => (
+      <CategoryChips query={categories} showCategories={showCategoryChips} openOnly={openOnly} onToggleOpen={toggleOpenOnly} />
+    ),
     // Eager: usually right under the hero.
     deals: (title) => (
       <DealRow title={title ?? "Today's Deals"} icon={Tag} query={deals} seeAllTo={ROUTES.deals} />
@@ -189,8 +206,8 @@ export function HomePage() {
       </LazySection>
     ),
     nearby: (title) => (
-      <section>
-        <SectionHeading icon={MapPin} title={title ?? 'Nearby you'}>
+      <section id="nearby-shops" className="scroll-mt-20">
+        <SectionHeading icon={MapPin} title={openOnly ? 'Open now near you' : (title ?? 'Nearby you')}>
           {nearby.isFetching && !nearby.isLoading && (
             <RefreshCw className="size-4 animate-spin text-text-muted" aria-hidden />
           )}
@@ -204,6 +221,14 @@ export function HomePage() {
           </div>
         ) : nearby.isError ? (
           <ErrorState variant="offline" onRetry={() => nearby.refetch()} />
+        ) : openOnly && shops?.length === 0 && (nearby.data?.length ?? 0) > 0 ? (
+          <EmptyState
+            icon={<Clock className="size-7" />}
+            title="No shops open right now"
+            description="Check back later, or see every shop near you."
+            actionLabel="Show all shops"
+            onAction={() => setOpenOnly(false)}
+          />
         ) : !nearby.data || nearby.data.length === 0 ? (
           <EmptyState
             icon={<Search className="size-7" />}
@@ -214,7 +239,7 @@ export function HomePage() {
           />
         ) : (
           <Stagger className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {nearby.data.map((business) => (
+            {(shops ?? []).map((business) => (
               <StaggerItem key={business.id}>
                 <ShopCard business={business} />
               </StaggerItem>
@@ -232,8 +257,13 @@ export function HomePage() {
           location is what makes the rows below it worth reading. */}
       <PermissionsPrompt />
 
+      {/* First-visit explainer: no hero section → it leads the page. */}
+      {!layout.some((s) => s.id === 'hero') && <HowItWorks isAuthenticated={isAuthenticated} />}
       {layout.map((section) => (
-        <Fragment key={section.id}>{sections[section.id](section.title?.trim() || null)}</Fragment>
+        <Fragment key={section.id}>
+          {sections[section.id](section.title?.trim() || null)}
+          {section.id === 'hero' && <HowItWorks isAuthenticated={isAuthenticated} />}
+        </Fragment>
       ))}
 
       {/* Gentle, one-time prompt to review the most recent completed order. */}
@@ -331,14 +361,42 @@ function MiniWheel() {
   )
 }
 
-/** Category quick-filter chips → open Search pre-filtered by that category. */
-function CategoryChips({ query }: { query: UseQueryResult<BusinessCategory[]> }) {
+/**
+ * Quick filters: "Open now" first (filters the nearby grid in place), then the
+ * category chips that open Search pre-filtered.
+ */
+function CategoryChips({
+  query,
+  showCategories,
+  openOnly,
+  onToggleOpen,
+}: {
+  query: UseQueryResult<BusinessCategory[]>
+  showCategories: boolean
+  openOnly: boolean
+  onToggleOpen: () => void
+}) {
   const { data } = query
-  const chips = (data ?? []).filter((c) => c.showOnHomepage)
-  if (chips.length === 0) return null
+  const chips = showCategories ? (data ?? []).filter((c) => c.showOnHomepage) : []
 
   return (
     <HorizontalScroller>
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.92 }}
+        onClick={onToggleOpen}
+        aria-pressed={openOnly}
+        className={cn(
+          'inline-flex shrink-0 snap-start items-center gap-1.5 rounded-full border px-4 py-2 text-caption font-semibold shadow-soft transition-colors',
+          openOnly ? 'border-success bg-success text-white' : 'border-success/40 bg-success-soft text-success',
+        )}
+      >
+        <span className="relative flex size-2">
+          <span className="absolute inline-flex size-full rounded-full bg-current opacity-60 motion-safe:animate-ping" />
+          <span className="relative inline-flex size-2 rounded-full bg-current" />
+        </span>
+        Open now
+      </motion.button>
       {chips.map((category, i) => (
         <MotionLink
           key={category.id}
@@ -403,6 +461,8 @@ function DealRow({
 /** Meal-combos row. Auto-hides when no combos are active. */
 function ComboRow({ title, query }: { title: string; query: UseQueryResult<ComboDeal[]> }) {
   const { data, isLoading } = query
+  const [openId, setOpenId] = useState<string | null>(null)
+  const open = data?.find((c) => c.id === openId) ?? null
 
   if (!isLoading && (!data || data.length === 0)) return null
 
@@ -418,35 +478,46 @@ function ComboRow({ title, query }: { title: string; query: UseQueryResult<Combo
             ))
           : data!.map((combo) => (
               <div key={combo.id} className="w-72 shrink-0 snap-start">
-                <HomeComboCard combo={combo} />
+                <HomeComboCard combo={combo} onOpen={() => setOpenId(combo.id)} />
               </div>
             ))}
       </HorizontalScroller>
+      <ComboSheet
+        combo={open}
+        onOpenChange={(o) => !o && setOpenId(null)}
+        subtitle={open && <ComboShopLine combo={open} />}
+        action={
+          open && (
+            <Button asChild>
+              <Link to={ROUTES.businessProfile(open.business.slug)}>Order at shop</Link>
+            </Button>
+          )
+        }
+      />
     </section>
   )
 }
 
-/** The shop-page combo card, labelled with its shop and linking there to order. */
-function HomeComboCard({ combo }: { combo: ComboDeal }) {
-  const navigate = useNavigate()
+/** The combo's shop, with distance / followed tags. */
+function ComboShopLine({ combo }: { combo: ComboDeal }) {
+  return (
+    <span className="mt-0.5 block space-y-0.5">
+      <span className="block truncate text-caption text-text-secondary">{combo.business.name}</span>
+      <FeedShopTags isFollowed={combo.business.isFollowed} distanceMeters={combo.business.distanceMeters} />
+    </span>
+  )
+}
+
+/** The shop-page combo card, labelled with its shop; tapping opens the combo sheet. */
+function HomeComboCard({ combo, onOpen }: { combo: ComboDeal; onOpen: () => void }) {
   const shopUrl = ROUTES.businessProfile(combo.business.slug)
   return (
     <ComboCard
       combo={combo}
       tint
       className="h-full"
-      onOpen={() => navigate(shopUrl)}
-      subtitle={
-        <span className="mt-0.5 block space-y-0.5">
-          <span className="block truncate text-caption text-text-secondary">
-            {combo.business.name}
-          </span>
-          <FeedShopTags
-            isFollowed={combo.business.isFollowed}
-            distanceMeters={combo.business.distanceMeters}
-          />
-        </span>
-      }
+      onOpen={onOpen}
+      subtitle={<ComboShopLine combo={combo} />}
       control={
         <Button asChild size="sm">
           <Link to={shopUrl}>Order</Link>

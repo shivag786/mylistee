@@ -91,10 +91,10 @@ export function comboDish(combo: PublicCombo): Dish {
   }
 }
 
-/** Every item with a photo, in menu order — what the full-screen viewer swipes through. */
-export function viewableDishes(menu: PublicMenuSection[], combos: PublicCombo[]): Dish[] {
-  return [
-    ...combos.filter((c) => c.isActiveNow).map(comboDish),
-    ...menu.flatMap((s) => s.products.map((p) => productDish(p, s.name))),
-  ].filter((d) => d.imageUrl)
+/**
+ * Every product with a photo, in menu order — what the full-screen viewer
+ * swipes through. Combos open their own sheet instead.
+ */
+export function viewableDishes(menu: PublicMenuSection[]): Dish[] {
+  return menu.flatMap((s) => s.products.map((p) => productDish(p, s.name))).filter((d) => d.imageUrl)
 }

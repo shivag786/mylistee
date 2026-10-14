@@ -53,6 +53,7 @@ export const ROUTES = {
     followers: '/business/followers',
     customers: '/business/customers',
     reels: '/business/reels',
+    notify: '/business/notify',
     subscription: '/business/subscription',
   },
 

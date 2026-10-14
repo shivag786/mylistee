@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Gift, BadgeCheck, Sparkles, Tag, Bell, X, type LucideIcon } from 'lucide-react'
+import { Gift, BadgeCheck, Sparkles, Tag, Bell, Store, X, type LucideIcon } from 'lucide-react'
 import { formatRelative } from '@/utils/format'
 import { cn } from '@/utils/cn'
 import { useMarkRead, useDeleteNotification } from '../hooks/useNotifications'
@@ -10,6 +10,7 @@ const ICONS: Record<NotificationType, LucideIcon> = {
   reward_redeemed: BadgeCheck,
   spin_activity: Sparkles,
   offer_expiring: Tag,
+  shop_update: Store,
   system: Bell,
 }
 

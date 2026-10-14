@@ -102,6 +102,8 @@ export interface Plan {
     maxActiveCombos: number | null
     maxActivePromotions: number | null
     maxPushPerMonth: number | null
+    /** Customers a shop can notify per month (null = unlimited). */
+    pushReachPerMonth?: number | null
     maxOfferDays: number | null
     maxQrCodes: number | null
     maxGalleryImages: number | null

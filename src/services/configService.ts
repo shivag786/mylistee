@@ -32,6 +32,8 @@ export interface AppConfig {
    * on. Absent on an older API, which only had Google.
    */
   auth?: { google: boolean; mobile: boolean }
+  /** ₹ per coin, and the coins a new account starts with. */
+  coins?: { value: number; welcome: number }
   /** Admin-set colours/fonts and the menu-card colour switch. Absent on an older API. */
   theme?: BrandTheme
   /** Admin-arranged home sections; null/absent = the built-in order. */
