@@ -26,6 +26,10 @@ export interface AppConfig {
     razorpay: boolean
     /** Convenience fee on the online share of an order, in percent. */
     convenienceFeePercent?: number
+    /** Listee's cut of every order, borne by the shop. */
+    platformFeePercent?: number
+    /** The payment gateway's cut of the online part, borne by the shop. */
+    gatewayFeePercent?: number
   }
   /**
    * Which ways in the customer login page offers. The server keeps at least one

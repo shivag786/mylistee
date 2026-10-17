@@ -76,7 +76,12 @@ export function ShopHero({ business, actions }: { business: PublicBusiness; acti
         </motion.div>
 
         <motion.div variants={staggerItem} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-caption">
-          {hasHours && (
+          {business.closedUntil ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive-soft px-2.5 py-0.5 font-semibold text-destructive">
+              <span className="relative inline-flex size-2 rounded-full bg-current" />
+              Closed till {new Date(business.closedUntil).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
+            </span>
+          ) : hasHours && (
             <span
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-semibold',

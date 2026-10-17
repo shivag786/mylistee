@@ -15,17 +15,7 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { MESSAGES } from '@/constants/messages'
-import { PROMOTION_STATUS_TONE, type Promotion } from '@/features/owner/promotionTypes'
-
-function summary(p: Promotion): string {
-  if (p.type === 'bogo') return `Buy ${p.buyQty ?? 1} get ${p.getQty ?? 1}`
-  const amount = p.discountType === 'flat' ? `₹${p.value ?? 0} off` : `${p.value ?? 0}% off`
-  if (p.type === 'quantity_discount') return `${amount} above ${p.minQty ?? 2} units`
-  if (p.type === 'happy_hour' && p.dailyStartTime && p.dailyEndTime) {
-    return `${amount} · ${p.dailyStartTime.slice(0, 5)}–${p.dailyEndTime.slice(0, 5)}`
-  }
-  return amount
-}
+import { PROMOTION_STATUS_TONE, promotionSummary, type Promotion } from '@/features/owner/promotionTypes'
 
 export function GrowSalesPage() {
   usePageTitle('Grow sales')
@@ -96,7 +86,7 @@ export function GrowSalesPage() {
                     {p.isActiveNow && <Badge tone="success">Live now</Badge>}
                   </div>
                   <p className="text-caption text-text-secondary">
-                    {p.typeLabel} · {summary(p)}
+                    {p.typeLabel} · {promotionSummary(p)}
                   </p>
                   <p className="mt-0.5 inline-flex items-center gap-1 text-small text-text-muted">
                     <Package className="size-3" aria-hidden />

@@ -27,6 +27,10 @@ export const promotionService = {
   update: (id: string, values: Partial<PromotionFormValues>): Promise<Promotion> =>
     apiClient.put<Promotion>(`business/promotions/${id}`, clean(values)),
 
+  /** Run the same offer again from now, for `days` days. */
+  repeat: (id: string, days: number): Promise<Promotion> =>
+    apiClient.post<Promotion>(`business/promotions/${id}/repeat`, { days }),
+
   setStatus: (id: string, action: 'pause' | 'resume'): Promise<Promotion> =>
     apiClient.patch<Promotion>(`business/promotions/${id}/status`, { action }),
 

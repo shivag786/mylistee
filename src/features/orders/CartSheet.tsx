@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Minus, Plus, Trash2, Coins, Utensils, Smartphone, Banknote } from 'lucide-react'
+import { Minus, Plus, Trash2, Coins, Utensils, Smartphone, Banknote, CheckCircle2, Info } from 'lucide-react'
 import { SERVICE_META, type ServiceType } from './serviceTypes'
 import { cn } from '@/utils/cn'
 import {
@@ -20,13 +20,17 @@ import { ApiError } from '@/types/api'
 import { MESSAGES } from '@/constants/messages'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useBusinessLoyalty } from '@/features/wallet/hooks/useCoins'
-import { cart, cartSubtotal, useCart } from './cartStore'
+import { cart, cartSubtotal, lineKey, optionsLabel, useCart } from './cartStore'
 import { useOrderCheckout, isOrderPaymentCancelled } from './useOrderCheckout'
 import { waitForPageInteractive } from '@/features/payments/razorpay'
 import { defaultChoice, splitPayment, type PaymentChoice } from './paymentSplit'
 import { useAppConfig } from '@/hooks/useAppConfig'
 import { rememberPostLoginTarget } from '@/features/auth/postLoginTarget'
 import { ROUTES } from '@/constants/routes'
+import { useCartQuote } from '@/features/rewards/useRewards'
+import { BillDiscountProgress, CouponPicker, NextRewardHint } from '@/features/rewards/CartRewards'
+import type { PlaceOrderPayload } from './customerOrderService'
+import type { Cart } from './cartStore'
 
 /** ₹ value of one coin — mirrors backend config('loyalty.coin_value') default. */
 const COIN_VALUE = 1
@@ -36,16 +40,26 @@ const PAYMENT_OPTIONS = [
   { key: 'cod', icon: Banknote },
 ] as const satisfies ReadonlyArray<{ key: PaymentChoice; icon: typeof Smartphone }>
 
+/** The cart's lines as the order API takes them (sizes and add-ons included). */
+function orderLines(cart: Cart): PlaceOrderPayload['items'] {
+  return cart.items.map((i) => ({
+    type: i.type,
+    id: i.id,
+    quantity: i.quantity,
+    ...(i.options ? { variant: i.options.variantId ?? undefined, addons: i.options.addonIds } : {}),
+  }))
+}
+
 /** "Cash on delivery" only reads right for delivery; otherwise it is paid at the counter. */
 function codLabel(serviceType: ServiceType): string {
   return serviceType === 'delivery' ? 'Cash on delivery' : 'Pay at counter'
 }
 
-function placeLabel(signedIn: boolean, chargedNow: number, stage: string): string {
+function placeLabel(signedIn: boolean, chargedNow: number, stage: string, total: number): string {
   if (stage === 'paying') return 'Complete the payment…'
   if (stage === 'verifying') return 'Confirming payment…'
   if (!signedIn) return 'Sign in & place order'
-  return chargedNow > 0 ? `Pay ₹${chargedNow}` : 'Place order'
+  return chargedNow > 0 ? `Pay ₹${chargedNow}` : `Place order · ₹${total}`
 }
 
 interface CartSheetProps {
@@ -61,6 +75,8 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   const { isAuthenticated, signInWithGoogle } = useAuth()
   const [useCoins, setUseCoins] = useState(false)
   const [note, setNote] = useState('')
+  // The coupon the customer chose; the server's quote says whether it holds.
+  const [couponCode, setCouponCode] = useState<string | null>(null)
   const [signingIn, setSigningIn] = useState(false)
 
   // Service (fulfilment) context (Phase 7.6). Config is captured on the cart; a
@@ -105,6 +121,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
       }
       setUseCoins(false)
       setNote('')
+      setCouponCode(null)
       // Scanned a table QR ⇒ default to dine-in; else the shop's preferred mode.
       const initial: ServiceType = preboundTableId ? 'dine_in' : service?.defaultMode ?? 'pickup'
       setServiceType(modes.includes(initial) ? initial : modes[0])
@@ -120,19 +137,29 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   const addressReady = !needsAddress || address.trim().length > 0
   const fee = serviceType === 'delivery' ? deliveryFee : 0
 
-  const subtotal = cartSubtotal(current)
+  // The server prices the cart — bill discount and coupon included — exactly as
+  // the order will be; the local sums only fill in until the first quote lands.
+  const { data: quote } = useCartQuote(
+    open && current
+      ? { business: current.businessSlug, items: orderLines(current), serviceType, couponCode: couponCode ?? undefined }
+      : null,
+  )
+  const subtotal = quote?.subtotal ?? cartSubtotal(current)
+  const savings = quote?.savings ?? 0
+  const discounted = Math.max(0, subtotal - savings)
   // Coins are a combo perk: the cap is the sum of each combo's "accept up to N
   // coins" (× quantity). No coin-accepting combo ⇒ coins can't be applied.
-  const comboCoinCap = (current?.items ?? []).reduce(
-    (sum, i) => sum + (i.type === 'combo' ? (i.coinsAccepted ?? 0) * i.quantity : 0),
-    0,
-  )
+  const comboCoinCap =
+    quote?.comboCoinCap ??
+    (current?.items ?? []).reduce((sum, i) => sum + (i.type === 'combo' ? (i.coinsAccepted ?? 0) * i.quantity : 0), 0)
   const coinsAccepted = comboCoinCap > 0
   const coinsToApply = useCoins
-    ? Math.min(balance, comboCoinCap, Math.floor(subtotal / COIN_VALUE))
+    ? Math.min(balance, comboCoinCap, Math.floor(discounted / COIN_VALUE))
     : 0
   const coinDiscount = coinsToApply * COIN_VALUE
-  const payable = Math.max(0, subtotal - coinDiscount) + fee
+  const payable = Math.round((Math.max(0, discounted - coinDiscount) + fee) * 100) / 100
+  const totalSaved = Math.round((savings + coinDiscount) * 100) / 100
+  const couponHolds = Boolean(couponCode && quote?.coupon && !quote.couponError)
   const split = splitPayment(payable, paymentChoice, payment)
   const showPaymentPicker = Boolean(payment?.onlineAvailable && payment?.codAvailable)
 
@@ -170,7 +197,8 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
     try {
       const order = await checkout.placeOrder({
         business: current!.businessSlug,
-        items: current!.items.map((i) => ({ type: i.type, id: i.id, quantity: i.quantity })),
+        items: orderLines(current!),
+        couponCode: couponHolds ? couponCode! : undefined,
         coinsToUse: coinsToApply,
         note: note.trim() || undefined,
         serviceType,
@@ -249,7 +277,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                 <>
                   <ul className="space-y-3">
                     {current.items.map((item) => (
-                      <li key={`${item.type}-${item.id}`} className="flex items-center gap-3">
+                      <li key={lineKey(item)} className="flex items-center gap-3">
                         <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-image bg-surface-muted">
                           {item.imageUrl ? (
                             <img src={item.imageUrl} alt="" className="size-full object-cover" />
@@ -259,13 +287,16 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-body font-medium text-foreground">{item.name}</p>
+                          {item.options && (
+                            <p className="truncate text-small text-text-muted">{optionsLabel(item.options)}</p>
+                          )}
                           <p className="text-caption text-text-secondary">₹{item.unitPrice}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
                             aria-label="Decrease"
-                            onClick={() => cart.setQuantity(item.type, item.id, item.quantity - 1)}
+                            onClick={() => cart.setLineQuantity(lineKey(item), item.quantity - 1)}
                             className="grid size-7 place-items-center rounded-full border border-border text-foreground hover:bg-surface-muted"
                           >
                             <Minus className="size-3.5" aria-hidden />
@@ -274,7 +305,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                           <button
                             type="button"
                             aria-label="Increase"
-                            onClick={() => cart.setQuantity(item.type, item.id, item.quantity + 1)}
+                            onClick={() => cart.setLineQuantity(lineKey(item), item.quantity + 1)}
                             className="grid size-7 place-items-center rounded-full border border-border text-foreground hover:bg-surface-muted"
                           >
                             <Plus className="size-3.5" aria-hidden />
@@ -282,7 +313,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                           <button
                             type="button"
                             aria-label={`Remove ${item.name}`}
-                            onClick={() => cart.remove(item.type, item.id)}
+                            onClick={() => cart.removeLine(lineKey(item))}
                             className="ml-1 text-text-muted hover:text-destructive"
                           >
                             <Trash2 className="size-4" aria-hidden />
@@ -388,80 +419,84 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                     placeholder="Add a note (optional)"
                   />
 
-                  <div className="space-y-1 border-t border-border pt-3">
-                    <div className="flex items-center justify-between text-caption text-text-secondary">
-                      <span>Subtotal</span>
-                      <span>₹{subtotal}</span>
-                    </div>
-                    {coinsToApply > 0 && (
-                      <div className="flex items-center justify-between text-caption text-premium-foreground">
-                        <span>Coins used ({coinsToApply})</span>
-                        <span>−₹{coinDiscount}</span>
-                      </div>
-                    )}
-                    {fee > 0 && (
-                      <div className="flex items-center justify-between text-caption text-text-secondary">
-                        <span>Delivery fee</span>
-                        <span>₹{fee}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between text-body font-semibold text-foreground">
-                      <span>Order total</span>
-                      <span>₹{payable}</span>
-                    </div>
-                  </div>
+                  {/* Rewards: the bill-discount nudge, the coupon, what this order earns. */}
+                  {quote && <BillDiscountProgress quote={quote} />}
+                  {quote && (
+                    <CouponPicker quote={quote} applied={couponCode} onApply={setCouponCode} signedIn={isAuthenticated} />
+                  )}
 
                   {showPaymentPicker && (
                     <div className="space-y-2">
-                      <p className="text-caption font-medium text-foreground">How would you like to pay?</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {PAYMENT_OPTIONS.map(({ key, icon: Icon }) => (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => setPaymentChoice(key)}
-                            aria-pressed={paymentChoice === key}
-                            className={cn(
-                              'flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-caption font-medium transition-colors',
-                              paymentChoice === key
-                                ? 'border-primary bg-primary-soft text-primary'
-                                : 'border-border text-text-secondary hover:bg-surface-muted',
-                            )}
-                          >
-                            <Icon className="size-4" aria-hidden />
-                            {key === 'online' ? 'Pay online' : codLabel(serviceType)}
-                          </button>
-                        ))}
+                      <p className="text-caption font-bold text-foreground">Pay with</p>
+                      <div role="radiogroup" className="grid grid-cols-2 gap-2">
+                        {PAYMENT_OPTIONS.map(({ key, icon: Icon }) => {
+                          const active = paymentChoice === key
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              role="radio"
+                              aria-checked={active}
+                              onClick={() => setPaymentChoice(key)}
+                              className={cn(
+                                'relative flex flex-col items-start gap-1 rounded-2xl border-2 p-3 text-left transition-all active:scale-[0.98]',
+                                active ? 'border-primary bg-primary-soft' : 'border-border bg-surface hover:border-border-strong',
+                              )}
+                            >
+                              {active && <CheckCircle2 className="absolute right-2.5 top-2.5 size-4 text-primary" aria-hidden />}
+                              <span className={cn('grid size-9 place-items-center rounded-xl', active ? 'bg-primary text-primary-foreground' : 'bg-surface-muted text-text-secondary')}>
+                                <Icon className="size-5" aria-hidden />
+                              </span>
+                              <span className="text-caption font-bold text-foreground">
+                                {key === 'online' ? 'Pay online' : codLabel(serviceType)}
+                              </span>
+                              <span className="text-[11px] leading-tight text-text-muted">
+                                {key === 'online' ? 'UPI · Cards · Wallets' : serviceType === 'delivery' ? 'Pay when it arrives' : 'Pay when you collect'}
+                              </span>
+                            </button>
+                          )
+                        })}
                       </div>
+                      <p className="text-small text-text-muted">Same price either way — no extra charges.</p>
                     </div>
                   )}
 
-                  {split.online > 0 && (
-                    <div className="space-y-1 rounded-xl bg-surface-muted px-3 py-2.5 text-caption">
-                      <div className="flex justify-between text-text-secondary">
-                        <span>
-                          {split.atCounter > 0 ? `Advance now (${payment?.partialPercent}%)` : 'Pay now'}
-                        </span>
-                        <span className="tabular-nums">₹{split.online}</span>
-                      </div>
-                      {split.fee > 0 && (
-                        <div className="flex justify-between text-text-muted">
-                          <span>Convenience fee ({payment?.feePercent}%)</span>
-                          <span className="tabular-nums">₹{split.fee}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between font-semibold text-foreground">
-                        <span>Charged now</span>
-                        <span className="tabular-nums">₹{split.chargedNow}</span>
-                      </div>
-                      {split.atCounter > 0 && (
-                        <div className="flex justify-between border-t border-border pt-1 text-text-secondary">
-                          <span>Pay at the counter</span>
-                          <span className="tabular-nums">₹{split.atCounter}</span>
-                        </div>
-                      )}
+                  {/* The bill. Savings in green, then one clear "To pay". */}
+                  <div className="space-y-1.5 rounded-2xl border border-border bg-surface p-3.5">
+                    <p className="text-caption font-bold text-foreground">Bill details</p>
+                    <BillRow label="Item total" value={`₹${subtotal}`} />
+                    {(quote?.billDiscount ?? 0) > 0 && <BillRow label="Bill discount" value={`−₹${quote!.billDiscount}`} saving />}
+                    {couponHolds && <BillRow label={`Coupon (${quote!.coupon!.code})`} value={`−₹${quote!.couponDiscount}`} saving />}
+                    {coinsToApply > 0 && <BillRow label={`Coins (${coinsToApply})`} value={`−₹${coinDiscount}`} saving />}
+                    {fee > 0 && <BillRow label="Delivery fee" value={`₹${fee}`} />}
+                    {split.fee > 0 && (
+                      <BillRow
+                        label={
+                          <span className="inline-flex items-center gap-1">
+                            Payment fee <Info className="size-3" aria-label="Charged by the payment provider on online payments" />
+                          </span>
+                        }
+                        value={`₹${split.fee}`}
+                      />
+                    )}
+                    <div className="flex items-center justify-between border-t border-dashed border-border pt-2 text-body-lg font-extrabold text-foreground">
+                      <span>To pay</span>
+                      <span className="tabular-nums">₹{Math.round((payable + split.fee) * 100) / 100}</span>
                     </div>
+                    {split.online > 0 && split.atCounter > 0 && (
+                      <p className="text-small text-text-secondary">
+                        ₹{split.chargedNow} now ({payment?.partialPercent}% advance) · ₹{split.atCounter} at the counter
+                      </p>
+                    )}
+                  </div>
+
+                  {totalSaved > 0 && (
+                    <p className="flex items-center justify-center gap-1.5 rounded-xl bg-success-soft py-2 text-caption font-bold text-success">
+                      🎉 You’re saving ₹{totalSaved} on this order
+                    </p>
                   )}
+
+                  {quote && <NextRewardHint quote={quote} />}
                 </>
               )}
             </div>
@@ -476,11 +511,20 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                 isLoading={checkout.isPending || signingIn}
                 disabled={!current || current.items.length === 0 || !addressReady}
               >
-                {placeLabel(isAuthenticated, split.chargedNow, checkout.stage)}
+                {placeLabel(isAuthenticated, split.chargedNow, checkout.stage, payable)}
               </Button>
             </SheetFooter>
         </>
       </SheetContent>
     </Sheet>
+  )
+}
+
+function BillRow({ label, value, saving }: { label: React.ReactNode; value: string; saving?: boolean }) {
+  return (
+    <div className={cn('flex items-center justify-between text-caption', saving ? 'font-semibold text-success' : 'text-text-secondary')}>
+      <span>{label}</span>
+      <span className="tabular-nums">{value}</span>
+    </div>
   )
 }

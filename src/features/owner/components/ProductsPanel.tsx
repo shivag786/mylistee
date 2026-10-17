@@ -16,7 +16,7 @@ import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { MESSAGES } from '@/constants/messages'
 import type { Product } from '../productTypes'
-import type { Promotion } from '../promotionTypes'
+import { isPromotionOver, type Promotion } from '../promotionTypes'
 
 /** Products tab on the Products page (Phase 7.2a). */
 export function ProductsPanel() {
@@ -38,7 +38,8 @@ export function ProductsPanel() {
   const promoByProduct = useMemo(() => {
     const map = new Map<string, Promotion>()
     for (const promo of promotions ?? []) {
-      if (!promo.productId) continue
+      // An ended offer no longer blocks "Add offer" on the card.
+      if (!promo.productId || isPromotionOver(promo)) continue
       const existing = map.get(promo.productId)
       if (!existing || (promo.isActiveNow && !existing.isActiveNow)) map.set(promo.productId, promo)
     }
@@ -62,6 +63,22 @@ export function ProductsPanel() {
     toggle.mutate(
       { id: product.id, field: 'is_visible', value },
       { onError: (err) => toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic) },
+    )
+  }
+
+  function toggleStock(product: Product, value: boolean) {
+    // Counted stock at zero: back in stock means entering how many came in.
+    if (value && product.stockQty === 0) {
+      toast.info('Enter the new stock quantity')
+      openEdit(product)
+      return
+    }
+    toggle.mutate(
+      { id: product.id, field: 'in_stock', value },
+      {
+        onSuccess: () => toast.success(value ? `${product.name} is back in stock` : `${product.name} marked sold out`),
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic),
+      },
     )
   }
 
@@ -99,6 +116,7 @@ export function ProductsPanel() {
                   product={product}
                   onEdit={openEdit}
                   onToggleVisible={toggleVisible}
+                  onToggleStock={toggleStock}
                   onSmartOffer={setQuickFor}
                   promotion={promoByProduct.get(product.id) ?? null}
                   onEditOffer={setEditingPromo}

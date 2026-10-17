@@ -1,3 +1,4 @@
+import type { ShopPerks } from '@/features/rewards/types'
 /** Customer-facing (public) business profile + spin types — mirror the Laravel
  * PublicBusinessResource / RewardResource. */
 import type { ServiceType } from '@/features/orders/serviceTypes'
@@ -31,6 +32,10 @@ export interface PublicProduct {
   /** Any active promotion (all types) with its type + short label. */
   promo?: { name: string; type: string; typeLabel: string; label: string; endsAt?: string | null } | null
   foodType: 'veg' | 'non_veg' | 'egg' | null
+  /** Sizes to pick one of; `sellingPrice` is after the product's discount. */
+  variants?: { id: string; name: string; price: number; sellingPrice: number }[]
+  /** Extras to add any of, priced on top. */
+  addons?: { id: string; name: string; price: number }[]
   isTodaysSpecial: boolean
   isBestseller: boolean
   isRecommended: boolean
@@ -39,6 +44,8 @@ export interface PublicProduct {
   /** True once it clears the "most ordered" threshold — drives the Popular badge. */
   isPopular?: boolean
   inStock: boolean
+  /** Units left when the shop counts stock; null otherwise. */
+  stockQty?: number | null
 }
 
 export interface PublicMenuSection {
@@ -120,6 +127,11 @@ export interface PublicBusiness {
   openingTime: string | null
   closingTime: string | null
   isOpen: boolean
+  /** Owner closed the shop until this time (ISO); null = not closed. */
+  closedUntil?: string | null
+  closedNote?: string | null
+  /** Open, but not taking new orders right now. */
+  ordersPaused?: boolean
   /** Premium: arriving by link/QR keeps the customer inside this shop. */
   storeMode?: boolean
   phone: string | null
@@ -150,6 +162,8 @@ export interface SpinState {
 export interface PublicBusinessResponse {
   business: PublicBusiness
   spin: SpinState
+  /** Bill discount, come-back, loyalty progress and coupons. Absent on an older API. */
+  perks?: ShopPerks
 }
 
 export interface WonReward {

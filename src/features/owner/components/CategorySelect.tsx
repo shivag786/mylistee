@@ -2,13 +2,6 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -23,6 +16,7 @@ import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { MESSAGES } from '@/constants/messages'
 import { useCategories, useRequestCategory } from '../hooks/useOwner'
+import { ChoiceChips } from './ChoiceChips'
 
 interface CategorySelectProps {
   value: string
@@ -32,7 +26,8 @@ interface CategorySelectProps {
 }
 
 /**
- * Category picker backed by the public /categories endpoint. When no category
+ * Category picker backed by the public /categories endpoint — tappable chips
+ * with a search box, rather than a dropdown that jams inside sheets on phones. When no category
  * fits, the owner can request a new one for admin approval (Phase 7.1).
  */
 export function CategorySelect({ value, onChange, error, disabled }: CategorySelectProps) {
@@ -69,18 +64,16 @@ export function CategorySelect({ value, onChange, error, disabled }: CategorySel
         </button>
       </div>
 
-      <Select value={value} onValueChange={onChange} disabled={disabled || isLoading}>
-        <SelectTrigger id="category" aria-invalid={Boolean(error)} className="w-full">
-          <SelectValue placeholder={isLoading ? 'Loading categories…' : 'Choose a category'} />
-        </SelectTrigger>
-        <SelectContent>
-          {categories?.map((category) => (
-            <SelectItem key={category.id} value={category.id}>
-              {category.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <ChoiceChips
+        id="category"
+        options={(categories ?? []).map((c) => ({ id: c.id, name: c.name }))}
+        value={value}
+        onChange={onChange}
+        loading={isLoading}
+        disabled={disabled}
+        invalid={Boolean(error)}
+        searchPlaceholder="Search categories (e.g. Cafe, Bakery)"
+      />
       {error && <p className="text-caption text-destructive">{error}</p>}
 
       <Dialog open={open} onOpenChange={setOpen}>

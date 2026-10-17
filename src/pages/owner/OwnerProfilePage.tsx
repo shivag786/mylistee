@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CreditCard, ChevronRight } from 'lucide-react'
+import { CreditCard, ChevronRight, Settings } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/constants/routes'
@@ -100,6 +100,28 @@ function ProfileForm({ business }: { business: OwnerBusiness }) {
       <h1 className="text-title font-bold text-foreground">Business profile</h1>
 
       <Link
+        to={ROUTES.owner.settings}
+        className="block rounded-[20px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+      >
+        <Card interactive className="flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-xl bg-primary-soft text-primary">
+            <Settings className="size-5" aria-hidden />
+          </span>
+          <span className="flex-1">
+            <span className="block text-body font-medium text-foreground">Settings</span>
+            <span className="block text-caption text-text-secondary">
+              {business?.closedUntil
+                ? 'Shop is closed right now'
+                : business?.ordersPaused
+                  ? 'New orders are paused'
+                  : 'Order notifications, close shop, pause orders'}
+            </span>
+          </span>
+          <ChevronRight className="size-5 text-text-muted" aria-hidden />
+        </Card>
+      </Link>
+
+      <Link
         to={ROUTES.owner.subscription}
         className="block rounded-[20px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
       >
@@ -143,6 +165,7 @@ function ProfileForm({ business }: { business: OwnerBusiness }) {
           register={form.register}
           errors={form.formState.errors}
           setValue={form.setValue}
+          watch={form.watch}
         />
       </Card>
 

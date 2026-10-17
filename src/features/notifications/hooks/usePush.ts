@@ -2,9 +2,18 @@ import { useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { toast } from '@/utils/toast'
+import { storage } from '@/utils/storage'
 import { notificationService } from '../services/notificationService'
 import { onForegroundMessage, pushPermission, requestPushToken } from '../push'
 import { notificationKeys } from './useNotifications'
+
+/**
+ * "Off" in Settings. The browser permission cannot be taken back by the app, so
+ * off means: this device's token is removed from the server and not silently
+ * re-registered until switched on again.
+ */
+const OPT_OUT_KEY = 'listee.pushOff'
+const isOptedOut = () => storage.get(OPT_OUT_KEY) === '1'
 
 interface PushRegistrationOptions {
   /**
@@ -35,7 +44,7 @@ export function usePushRegistration({ registerEffects = true }: PushRegistration
     // Read the browser's live answer, not this instance's state: "Allow" may have
     // been tapped elsewhere (e.g. the home card, before signing in), and the
     // token can only be saved once signed in.
-    if (!registerEffects || !isAuthenticated || pushPermission() !== 'granted') return
+    if (!registerEffects || !isAuthenticated || pushPermission() !== 'granted' || isOptedOut()) return
     let active = true
     void requestPushToken(false).then((token) => {
       if (active && token) void notificationService.registerDevice(token).catch(() => undefined)
@@ -56,14 +65,30 @@ export function usePushRegistration({ registerEffects = true }: PushRegistration
     return unsub
   }, [registerEffects, isAuthenticated, qc])
 
+  const [optedOut, setOptedOut] = useState(isOptedOut)
+
   const enable = useCallback(async () => {
     const token = await requestPushToken(true)
     setPermission(pushPermission())
     if (token) {
+      storage.set(OPT_OUT_KEY, '0')
+      setOptedOut(false)
       await notificationService.registerDevice(token).catch(() => undefined)
       toast.success('Push notifications enabled')
     }
+    return Boolean(token)
   }, [])
 
-  return { permission, enable }
+  /** Stop pushes to this device (in-app notifications still arrive). */
+  const disable = useCallback(async () => {
+    storage.set(OPT_OUT_KEY, '1')
+    setOptedOut(true)
+    const token = await requestPushToken(false)
+    if (token) await notificationService.unregisterDevice(token).catch(() => undefined)
+  }, [])
+
+  /** On = permission granted and not switched off here. */
+  const active = permission === 'granted' && !optedOut
+
+  return { permission, enable, disable, active }
 }

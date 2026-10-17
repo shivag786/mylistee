@@ -18,6 +18,8 @@ export interface OrderItemLine {
   unitPrice: number
   quantity: number
   lineTotal: number
+  /** Add-ons picked with it; the size is already in `name`. */
+  addons?: string[]
 }
 
 export interface Order {
@@ -34,8 +36,16 @@ export interface Order {
   subtotal: number
   coinsUsed: number
   coinDiscount: number
+  /** The shop's automatic bill discount. */
+  billDiscount?: number
+  couponDiscount?: number
+  couponCode?: string | null
   deliveryFee: number
   total: number
+  /** Shop-only: Listee's platform fee, the gateway's share, and what the shop keeps. */
+  platformFee?: number
+  gatewayFee?: number
+  vendorEarning?: number | null
   /** What the customer picked at checkout. Null on orders from before online payment. */
   paymentChoice?: PaymentMethodKey | null
   /** The part of `total` taken online. */

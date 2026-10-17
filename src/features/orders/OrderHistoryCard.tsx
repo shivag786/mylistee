@@ -80,6 +80,9 @@ export function OrderHistoryCard({ order }: { order: Order }) {
           <li key={i} className="flex items-baseline justify-between gap-2 text-text-secondary">
             <span className="min-w-0 truncate">
               <span className="font-medium text-foreground">{item.quantity}×</span> {item.name}
+              {item.addons && item.addons.length > 0 && (
+                <span className="block truncate text-small text-text-muted">+ {item.addons.join(', ')}</span>
+              )}
             </span>
             <span className="shrink-0 tabular-nums">₹{item.lineTotal}</span>
           </li>

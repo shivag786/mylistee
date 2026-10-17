@@ -59,8 +59,14 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
           <li key={i} className="flex items-center justify-between gap-2 text-caption">
             <span className="flex min-w-0 items-center gap-1.5 text-foreground">
               <Utensils className="size-3 shrink-0 text-text-muted" aria-hidden />
-              <span className="truncate">
-                {item.quantity}× {item.name}
+              <span className="min-w-0">
+                <span className="block truncate">
+                  {item.quantity}× {item.name}
+                </span>
+                {/* The kitchen needs the extras on the ticket. */}
+                {item.addons && item.addons.length > 0 && (
+                  <span className="block truncate text-small font-medium text-primary">+ {item.addons.join(', ')}</span>
+                )}
               </span>
             </span>
             <span className="shrink-0 text-text-secondary">₹{item.lineTotal}</span>
@@ -70,12 +76,25 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
 
       <div className="space-y-0.5 text-caption">
         <Row label="Subtotal" value={`₹${order.subtotal}`} />
+        {(order.billDiscount ?? 0) > 0 && <Row label="Bill discount" value={`−₹${order.billDiscount}`} muted />}
+        {(order.couponDiscount ?? 0) > 0 && (
+          <Row label={`Coupon ${order.couponCode ?? ''}`.trim()} value={`−₹${order.couponDiscount}`} muted />
+        )}
         {order.coinsUsed > 0 && <Row label={`Coins used (${order.coinsUsed})`} value={`−₹${order.coinDiscount}`} muted />}
         {order.deliveryFee > 0 && <Row label="Delivery fee" value={`₹${order.deliveryFee}`} />}
         <div className="flex items-center justify-between font-semibold text-foreground">
           <span>Total</span>
           <span>₹{order.total}</span>
         </div>
+        {/* What the shop keeps once Listee's fee is out — never shown to customers. */}
+        {order.vendorEarning != null && (
+          <p className="flex items-center justify-between text-small text-text-muted">
+            <span>
+              Listee fee ₹{Math.round(((order.platformFee ?? 0) + (order.gatewayFee ?? 0)) * 100) / 100}
+            </span>
+            <span className="font-semibold text-success">You get ₹{order.vendorEarning}</span>
+          </p>
+        )}
         {order.coinsEarned > 0 && (
           <p className="inline-flex items-center gap-1 text-premium-foreground">
             <Coins className="size-3" aria-hidden /> +{order.coinsEarned} coins on payment

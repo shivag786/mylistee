@@ -7,7 +7,7 @@ import type { ServiceType } from './serviceTypes'
 
 export interface PlaceOrderPayload {
   business: string
-  items: { type: 'product' | 'combo'; id: string; quantity: number }[]
+  items: { type: 'product' | 'combo'; id: string; quantity: number; variant?: string; addons?: string[] }[]
   coinsToUse?: number
   note?: string
   /** How the order is served (Phase 7.6). Omit ⇒ backend uses the shop's default. */
@@ -18,6 +18,8 @@ export interface PlaceOrderPayload {
   serviceAddress?: string
   /** Pay online now, or cash at the counter. Omit ⇒ cash, as before. */
   paymentChoice?: PaymentMethodKey
+  /** A coupon the customer applied. */
+  couponCode?: string
 }
 
 /** Everything Razorpay Checkout needs, straight from the server. */

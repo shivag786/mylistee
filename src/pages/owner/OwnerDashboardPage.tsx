@@ -20,6 +20,7 @@ import { ROUTES } from '@/constants/routes'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useDashboard } from '@/features/owner/hooks/useOwner'
 import { OnboardingChecklist } from '@/features/owner/components/OnboardingChecklist'
+import { PersonalLinkCard } from '@/features/owner/components/PersonalLinkCard'
 import type { DashboardMetrics } from '@/features/owner/types'
 
 interface MetricDef {
@@ -63,6 +64,8 @@ export function OwnerDashboardPage() {
       </div>
 
       <OnboardingChecklist items={data.onboarding} />
+
+      <PersonalLinkCard />
 
       <section aria-label="Today at a glance" className="space-y-3">
         <h2 className="text-body-lg font-semibold text-foreground">Today at a glance</h2>

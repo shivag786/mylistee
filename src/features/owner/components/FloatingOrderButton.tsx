@@ -34,7 +34,7 @@ export function FloatingOrderButton() {
         >
           <Link
             to={ROUTES.owner.orders}
-            aria-label={`${activeCount} active ${activeCount === 1 ? 'order' : 'orders'} — view queue`}
+            aria-label={`${activeCount} new ${activeCount === 1 ? 'order' : 'orders'} today — view queue`}
             className="relative flex h-14 items-center gap-2 rounded-full bg-primary pl-4 pr-5 text-primary-foreground shadow-floating transition-transform hover:scale-105 active:scale-95"
           >
             <span className="relative grid size-9 place-items-center">
@@ -49,7 +49,7 @@ export function FloatingOrderButton() {
               )}
             </span>
             <span className="text-caption font-semibold">
-              {activeCount} {activeCount === 1 ? 'order' : 'orders'}
+              {activeCount} new today
             </span>
             <span
               className="absolute -right-1 -top-1 grid min-w-6 place-items-center rounded-full bg-destructive px-1.5 py-0.5 text-[11px] font-bold text-white shadow-soft"

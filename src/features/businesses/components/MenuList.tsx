@@ -16,11 +16,18 @@ import { comboDish, dishKey, productDish, viewableDishes, type Dish } from './di
 import { ComboCard } from './dish/ComboCard'
 import { ComboSheet } from './dish/ComboSheet'
 import { ComboTimer } from '@/features/combos/components/ComboTimer'
+import { ProductOptionsSheet } from './ProductOptionsSheet'
 import { useAppConfig } from '@/hooks/useAppConfig'
 
 /** `quiet` skips the "added" toast — the dish viewer shows its own cart button instead. */
-type AddHandler = (item: Omit<CartItem, 'quantity'>, opts?: { quiet?: boolean }) => void
+type AddHandler = (item: Omit<CartItem, 'quantity'>, opts?: { quiet?: boolean; quantity?: number }) => void
 type OpenHandler = (key: string) => void
+/** +1 / −1 on a menu item's stepper. */
+type StepHandler = (type: CartItem['type'], id: string, delta: 1 | -1) => void
+
+/** Sizes or add-ons mean the customer picks before adding. */
+const isCustomisable = (p?: PublicProduct) =>
+  Boolean(p && ((p.variants?.length ?? 0) > 0 || (p.addons?.length ?? 0) > 0))
 
 /**
  * Whether menu cards are tinted with each dish's colours — the admin's "dish
@@ -58,8 +65,37 @@ export function MenuList({ menu, combos, businessSlug, onAdd, focusProductId }: 
   const { data: config } = useAppConfig()
   const tint = config?.theme?.menuCardColors ?? true
 
+  // All lines of an item count — a Small and a Large pizza are both "pizza".
   const qtyOf = (type: CartItem['type'], id: string) =>
-    inShop ? (cartData?.items.find((i) => i.type === type && i.id === id)?.quantity ?? 0) : 0
+    inShop
+      ? (cartData?.items.filter((i) => i.type === type && i.id === id).reduce((n, i) => n + i.quantity, 0) ?? 0)
+      : 0
+
+  const productsById = useMemo(
+    () => new Map(menu.flatMap((s) => s.products).map((p) => [p.id, p])),
+    [menu],
+  )
+  const [customising, setCustomising] = useState<PublicProduct | null>(null)
+
+  // A product with sizes / add-ons opens the picker instead of going straight in.
+  const add: AddHandler | undefined =
+    onAdd &&
+    ((item, opts) => {
+      const product = item.type === 'product' && !item.options ? productsById.get(item.id) : undefined
+      if (product && isCustomisable(product)) setCustomising(product)
+      else onAdd(item, opts)
+    })
+
+  const step: StepHandler = (type, id, delta) => {
+    const product = type === 'product' ? productsById.get(id) : undefined
+    if (product && isCustomisable(product)) {
+      // "+" picks again (maybe another size); "−" takes one off the newest pick.
+      if (delta > 0) setCustomising(product)
+      else cart.decrementLatest(type, id)
+    } else {
+      cart.setQuantity(type, id, qtyOf(type, id) + delta)
+    }
+  }
 
   const activeCombos = combos.filter((c) => c.isActiveNow)
   // Combos open their own sheet (every item listed), so the photo viewer is products only.
@@ -107,7 +143,8 @@ export function MenuList({ menu, combos, businessSlug, onAdd, focusProductId }: 
                 index={i}
                 qty={qtyOf(dish.type, dish.id)}
                 onOpen={openDish}
-                onAdd={onAdd}
+                onAdd={add}
+                onStep={step}
               />
             ))}
           </div>
@@ -146,7 +183,8 @@ export function MenuList({ menu, combos, businessSlug, onAdd, focusProductId }: 
                 key={product.id}
                 product={product}
                 qty={qtyOf('product', product.id)}
-                onAdd={onAdd}
+                onAdd={add}
+                onStep={step}
                 onOpen={openDish}
                 focus={product.id === focusProductId}
               />
@@ -176,7 +214,17 @@ export function MenuList({ menu, combos, businessSlug, onAdd, focusProductId }: 
         openAt={viewerAt}
         onClose={() => setViewerAt(null)}
         qtyOf={(d: Dish) => qtyOf(d.type, d.id)}
-        onAdd={onAdd ? (d: Dish) => onAdd(d.cartItem, { quiet: true }) : undefined}
+        onAdd={add ? (d: Dish) => add(d.cartItem, { quiet: true }) : undefined}
+        onStep={(d: Dish, delta) => step(d.type, d.id, delta)}
+      />
+
+      <ProductOptionsSheet
+        product={customising}
+        onClose={() => setCustomising(null)}
+        onConfirm={(item, quantity) => {
+          setCustomising(null)
+          onAdd?.(item, { quantity })
+        }}
       />
     </div>
     </TintContext.Provider>
@@ -344,12 +392,14 @@ function MustTryCard({
   qty,
   onOpen,
   onAdd,
+  onStep,
 }: {
   dish: Dish
   index: number
   qty: number
   onOpen: OpenHandler
   onAdd?: AddHandler
+  onStep: StepHandler
 }) {
   return (
     <RevealCard delay={Math.min(index, 4) * 0.06} className="w-40 shrink-0 snap-start">
@@ -363,8 +413,8 @@ function MustTryCard({
               <AddControl
                 qty={qty}
                 onAdd={() => onAdd(dish.cartItem)}
-                onInc={() => cart.setQuantity(dish.type, dish.id, qty + 1)}
-                onDec={() => cart.setQuantity(dish.type, dish.id, qty - 1)}
+                onInc={() => onStep(dish.type, dish.id, 1)}
+                onDec={() => onStep(dish.type, dish.id, -1)}
               />
             )}
           </div>
@@ -378,15 +428,18 @@ function ProductCard({
   product,
   qty,
   onAdd,
+  onStep,
   onOpen,
   focus,
 }: {
   product: PublicProduct
   qty: number
   onAdd?: AddHandler
+  onStep: StepHandler
   onOpen: OpenHandler
   focus?: boolean
 }) {
+  const customisable = isCustomisable(product)
   const dish = productDish(product, '')
   const hasOffer = Boolean(product.activeOffer) && product.effectivePrice != null
 
@@ -415,9 +468,18 @@ function ProductCard({
       disabled={!product.inStock}
       floating={Boolean(product.imageUrl)}
       onAdd={add}
-      onInc={() => cart.setQuantity('product', product.id, qty + 1)}
-      onDec={() => cart.setQuantity('product', product.id, qty - 1)}
+      onInc={() => onStep('product', product.id, 1)}
+      onDec={() => onStep('product', product.id, -1)}
     />
+  )
+  // A hint under the button that a picker opens.
+  const controlBlock = control && (
+    <div className="flex flex-col items-center gap-0.5">
+      {control}
+      {customisable && product.inStock && (
+        <span className="text-[10px] font-medium text-text-muted">Customisable</span>
+      )}
+    </div>
   )
 
   return (
@@ -448,6 +510,7 @@ function ProductCard({
 
           <div className="mt-1 flex items-baseline gap-1.5">
             <span className={`text-body font-bold ${hasOffer ? 'text-success' : 'text-foreground'}`}>₹{dish.price}</span>
+            {(product.variants?.length ?? 0) > 0 && <span className="text-small text-text-muted">onwards</span>}
             {dish.strikePrice != null && <span className="text-small text-text-muted line-through">₹{dish.strikePrice}</span>}
             {product.discountPercent > 0 && !hasOffer && (
               <Badge size="sm" className="bg-offer-soft text-offer">{product.discountPercent}% off</Badge>
@@ -481,16 +544,20 @@ function ProductCard({
             </div>
           )}
 
+          {product.inStock && product.stockQty != null && product.stockQty > 0 && product.stockQty <= 5 && (
+            <p className="mt-1 text-small font-semibold text-warning">Only {product.stockQty} left</p>
+          )}
+
           {product.description && <ExpandableText text={product.description} limit={90} className="mt-1.5 text-small" />}
         </div>
 
         {product.imageUrl ? (
           <div className="relative flex w-32 shrink-0 flex-col items-center pb-1">
             <PhotoButton src={product.imageUrl} label={product.name} onOpen={() => onOpen(dishKey('product', product.id))} />
-            {control && <div className="relative z-10 -mt-4">{control}</div>}
+            {controlBlock && <div className="relative z-10 -mt-4">{controlBlock}</div>}
           </div>
         ) : (
-          control && <div className="relative shrink-0 self-center">{control}</div>
+          controlBlock && <div className="relative shrink-0 self-center">{controlBlock}</div>
         )}
       </Card>
     </RevealCard>

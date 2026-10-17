@@ -17,6 +17,9 @@ import {
   Contact,
   Clapperboard,
   BellRing,
+  Gift,
+  Link2,
+  Settings,
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
@@ -69,6 +72,9 @@ export const OWNER_NAV: OwnerNavItem[] = [
   { to: ROUTES.owner.combos, label: 'Combos', shortLabel: 'Combo', icon: Layers, bottomNav: true, module: 'combos' },
   { to: ROUTES.owner.orders, label: 'Orders', shortLabel: 'Order', icon: ClipboardList, bottomNav: true, module: 'orders' },
   { to: ROUTES.owner.profile, label: 'Business profile', shortLabel: 'Profile', icon: Store, bottomNav: true },
+  // Core and near the top: a paid add-on owners must find easily.
+  { to: ROUTES.owner.personalLink, label: 'Personal link', shortLabel: 'My link', icon: Link2 },
+  { to: ROUTES.owner.settings, label: 'Settings', shortLabel: 'Settings', icon: Settings },
   { to: ROUTES.owner.tables, label: 'Tables & service', shortLabel: 'Tables', icon: Armchair, module: 'tables' },
   { to: ROUTES.owner.redeem, label: 'Redeem', shortLabel: 'Redeem', icon: ScanLine, module: 'redeem' },
   { to: ROUTES.owner.reels, label: 'Reels', shortLabel: 'Reels', icon: Clapperboard, module: 'reels' },
@@ -77,6 +83,7 @@ export const OWNER_NAV: OwnerNavItem[] = [
   { to: ROUTES.owner.followers, label: 'Followers', shortLabel: 'Followers', icon: Users },
   { to: ROUTES.owner.analytics, label: 'Analytics', shortLabel: 'Stats', icon: BarChart3, module: 'analytics' },
   { to: ROUTES.owner.subscription, label: 'Plan & billing', shortLabel: 'Plan', icon: CreditCard },
+  { to: ROUTES.owner.rewards, label: 'Rewards & coupons', shortLabel: 'Rewards', icon: Gift, module: 'loyalty' },
   { to: ROUTES.owner.growSales, label: 'Grow sales', shortLabel: 'Grow', icon: Megaphone, module: 'grow_sales' },
   { to: ROUTES.owner.notify, label: 'Notify customers', shortLabel: 'Notify', icon: BellRing, module: 'notifications' },
   { to: ROUTES.owner.loyalty, label: 'Loyalty', shortLabel: 'Coins', icon: Coins, module: 'loyalty' },

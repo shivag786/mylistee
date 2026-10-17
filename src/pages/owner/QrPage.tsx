@@ -97,11 +97,11 @@ export function QrPage() {
           <div className="min-w-0 flex-1">
             <p className="text-caption font-semibold text-foreground">Show only your shop when customers scan</p>
             <p className="text-small text-text-secondary">
-              Right now, customers can browse other shops from your QR. With a premium plan they stay in your
-              shop only.
+              Right now, customers can browse other shops from your QR. Turn on your personal link and they
+              stay in your shop only — free for the first 7 days.
             </p>
-            <Link to={ROUTES.owner.subscription} className="mt-1.5 inline-block text-caption font-semibold text-primary hover:underline">
-              See premium plans →
+            <Link to={ROUTES.owner.personalLink} className="mt-1.5 inline-block text-caption font-semibold text-primary hover:underline">
+              Set up personal link →
             </Link>
           </div>
         </Card>

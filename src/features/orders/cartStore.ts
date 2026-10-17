@@ -13,6 +13,31 @@ export interface CartItem {
   quantity: number
   /** For combos: max Listee coins spendable on this item (0/absent = none). */
   coinsAccepted?: number
+  /** The size and add-ons picked, for products that have them. */
+  options?: CartItemOptions
+}
+
+export interface CartItemOptions {
+  variantId: string | null
+  variantName: string | null
+  addonIds: string[]
+  addonNames: string[]
+}
+
+/**
+ * One cart line per distinct pick: a Large pizza with cheese and a Small one
+ * are two lines. Plain items keep the old `type:id` key.
+ */
+export function lineKey(item: Pick<CartItem, 'type' | 'id' | 'options'>): string {
+  const o = item.options
+  if (!o) return `${item.type}:${item.id}`
+  return `${item.type}:${item.id}:${o.variantId ?? ''}:${[...o.addonIds].sort().join(',')}`
+}
+
+/** "Large · Extra cheese, Dip" — what a line's picks read as. */
+export function optionsLabel(options?: CartItemOptions): string {
+  if (!options) return ''
+  return [options.variantName, options.addonNames.join(', ')].filter(Boolean).join(' · ')
 }
 
 /** The shop's service config, captured on add so the checkout sheet is self-sufficient. */
@@ -84,7 +109,8 @@ export const cart = {
     if (current && current.businessSlug !== business.slug) return 'conflict'
 
     const base: Cart = current ?? { businessSlug: business.slug, businessName: business.name, items: [] }
-    const existing = base.items.find((i) => i.type === item.type && i.id === item.id)
+    const key = lineKey(item)
+    const existing = base.items.find((i) => lineKey(i) === key)
     const items = existing
       ? base.items.map((i) => (i === existing ? { ...i, quantity: i.quantity + quantity } : i))
       : [...base.items, { ...item, quantity }]
@@ -98,17 +124,28 @@ export const cart = {
     return 'ok'
   },
 
+  /** Quantity of a plain (no size / add-on) item. */
   setQuantity(type: CartItem['type'], id: string, quantity: number) {
+    cart.setLineQuantity(`${type}:${id}`, quantity)
+  },
+
+  setLineQuantity(key: string, quantity: number) {
     if (!current) return
     const items = current.items
-      .map((i) => (i.type === type && i.id === id ? { ...i, quantity: Math.max(0, quantity) } : i))
+      .map((i) => (lineKey(i) === key ? { ...i, quantity: Math.max(0, quantity) } : i))
       .filter((i) => i.quantity > 0)
     commit({ ...current, items })
   },
 
-  remove(type: CartItem['type'], id: string) {
+  removeLine(key: string) {
     if (!current) return
-    commit({ ...current, items: current.items.filter((i) => !(i.type === type && i.id === id)) })
+    commit({ ...current, items: current.items.filter((i) => lineKey(i) !== key) })
+  },
+
+  /** "−" on a menu item with several picks in the cart: take one off the newest. */
+  decrementLatest(type: CartItem['type'], id: string) {
+    const line = current?.items.filter((i) => i.type === type && i.id === id).at(-1)
+    if (line) cart.setLineQuantity(lineKey(line), line.quantity - 1)
   },
 
   clear() {

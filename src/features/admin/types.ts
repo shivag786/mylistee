@@ -174,6 +174,21 @@ export interface PlatformSettings {
   /** Whether a secret is stored, since the value itself is never sent back. */
   razorpayKeySecretSet: boolean
   razorpayWebhookSecretSet: boolean
+  /** Personal link: free trial days and pack prices (₹). */
+  personalLinkTrialDays: number
+  personalLinkPrice30: number
+  personalLinkPrice90: number
+  personalLinkPrice365: number
+  /** Daily expiry reminders — off until an admin turns them on. */
+  personalLinkReminderEnabled: boolean
+  personalLinkReminderDays: number
+  personalLinkReminderTitle: string
+  personalLinkReminderBody: string
+  personalLinkReminderEmail: boolean
+  /** Gmail used to email reminders; the App Password is write-only. */
+  gmailAddress: string
+  gmailAppPassword: string
+  gmailAppPasswordSet: boolean
   /** Convenience fee added to a customer's online payment, in percent. */
   razorpayFeePercent: number
 

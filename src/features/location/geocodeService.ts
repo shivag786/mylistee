@@ -135,3 +135,49 @@ export async function reverseGeocodeCity(
 
   return null
 }
+
+/**
+ * Coordinates -> the shop's street address and city, in one request, for the
+ * "Get my shop address" button. The address is Google's most precise result
+ * with the country dropped (every shop is in India); the city is picked the
+ * same way as {@link reverseGeocodeCity} so it groups with other shops.
+ */
+export async function reverseGeocodeAddress(
+  coords: Coords,
+  signal?: AbortSignal,
+): Promise<{ address: string | null; city: string | null } | null> {
+  if (!isGeocodingConfigured) return null
+
+  const url = new URL('https://maps.googleapis.com/maps/api/geocode/json')
+  url.searchParams.set('latlng', `${coords.lat},${coords.lng}`)
+  url.searchParams.set('key', env.googleMapsApiKey)
+
+  const response = await fetch(url, { signal })
+  if (!response.ok) return null
+
+  const body = (await response.json()) as GeocodeResponse
+  if (body.status !== 'OK' || !body.results?.length) return null
+
+  const formatted = body.results[0].formatted_address ?? null
+  const address = formatted
+    ? formatted
+        .replace(/,\s*India$/i, '')
+        // Plus codes ("7JVW+2Q Andheri, …") mean nothing to a customer.
+        .replace(/^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3},?\s*/, '')
+        .trim()
+    : null
+
+  let city: string | null = null
+  for (const type of CITY_TYPES) {
+    for (const result of body.results) {
+      const match = result.address_components?.find((c) => c.types.includes(type))
+      if (match) {
+        city = match.long_name
+        break
+      }
+    }
+    if (city) break
+  }
+
+  return { address: address || null, city }
+}

@@ -2,6 +2,20 @@
 
 export type FoodType = 'veg' | 'non_veg' | 'egg'
 
+/** A size ("Large") or an add-on ("Extra cheese") with its price. */
+export interface ProductOption {
+  /** Server-minted; absent on a row the owner just added. */
+  id?: string
+  name: string
+  price: number
+}
+
+/** The product's own discount: `percent` off, or a `flat` ₹ amount off. */
+export interface ProductDiscount {
+  type: 'percent' | 'flat'
+  value: number
+}
+
 export interface ProductImage {
   id: string
   url: string | null
@@ -20,6 +34,10 @@ export interface Product {
   mrp: number | null
   sellingPrice: number
   discountPercent: number
+  /** Sizes; `sellingPrice` is after the product's discount. */
+  variants: (ProductOption & { id: string; sellingPrice: number })[]
+  addons: (ProductOption & { id: string })[]
+  discount: ProductDiscount | null
   foodType: FoodType | null
   availableFrom: string | null
   availableTo: string | null
@@ -28,6 +46,8 @@ export interface Product {
   isBestseller: boolean
   isRecommended: boolean
   inStock: boolean
+  /** Units left; null when the shop doesn't count this product's stock. */
+  stockQty: number | null
   isVisible: boolean
   position: number
   createdAt: string | null
@@ -60,8 +80,13 @@ export interface ProductFormValues {
   isBestseller?: boolean
   isRecommended?: boolean
   inStock?: boolean
+  /** null = stop counting stock. */
+  stockQty?: number | null
   isVisible?: boolean
   image?: File | null
+  variants?: ProductOption[]
+  addons?: ProductOption[]
+  discount?: ProductDiscount | null
 }
 
 export type ProductToggleField =

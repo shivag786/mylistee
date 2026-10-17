@@ -29,6 +29,8 @@ interface DishViewerProps {
   onClose: () => void
   qtyOf: (dish: Dish) => number
   onAdd?: (dish: Dish) => void
+  /** +1 / −1 from the viewer's stepper; defaults to a plain quantity change. */
+  onStep?: (dish: Dish, delta: 1 | -1) => void
 }
 
 /**
@@ -37,7 +39,9 @@ interface DishViewerProps {
  * phone (or moving the pointer) turns the dish in 3D with a moving shadow and
  * sheen; swiping sideways moves through the menu like stories.
  */
-export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd }: DishViewerProps) {
+export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd, onStep }: DishViewerProps) {
+  const stepBy = (d: Dish, delta: 1 | -1) =>
+    onStep ? onStep(d, delta) : cart.setQuantity(d.type, d.id, qtyOf(d) + delta)
   const open = openAt !== null && dishes.length > 0
   const reduce = useReducedMotion()
   const [index, setIndex] = useState(0)
@@ -305,7 +309,7 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd }: DishViewer
                           <button
                             type="button"
                             aria-label="Decrease"
-                            onClick={() => cart.setQuantity(dish.type, dish.id, qty - 1)}
+                            onClick={() => stepBy(dish, -1)}
                             className="grid size-8 place-items-center rounded-full hover:bg-neutral-100"
                           >
                             <Minus className="size-4" aria-hidden />
@@ -321,7 +325,7 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd }: DishViewer
                           <button
                             type="button"
                             aria-label="Increase"
-                            onClick={() => cart.setQuantity(dish.type, dish.id, qty + 1)}
+                            onClick={() => stepBy(dish, 1)}
                             className="grid size-8 place-items-center rounded-full hover:bg-neutral-100"
                           >
                             <Plus className="size-4" aria-hidden />

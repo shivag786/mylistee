@@ -52,6 +52,7 @@ import { useHomeSpotlight } from '@/features/home/useHomeSpotlight'
 import { HeroCarousel3D } from '@/features/home/HeroCarousel3D'
 import { StoryRail } from '@/features/home/StoryRail'
 import { HowItWorks } from '@/features/home/HowItWorks'
+import { WhyListee } from '@/features/rewards/WhyListee'
 import { ReelsRow } from '@/features/reels/ReelsRow'
 import { visibleSections, type HomeSectionId } from '@/features/home/homeSections'
 import { ComboCard } from '@/features/businesses/components/dish/ComboCard'
@@ -263,6 +264,8 @@ export function HomePage() {
         <Fragment key={section.id}>
           {sections[section.id](section.title?.trim() || null)}
           {section.id === 'hero' && <HowItWorks isAuthenticated={isAuthenticated} />}
+          {/* Guests: what ordering through Listee gets them, right under the hero. */}
+          {section.id === 'hero' && !isAuthenticated && <WhyListee />}
         </Fragment>
       ))}
 

@@ -40,6 +40,11 @@ export interface OwnerBusiness {
   openingTime: string | null
   closingTime: string | null
   isOpen: boolean
+  /** Owner closed the shop until this time (ISO); null = not closed. */
+  closedUntil?: string | null
+  closedNote?: string | null
+  /** Open, but not taking new orders right now. */
+  ordersPaused?: boolean
   /** Premium store mode — the shop's QR/link shows only this shop. */
   storeMode?: boolean
   phone: string | null

@@ -47,6 +47,7 @@ export const ROUTES = {
     analytics: '/business/analytics',
     reviews: '/business/reviews',
     loyalty: '/business/loyalty',
+    rewards: '/business/rewards',
     redeem: '/business/redeem',
     qr: '/business/qr',
     profile: '/business/profile',
@@ -55,6 +56,8 @@ export const ROUTES = {
     reels: '/business/reels',
     notify: '/business/notify',
     subscription: '/business/subscription',
+    personalLink: '/business/personal-link',
+    settings: '/business/settings',
   },
 
   // Admin (Super Admin panel — Milestone 14)
@@ -72,6 +75,7 @@ export const ROUTES = {
     revenue: '/admin/revenue',
     orders: '/admin/orders',
     payments: '/admin/payments',
+    personalLinks: '/admin/personal-links',
     broadcast: '/admin/broadcast',
     banners: '/admin/banners',
     homeLayout: '/admin/home-layout',

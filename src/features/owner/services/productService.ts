@@ -30,6 +30,16 @@ function toFormData(values: Partial<ProductFormValues>): FormData {
   for (const [key, value] of Object.entries(map)) {
     if (value !== undefined && value !== null && value !== '') form.append(key, String(value))
   }
+  // An explicit null clears these on the server (blank → null): the form no
+  // longer asks for an MRP, and the food type can be unset.
+  if (values.mrp === null) form.append('mrp', '')
+  if (values.foodType === null) form.append('food_type', '')
+  // A count sets stock (0 = sold out); blank stops counting.
+  if (values.stockQty !== undefined) form.append('stock_qty', values.stockQty === null ? '' : String(values.stockQty))
+  // Lists go as JSON (multipart can't nest objects); an empty list clears them.
+  if (values.variants !== undefined) form.append('variants', JSON.stringify(values.variants))
+  if (values.addons !== undefined) form.append('addons', JSON.stringify(values.addons))
+  if (values.discount !== undefined) form.append('discount', values.discount ? JSON.stringify(values.discount) : '')
   // Booleans are always sent (may be false).
   const flags: Array<[string, boolean | undefined]> = [
     ['is_todays_special', values.isTodaysSpecial],

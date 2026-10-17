@@ -9,6 +9,7 @@ import {
   Navigation,
   Gift,
   Utensils,
+  Clock,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +24,7 @@ import { ImageLightbox } from '@/components/media/ImageLightbox'
 import { cart, useCart, type CartItem } from '@/features/orders/cartStore'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { usePublicBusiness, useSpin } from '@/features/businesses/hooks/usePublicBusiness'
+import { ShopPerksStrip } from '@/features/rewards/ShopPerksStrip'
 import { MenuList } from '@/features/businesses/components/MenuList'
 import { BusinessInfo } from '@/features/businesses/components/BusinessInfo'
 import { ReviewsSection } from '@/features/businesses/components/ReviewsSection'
@@ -136,8 +138,8 @@ export function BusinessProfilePage() {
     }
   }
 
-  function handleAdd(item: Omit<CartItem, 'quantity'>, opts?: { quiet?: boolean }) {
-    const res = cart.add({ slug, name: business!.name }, item, 1, serviceContext())
+  function handleAdd(item: Omit<CartItem, 'quantity'>, opts?: { quiet?: boolean; quantity?: number }) {
+    const res = cart.add({ slug, name: business!.name }, item, opts?.quantity ?? 1, serviceContext())
     if (res === 'conflict') setConflictItem(item)
     else if (!opts?.quiet) toast.success(`${item.name} added`)
   }
@@ -188,6 +190,27 @@ export function BusinessProfilePage() {
           )}
         </div>
       )}
+
+      {/* Owner closed the shop for a while, or paused orders. */}
+      {business.closedUntil ? (
+        <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive-soft px-3 py-2.5 text-caption text-foreground">
+          <Clock className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
+          <span>
+            <b>Temporarily closed</b> until {new Date(business.closedUntil).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
+            {business.closedNote ? ` · ${business.closedNote}` : ''}. You can browse the menu, but orders open after that.
+          </span>
+        </div>
+      ) : business.ordersPaused ? (
+        <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning-soft px-3 py-2.5 text-caption text-foreground">
+          <Clock className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
+          <span>
+            <b>Not taking orders right now.</b> The shop is busy — please check back in a little while.
+          </span>
+        </div>
+      ) : null}
+
+      {/* What ordering here gets you — bill discount, stamps, coupons. */}
+      <ShopPerksStrip perks={data?.perks} isAuthenticated={isAuthenticated} />
 
       {/* Table QR binding — the customer scanned a specific table's code. */}
       {boundTable && (

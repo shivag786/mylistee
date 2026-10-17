@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Star, Heart, Store, Zap, BadgeCheck, Navigation, Sparkles, Tag } from 'lucide-react'
+import { Star, Heart, Store, Zap, BadgeCheck, Navigation, Sparkles, Tag, Gift } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
 import { Card } from '@/components/ui/card'
 import { IconButton } from '@/components/ui/icon-button'
@@ -121,6 +121,13 @@ export function ShopCard({ business }: ShopCardProps) {
 
         {business.distanceMeters != null && <ProximityLine meters={business.distanceMeters} />}
 
+        {business.perk && (
+          <p className="mt-1.5 flex min-w-0 items-center gap-1 rounded-lg bg-primary-soft px-2 py-1 text-[11px] font-bold text-primary">
+            <Gift className="size-3 shrink-0" aria-hidden />
+            <span className="truncate">{business.perk}</span>
+          </p>
+        )}
+
         {business.offerCount > 0 && (
           <div className="mt-auto pt-2.5">
             <p className="flex items-center gap-1 border-t border-dashed border-border pt-2 text-small font-semibold text-offer">
@@ -190,6 +197,14 @@ function CoverBadges({ business }: { business: Business }) {
 /** "● Open · till 10 PM" / "● Closed · opens 9 AM" on the photo; nothing when hours aren't set. */
 function OpenPill({ business }: { business: Business }) {
   const { openingTime: open, closingTime: close, isOpen } = business
+  if (business.closedUntil) {
+    return (
+      <span className="inline-flex min-w-0 items-center gap-1 truncate text-[11px] font-semibold text-white drop-shadow">
+        <span className="size-1.5 shrink-0 rounded-full bg-danger" aria-hidden />
+        <span className="truncate">Closed till {new Date(business.closedUntil).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</span>
+      </span>
+    )
+  }
   if (!open || !close) return null
   const allDay = open.slice(0, 5) === close.slice(0, 5)
 

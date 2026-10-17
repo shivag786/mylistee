@@ -14,6 +14,8 @@ export interface Business {
   distanceMeters: number | null
   offerCount: number
   isOpen: boolean
+  /** Owner closed the shop until this time (ISO); null = not closed. */
+  closedUntil?: string | null
   /** "09:00:00"; null when the shop hasn't set hours. */
   openingTime?: string | null
   closingTime?: string | null
@@ -27,6 +29,8 @@ export interface Business {
   spinAvailable: boolean
   /** Onboarded within the last 14 days. */
   isNew: boolean
+  /** The shop's headline reward ("₹50 off above ₹499"), or null. */
+  perk?: string | null
   status: BusinessStatus
 }
 

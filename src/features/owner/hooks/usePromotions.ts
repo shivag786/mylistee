@@ -37,6 +37,10 @@ export function usePromotionActions() {
         promotionService.update(v.id, v.values),
       onSuccess: done,
     }),
+    repeat: useMutation({
+      mutationFn: (v: { id: string; days: number }) => promotionService.repeat(v.id, v.days),
+      onSuccess: done,
+    }),
     setStatus: useMutation({
       mutationFn: (v: { id: string; action: 'pause' | 'resume' }) =>
         promotionService.setStatus(v.id, v.action),

@@ -21,6 +21,7 @@ import {
   Grid3x3,
   Inbox,
   PanelLeft,
+  Link2,
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
@@ -45,6 +46,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { to: ROUTES.admin.revenue, label: 'Revenue', icon: IndianRupee },
   { to: ROUTES.admin.orders, label: 'Orders', icon: ShoppingBag },
   { to: ROUTES.admin.payments, label: 'Payments', icon: Receipt },
+  { to: ROUTES.admin.personalLinks, label: 'Personal links', icon: Link2 },
   { to: ROUTES.admin.broadcast, label: 'Broadcast', icon: Megaphone },
   { to: ROUTES.admin.homeLayout, label: 'Home layout', icon: LayoutList },
   { to: ROUTES.admin.banners, label: 'Home banners', icon: GalleryHorizontalEnd },

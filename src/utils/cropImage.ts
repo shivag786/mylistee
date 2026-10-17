@@ -13,6 +13,13 @@ function loadImage(url: string): Promise<HTMLImageElement> {
 /** Cap the longest output edge so zoomed-out crops don't produce huge files. */
 const MAX_DIMENSION = 1600
 
+export interface CropOutputOptions {
+  /** Longest edge of the output, in px. */
+  maxDimension?: number
+  /** JPEG quality, 0–1. */
+  quality?: number
+}
+
 /**
  * Produce a cropped image File from a source and the pixel crop area returned by
  * react-easy-crop. Shared by every ImageCropField instance (Phase 7.0) so crop
@@ -29,6 +36,7 @@ export async function getCroppedImageFile(
   fileName = 'image.jpg',
   mimeType = 'image/jpeg',
   background = '#ffffff',
+  { maxDimension = MAX_DIMENSION, quality = 0.9 }: CropOutputOptions = {},
 ): Promise<File> {
   const image = await loadImage(src)
   const canvas = document.createElement('canvas')
@@ -37,7 +45,7 @@ export async function getCroppedImageFile(
 
   const cropWidth = Math.max(1, Math.round(crop.width))
   const cropHeight = Math.max(1, Math.round(crop.height))
-  const scale = Math.min(1, MAX_DIMENSION / Math.max(cropWidth, cropHeight))
+  const scale = Math.min(1, maxDimension / Math.max(cropWidth, cropHeight))
 
   canvas.width = Math.max(1, Math.round(cropWidth * scale))
   canvas.height = Math.max(1, Math.round(cropHeight * scale))
@@ -46,6 +54,10 @@ export async function getCroppedImageFile(
   // is zoomed out to fit fully inside the frame.
   ctx.fillStyle = background
   ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  // Smooth downscaling — the default can look jagged on big phone photos.
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
 
   // Draw the entire image, offset so the crop origin sits at (0,0). Both the
   // offset and the image are scaled uniformly to match the output canvas.
@@ -58,7 +70,7 @@ export async function getCroppedImageFile(
   )
 
   const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, mimeType, 0.9),
+    canvas.toBlob(resolve, mimeType, quality),
   )
   if (!blob) throw new Error('Could not process the image. Please try again.')
 

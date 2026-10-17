@@ -36,9 +36,12 @@ const GrowSalesPage = lazyPage(() => import('@/pages/owner/GrowSalesPage'), 'Gro
 const OrdersPage = lazyPage(() => import('@/pages/owner/OrdersPage'), 'OrdersPage')
 const OffersPage = lazyPage(() => import('@/pages/owner/OffersPage'), 'OffersPage')
 const LoyaltyPage = lazyPage(() => import('@/pages/owner/LoyaltyPage'), 'LoyaltyPage')
+const RewardsPage = lazyPage(() => import('@/pages/owner/RewardsPage'), 'RewardsPage')
 const AnalyticsPage = lazyPage(() => import('@/pages/owner/AnalyticsPage'), 'AnalyticsPage')
 const OwnerReviewsPage = lazyPage(() => import('@/pages/owner/OwnerReviewsPage'), 'OwnerReviewsPage')
 const SubscriptionPage = lazyPage(() => import('@/pages/owner/SubscriptionPage'), 'SubscriptionPage')
+const PersonalLinkPage = lazyPage(() => import('@/pages/owner/PersonalLinkPage'), 'PersonalLinkPage')
+const OwnerSettingsPage = lazyPage(() => import('@/pages/owner/OwnerSettingsPage'), 'OwnerSettingsPage')
 const RedeemPage = lazyPage(() => import('@/pages/owner/RedeemPage'), 'RedeemPage')
 const QrPage = lazyPage(() => import('@/pages/owner/QrPage'), 'QrPage')
 const OwnerProfilePage = lazyPage(() => import('@/pages/owner/OwnerProfilePage'), 'OwnerProfilePage')
@@ -59,6 +62,7 @@ const AdminReviewsPage = lazyPage(() => import('@/pages/admin/AdminReviewsPage')
 const AdminPlansPage = lazyPage(() => import('@/pages/admin/AdminPlansPage'), 'AdminPlansPage')
 const AdminRevenuePage = lazyPage(() => import('@/pages/admin/AdminRevenuePage'), 'AdminRevenuePage')
 const AdminPaymentsPage = lazyPage(() => import('@/pages/admin/AdminPaymentsPage'), 'AdminPaymentsPage')
+const AdminPersonalLinksPage = lazyPage(() => import('@/pages/admin/AdminPersonalLinksPage'), 'AdminPersonalLinksPage')
 const AdminOrdersPage = lazyPage(() => import('@/pages/admin/AdminOrdersPage'), 'AdminOrdersPage')
 const AdminBroadcastPage = lazyPage(() => import('@/pages/admin/AdminBroadcastPage'), 'AdminBroadcastPage')
 const AdminBannersPage = lazyPage(() => import('@/pages/admin/AdminBannersPage'), 'AdminBannersPage')
@@ -202,12 +206,15 @@ export function AppRouter() {
             <Route path={ROUTES.owner.growSales} element={<OwnerModuleGuard module="grow_sales"><GrowSalesPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.offers} element={<OwnerModuleGuard module="spin_rewards"><OffersPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.loyalty} element={<OwnerModuleGuard module="loyalty"><LoyaltyPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.rewards} element={<OwnerModuleGuard module="loyalty"><RewardsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.analytics} element={<OwnerModuleGuard module="analytics"><AnalyticsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.reviews} element={<OwnerModuleGuard module="reviews"><OwnerReviewsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.customers} element={<OwnerModuleGuard module="customers"><OwnerCustomersPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.reels} element={<OwnerModuleGuard module="reels"><OwnerReelsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.notify} element={<OwnerModuleGuard module="notifications"><OwnerNotifyPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.subscription} element={<SubscriptionPage />} />
+            <Route path={ROUTES.owner.personalLink} element={<PersonalLinkPage />} />
+            <Route path={ROUTES.owner.settings} element={<OwnerSettingsPage />} />
             <Route path={ROUTES.owner.redeem} element={<OwnerModuleGuard module="redeem"><RedeemPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.qr} element={<OwnerModuleGuard module="qr"><QrPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.profile} element={<OwnerProfilePage />} />
@@ -234,6 +241,7 @@ export function AppRouter() {
             <Route path={ROUTES.admin.revenue} element={<AdminRevenuePage />} />
             <Route path={ROUTES.admin.orders} element={<AdminOrdersPage />} />
             <Route path={ROUTES.admin.payments} element={<AdminPaymentsPage />} />
+            <Route path={ROUTES.admin.personalLinks} element={<AdminPersonalLinksPage />} />
             <Route path={ROUTES.admin.broadcast} element={<AdminBroadcastPage />} />
             <Route path={ROUTES.admin.banners} element={<AdminBannersPage />} />
             <Route path={ROUTES.admin.homeLayout} element={<AdminHomeLayoutPage />} />

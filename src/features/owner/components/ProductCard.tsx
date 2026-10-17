@@ -1,8 +1,11 @@
-import { Pencil, Utensils, Star, Sparkles, EyeOff, Tag } from 'lucide-react'
+import { Pencil, Utensils, Star, Sparkles, EyeOff, Tag, Wallet } from 'lucide-react'
+import { useAppConfig } from '@/hooks/useAppConfig'
+import { shopEarning } from '@/features/rewards/format'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { IconButton } from '@/components/ui/icon-button'
+import { cn } from '@/utils/cn'
 import type { Product } from '../productTypes'
 import { PROMOTION_STATUS_TONE, type Promotion } from '../promotionTypes'
 
@@ -10,6 +13,7 @@ interface ProductCardProps {
   product: Product
   onEdit: (product: Product) => void
   onToggleVisible: (product: Product, value: boolean) => void
+  onToggleStock: (product: Product, value: boolean) => void
   onSmartOffer: (product: Product) => void
   /** Existing product-scoped promotion (any status), if any. */
   promotion?: Promotion | null
@@ -28,6 +32,7 @@ export function ProductCard({
   product,
   onEdit,
   onToggleVisible,
+  onToggleStock,
   onSmartOffer,
   promotion,
   onEditOffer,
@@ -35,6 +40,16 @@ export function ProductCard({
 }: ProductCardProps) {
   const hasOffer = Boolean(product.activeOffer)
   const effective = product.effectivePrice ?? product.sellingPrice
+  // What the shop keeps per unit after Listee's fee (known once /config loads).
+  const { data: config } = useAppConfig()
+  const fees = config?.payments
+  const earning =
+    fees?.platformFeePercent != null
+      ? shopEarning(hasOffer ? effective : product.sellingPrice, {
+          platformPercent: fees.platformFeePercent,
+          gatewayPercent: fees.gatewayFeePercent ?? 0,
+        })
+      : null
   return (
     <Card className="flex h-full flex-col gap-2 p-0 overflow-hidden" padding="none">
       <div className="relative aspect-[4/3] w-full bg-surface-muted">
@@ -48,6 +63,20 @@ export function ProductCard({
         {product.discountPercent > 0 && (
           <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
             {product.discountPercent}% OFF
+          </span>
+        )}
+        {product.stockQty != null && (
+          <span
+            className={cn(
+              'absolute bottom-1.5 left-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm',
+              product.stockQty === 0
+                ? 'bg-danger text-danger-foreground'
+                : product.stockQty <= 5
+                  ? 'bg-warning text-warning-foreground'
+                  : 'bg-surface/95 text-foreground',
+            )}
+          >
+            {product.stockQty === 0 ? 'Sold out' : `${product.stockQty} left`}
           </span>
         )}
         {!product.isVisible && (
@@ -91,6 +120,27 @@ export function ProductCard({
           )}
         </div>
 
+        {earning && (
+          <p className="flex items-center gap-1 text-[11px] text-text-muted" title="After Listee's fee">
+            <Wallet className="size-3 shrink-0" aria-hidden />
+            <span className="truncate">
+              You get <span className="font-semibold text-success">₹{earning.online}</span> online ·{' '}
+              <span className="font-semibold text-foreground">₹{earning.cash}</span> cash
+            </span>
+          </p>
+        )}
+
+        {(product.variants.length > 0 || product.addons.length > 0) && (
+          <p className="truncate text-[11px] font-medium text-text-secondary">
+            {[
+              product.variants.length > 0 && `${product.variants.length} sizes`,
+              product.addons.length > 0 && `${product.addons.length} add-ons`,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        )}
+
         <div className="flex flex-wrap gap-1">
           {promotion && (
             <button
@@ -117,7 +167,6 @@ export function ProductCard({
             </Badge>
           )}
           {product.isRecommended && <Badge tone="info">Recommended</Badge>}
-          {!product.inStock && <Badge tone="danger">Out of stock</Badge>}
         </div>
 
         {!promotion && (
@@ -130,14 +179,35 @@ export function ProductCard({
           </button>
         )}
 
-        <div className="mt-auto flex items-center justify-between gap-1 border-t border-border pt-2">
-          <Switch
-            checked={product.isVisible}
-            onCheckedChange={(v) => onToggleVisible(product, v)}
-            disabled={busy}
-            aria-label="Visible on menu"
-          />
-          <div className="flex items-center gap-0.5">
+        <div className="mt-auto space-y-2 border-t border-border pt-2">
+          {/* Stock is what a busy kitchen flips most — a labelled switch, one tap. */}
+          <label className="flex items-center justify-between gap-2">
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 text-[11px] font-bold',
+                product.inStock ? 'text-success' : 'text-danger',
+              )}
+            >
+              <span className="size-1.5 rounded-full bg-current" aria-hidden />
+              {product.inStock ? 'In stock' : 'Out of stock'}
+            </span>
+            <Switch
+              checked={product.inStock}
+              onCheckedChange={(v) => onToggleStock(product, v)}
+              disabled={busy}
+              aria-label="In stock"
+            />
+          </label>
+          <div className="flex items-center justify-between gap-2">
+            <label className="flex items-center gap-2 text-[11px] font-semibold text-text-secondary">
+              <Switch
+                checked={product.isVisible}
+                onCheckedChange={(v) => onToggleVisible(product, v)}
+                disabled={busy}
+                aria-label="Visible on menu"
+              />
+              On menu
+            </label>
             <IconButton aria-label={`Edit ${product.name}`} size="sm" onClick={() => onEdit(product)}>
               <Pencil className="size-4" aria-hidden />
             </IconButton>

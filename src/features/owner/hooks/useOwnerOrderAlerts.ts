@@ -27,7 +27,12 @@ export function useOwnerOrderAlerts() {
   // The floating nudge is for orders the owner hasn't touched yet — the instant
   // they confirm / pay / cancel one, it drops off the float (the Orders page
   // still lists every active order). So count only 'placed' orders here.
-  const newCount = data?.filter((o) => o.status === 'placed').length ?? 0
+  // Only today's: an old order left un-actioned from yesterday should not keep
+  // the float lit (it is still on the Orders page).
+  const today = new Date().toDateString()
+  const newCount =
+    data?.filter((o) => o.status === 'placed' && new Date(o.placedAt ?? o.createdAt ?? 0).toDateString() === today)
+      .length ?? 0
 
   // Browsers block audio until a user gesture — arm on the first pointer down.
   useEffect(() => {
