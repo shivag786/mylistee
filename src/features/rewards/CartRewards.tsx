@@ -184,9 +184,11 @@ export function CouponPicker({
 /** "This order gets you 10% off next time · 2 more stamps to a free reward". */
 export function NextRewardHint({ quote }: { quote: CartQuote }) {
   const next = quote.next
-  if (!next?.comeback && !next?.loyalty) return null
-  const loyalty = next.loyalty
-  const left = loyalty?.done != null ? loyalty.every - loyalty.done : null
+  // A finished one-time card has nothing left to promise.
+  const loyalty = next?.loyalty && !next.loyalty.finished ? next.loyalty : null
+  if (!next || (!next.comeback && !loyalty)) return null
+  const step = loyalty?.next ?? null
+  const left = loyalty?.done != null && step ? step.ordersLeft : null
 
   return (
     <div className="space-y-1 rounded-xl bg-gold-soft/70 px-3 py-2.5 text-small text-foreground">
@@ -203,11 +205,15 @@ export function NextRewardHint({ quote }: { quote: CartQuote }) {
           <Award className="mt-0.5 size-3.5 shrink-0 text-premium" aria-hidden />
           <span>
             {left === 1 ? (
-              <>This order unlocks <span className="font-bold">{loyalty.label}</span>!</>
+              <>This order unlocks a scratch card: <span className="font-bold">{step!.label}</span>!</>
             ) : left != null ? (
-              <>+1 stamp · {left - 1} more after this for <span className="font-bold">{loyalty.label}</span></>
+              <>+1 stamp · {left - 1} more after this for <span className="font-bold">{step!.label}</span></>
             ) : (
-              <>Collect stamps: every {ordinal(loyalty.every)} order gets <span className="font-bold">{loyalty.label}</span></>
+              <>
+                Rewards on your{' '}
+                {loyalty.steps.map((s) => ordinal(s.at)).join(', ')} order · first:{' '}
+                <span className="font-bold">{loyalty.steps[0]?.label}</span>
+              </>
             )}
           </span>
         </p>

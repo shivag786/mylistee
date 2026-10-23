@@ -1,4 +1,4 @@
-import { Bell, BellRing, CheckCheck } from 'lucide-react'
+import { Bell, CheckCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Spinner } from '@/components/feedback/Spinner'
@@ -8,6 +8,7 @@ import { Stagger, StaggerItem } from '@/components/motion/Stagger'
 import { MESSAGES } from '@/constants/messages'
 import { useNotifications, useMarkAllRead } from '@/features/notifications/hooks/useNotifications'
 import { usePushRegistration } from '@/features/notifications/hooks/usePush'
+import { PushToggle } from '@/features/notifications/components/PushToggle'
 import { NotificationItem } from '@/features/notifications/components/NotificationItem'
 
 export function NotificationsPage() {
@@ -15,7 +16,7 @@ export function NotificationsPage() {
   const markAll = useMarkAllRead()
   // Effects (silent register + foreground messages) run app-wide in PushRegistrar;
   // here we only need the permission state + the enable action for the toggle.
-  const { permission, enable } = usePushRegistration({ registerEffects: false })
+  const { permission } = usePushRegistration({ registerEffects: false })
 
   const hasUnread = notifications?.some((n) => !n.isRead) ?? false
 
@@ -36,19 +37,10 @@ export function NotificationsPage() {
         )}
       </div>
 
-      {/* Enable push (only when supported and not yet decided) */}
-      {permission === 'default' && (
-        <Card className="flex items-center gap-3" elevation="soft">
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-            <BellRing className="size-5" aria-hidden />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-body font-medium text-foreground">Turn on notifications</p>
-            <p className="text-caption text-text-secondary">Get alerted the moment you win a reward.</p>
-          </div>
-          <Button size="sm" onClick={() => void enable()}>
-            Enable
-          </Button>
+      {/* Push on/off for this device (hidden where the browser cannot push). */}
+      {permission !== 'unsupported' && (
+        <Card padding="none" elevation="soft">
+          <PushToggle hint="Get alerted the moment you win a reward or your order is ready." />
         </Card>
       )}
 

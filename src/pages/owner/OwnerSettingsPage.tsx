@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Bell, ChevronRight, Clock, Link2, PauseCircle, Store, Volume2 } from 'lucide-react'
+import { BellRing, ChevronRight, Clock, Link2, PauseCircle, Store, Volume2 } from 'lucide-react'
+import { apiClient } from '@/services/apiClient'
+import { ApiError } from '@/types/api'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,7 +14,7 @@ import { toast } from '@/utils/toast'
 import { cn } from '@/utils/cn'
 import { ROUTES } from '@/constants/routes'
 import { useOwnerBusiness } from '@/features/owner/hooks/useOwner'
-import { usePushRegistration } from '@/features/notifications/hooks/usePush'
+import { PushToggle } from '@/features/notifications/components/PushToggle'
 import { setOrderSound, useOrderSound } from '@/features/owner/orderSound'
 import { beep } from '@/utils/beep'
 import { formatClosedUntil, useCloseShop, usePauseOrders, useReopenShop } from '@/features/owner/availability'
@@ -20,12 +22,10 @@ import { formatClosedUntil, useCloseShop, usePauseOrders, useReopenShop } from '
 /** Owner settings — switches an owner reaches for day to day. */
 export function OwnerSettingsPage() {
   const { data: business, isLoading, isError, refetch } = useOwnerBusiness()
-  const { permission, enable, disable, active: pushOn } = usePushRegistration({ registerEffects: false })
   const sound = useOrderSound()
   const pause = usePauseOrders()
   const reopen = useReopenShop()
   const [closing, setClosing] = useState(false)
-  const [pushBusy, setPushBusy] = useState(false)
 
   if (isLoading) {
     return (
@@ -38,27 +38,6 @@ export function OwnerSettingsPage() {
 
   const closedUntil = business.closedUntil ?? null
 
-  async function togglePush(next: boolean) {
-    setPushBusy(true)
-    try {
-      if (next) {
-        const ok = await enable()
-        if (!ok) {
-          toast.error(
-            permission === 'denied'
-              ? 'Notifications are blocked for this site. Allow them in your browser settings (lock icon in the address bar), then try again.'
-              : 'Could not turn on notifications on this device.',
-          )
-        }
-      } else {
-        await disable()
-        toast.success('Push notifications off on this device')
-      }
-    } finally {
-      setPushBusy(false)
-    }
-  }
-
   return (
     <div className="space-y-5">
       <header>
@@ -67,24 +46,12 @@ export function OwnerSettingsPage() {
       </header>
 
       <Section title="Notifications">
-        <Row
-          icon={<Bell className="size-5" />}
+        <PushToggle
+          className="px-4 py-3.5"
           title="Order notifications"
-          hint={
-            permission === 'unsupported'
-              ? 'This browser cannot show notifications. Add the app to your home screen or use Chrome.'
-              : permission === 'denied'
-                ? 'Blocked in the browser — allow notifications for this site in browser settings.'
-                : 'Get a notification on this phone for every new order, even when the app is closed.'
-          }
-        >
-          <Switch
-            checked={pushOn}
-            onCheckedChange={(v) => void togglePush(v)}
-            disabled={pushBusy || permission === 'unsupported'}
-            aria-label="Order notifications"
-          />
-        </Row>
+          hint="Get a notification on this phone for every new order, even when the app is closed."
+        />
+        <TestAlertRow />
         <Row icon={<Volume2 className="size-5" />} title="New order sound" hint="Ring while the app is open. Applies to this device.">
           <Switch
             checked={sound}
@@ -270,6 +237,31 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
         {children}
       </Card>
     </section>
+  )
+}
+
+/** Ring this phone with a sample order alert. The server says so if no phone has alerts on. */
+function TestAlertRow() {
+  const [sending, setSending] = useState(false)
+
+  async function send() {
+    setSending(true)
+    try {
+      await apiClient.post('business/order-alerts/test')
+      toast.success('Test alert sent', 'It should pop up on this phone in a few seconds.')
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Could not send a test alert.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <Row icon={<BellRing className="size-5" />} title="Test order alert" hint="Check that a new order rings this phone.">
+      <Button size="sm" variant="outline" isLoading={sending} onClick={() => void send()}>
+        Send test
+      </Button>
+    </Row>
   )
 }
 

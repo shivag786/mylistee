@@ -33,7 +33,7 @@ export function AdminReviewsPage() {
       cell: (r) => (
         <div className="min-w-0 max-w-md">
           {r.rating !== null ? (
-            <div className="flex items-center gap-1 text-gold">
+            <div className="flex items-center gap-1 text-star">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} className={i < r.rating! ? 'size-3.5 fill-current' : 'size-3.5 text-border'} aria-hidden />
               ))}

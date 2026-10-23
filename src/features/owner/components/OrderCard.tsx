@@ -1,4 +1,5 @@
-import { Coins, Check, X, CheckCheck, Utensils, MapPin, Banknote, Smartphone } from 'lucide-react'
+import { Coins, Check, X, CheckCheck, Utensils, MapPin, Banknote, Smartphone, Phone, Navigation } from 'lucide-react'
+import { directionsUrl } from '@/features/orders/delivery/addressLookup'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -48,10 +49,34 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
       </div>
 
       {order.serviceAddress && (
-        <p className="flex items-start gap-1.5 rounded-lg bg-surface-muted p-2 text-caption text-text-secondary">
-          <MapPin className="mt-0.5 size-3.5 shrink-0 text-text-muted" aria-hidden />
-          <span>{order.serviceAddress}</span>
-        </p>
+        <div className="space-y-2 rounded-lg bg-surface-muted p-2">
+          <p className="flex items-start gap-1.5 text-caption text-text-secondary">
+            <MapPin className="mt-0.5 size-3.5 shrink-0 text-text-muted" aria-hidden />
+            <span>{order.serviceAddress}</span>
+          </p>
+          {(order.deliveryPhone || order.deliveryLocation) && (
+            <div className="flex flex-wrap gap-2">
+              {order.deliveryPhone && (
+                <a
+                  href={`tel:+91${order.deliveryPhone}`}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-small font-semibold text-foreground shadow-soft"
+                >
+                  <Phone className="size-3.5 text-success" aria-hidden /> {order.deliveryPhone}
+                </a>
+              )}
+              {order.deliveryLocation && (
+                <a
+                  href={directionsUrl(order.deliveryLocation)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-small font-semibold text-primary-foreground shadow-soft"
+                >
+                  <Navigation className="size-3.5" aria-hidden /> Directions
+                </a>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       <ul className="space-y-1 border-y border-border py-2">

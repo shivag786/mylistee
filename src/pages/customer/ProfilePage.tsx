@@ -9,6 +9,7 @@ import { ConfirmationDialog } from '@/components/feedback/ConfirmationDialog'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ChangePinCard } from '@/features/auth/components/ChangePinCard'
 import { ROUTES } from '@/constants/routes'
+import { PushToggle } from '@/features/notifications/components/PushToggle'
 import { toast } from '@/utils/toast'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -52,6 +53,11 @@ export function ProfilePage() {
         </div>
       </Card>
 
+      {/* Push on/off for this phone — reward wins, order updates, shop offers. */}
+      <Card padding="none">
+        <PushToggle title="Notifications" hint="Order updates, rewards and offers — even when Listee is closed." />
+      </Card>
+
       <Card padding="none">
         <ProfileRow
           icon={<Heart className="size-5" />}
@@ -61,7 +67,7 @@ export function ProfilePage() {
         <ProfileRow icon={<Store className="size-5" />} label="Visit history" />
         <ProfileRow
           icon={<Bell className="size-5" />}
-          label="Notifications"
+          label="All alerts"
           onClick={() => navigate(ROUTES.notifications)}
         />
       </Card>

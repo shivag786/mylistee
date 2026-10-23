@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Confetti } from '@/components/motion/Confetti'
 import { AlertTriangle, CalendarClock, Copy, CreditCard, History, Gift, Link2, Mail, Share2, ShieldCheck, Store } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -38,6 +40,8 @@ export function PersonalLinkPage() {
   const { data: business } = useOwnerBusiness()
   const toggle = useTogglePersonalLink()
   const { buy, isPending: buying, activePack } = useBuyPersonalLinkPack()
+  // Bumped on every activation so the confetti replays.
+  const [party, setParty] = useState(0)
 
   if (isLoading) {
     return (
@@ -57,7 +61,10 @@ export function PersonalLinkPage() {
     toggle.mutate(next, {
       onSuccess: (s) => {
         if (!next) toast.success('Personal link switched off')
-        else if (s.active && s.onTrial) toast.success(`Free trial started — ${s.daysLeft} days`)
+        else if (s.active && s.onTrial) {
+          toast.success(`Free trial started — ${s.daysLeft} days`)
+          setParty((n) => n + 1)
+        }
         else if (s.active) toast.success('Personal link is live')
         else toast.info('Your free trial is over — choose a pack below to go live')
       },
@@ -67,7 +74,10 @@ export function PersonalLinkPage() {
 
   function onBuy(pack: PersonalLinkPack) {
     buy(pack.key, {
-      onSuccess: (s) => toast.success(`Payment successful — ${s.daysLeft} days active`),
+      onSuccess: (s) => {
+        toast.success(`Payment successful — ${s.daysLeft} days active`)
+        setParty((n) => n + 1)
+      },
       onError: (e) => {
         if (!isCheckoutCancelled(e)) toast.error(e.message)
       },
@@ -88,6 +98,7 @@ export function PersonalLinkPage() {
 
   return (
     <div className="space-y-5">
+      {party > 0 && <Confetti key={party} count={90} />}
       <header>
         <h1 className="text-title font-bold text-foreground">Personal link</h1>
         <p className="text-caption text-text-secondary">

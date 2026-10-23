@@ -19,9 +19,61 @@ export interface ComebackRule extends RewardRuleBase {
   days: number
 }
 
-export interface LoyaltyRule extends RewardRuleBase {
-  /** A reward on every Nth paid order. */
-  every: number
+/** One step on the loyalty card: a reward on the `at`-th paid order. */
+export interface LoyaltyStep extends RewardRuleBase {
+  at: number
+}
+
+export interface LoyaltyRule {
+  /** Sorted by `at`, one per order number. */
+  steps: LoyaltyStep[]
+  /** Start the card over after the last step (else each step is earned once). */
+  repeat: boolean
+}
+
+/** A loyalty step as customers see it. */
+export interface PublicLoyaltyStep {
+  at: number
+  label: string
+  /** The signed-in customer has reached it in the current round. */
+  reached: boolean
+}
+
+/** A loyalty reward the customer earned, shown as a scratch card. */
+export interface ScratchCard {
+  id: string
+  tierAt: number | null
+  title: string
+  /** Null until scratched. */
+  label: string | null
+  code: string | null
+  minBill: number | null
+  revealed: boolean
+  status: 'active' | 'used' | 'expired'
+  expiresAt: string | null
+  earnedAt: string | null
+  business: { name: string; slug: string; logo: string | null } | null
+}
+
+/** One customer on the owner's repeat-customer list. */
+export interface RepeatCustomer {
+  name: string
+  avatar: string | null
+  orders: number
+  spent: number
+  lastOrderAt: string | null
+  rewardsEarned: number
+  rewardsUsed: number
+  /** Orders into the current round of the card; null when loyalty is off. */
+  position: number | null
+  round: number | null
+  finished: boolean
+  next: { at: number; ordersLeft: number } | null
+}
+
+export interface RepeatCustomers {
+  customers: RepeatCustomer[]
+  summary: { customers: number; repeat: number; rewardsEarned: number; rewardsUsed: number }
 }
 
 export interface OwnerCoupon {
@@ -79,8 +131,21 @@ export interface PublicCoupon {
 export interface ShopPerks {
   billDiscount: { minBill: number; label: string } | null
   comeback: { days: number; minBill: number | null; label: string } | null
-  /** `done` is the signed-in customer's paid orders towards the next reward; null for a guest. */
-  loyalty: { every: number; done: number | null; label: string } | null
+  loyalty: {
+    steps: PublicLoyaltyStep[]
+    repeat: boolean
+    /** Orders in one round of the card (the last step's number). */
+    every: number
+    /** Paid orders into the current round; null for a guest. */
+    done: number | null
+    totalOrders: number | null
+    round: number | null
+    /** A one-time card the customer has completed. */
+    finished: boolean
+    next: (PublicLoyaltyStep & { ordersLeft: number }) | null
+    /** The next step's reward (or the first, for a guest). */
+    label: string
+  } | null
   coupons: PublicCoupon[]
 }
 

@@ -24,6 +24,7 @@ function wasDismissed(): boolean {
 export function HowItWorks({ isAuthenticated }: { isAuthenticated: boolean }) {
   const reduce = useReducedMotion()
   const { data: config } = useAppConfig()
+  const tagline = config?.theme?.tagline?.trim()
   const [hidden, setHidden] = useState(wasDismissed)
 
   const coinValue = config?.coins?.value ?? 1
@@ -66,7 +67,9 @@ export function HowItWorks({ isAuthenticated }: { isAuthenticated: boolean }) {
           <h2 id="how-listee-works" className="pr-8 text-subtitle font-bold text-foreground">
             How Listee works
           </h2>
-          <p className="mt-0.5 text-caption text-text-secondary">Your local shops, their offers and your rewards — in one place.</p>
+          <p className="mt-0.5 text-caption text-text-secondary">
+            {tagline ? `${tagline} ` : ''}Your local shops, their offers and your rewards — in one place.
+          </p>
 
           <ol className="mt-4 space-y-3">
             {steps.map((step, i) => (

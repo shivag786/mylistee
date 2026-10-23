@@ -32,6 +32,8 @@ export function OwnerLayout() {
   const { data: business, isLoading, isError } = useOwnerBusiness()
   const { data: config } = useAppConfig()
   const nav = visibleOwnerNav(OWNER_NAV, config?.ownerModules)
+  // "Listee for Business": a dark sidebar/top bar when the admin set a panel colour.
+  const darkPanel = Boolean(config?.theme?.business)
 
   // Tapping a drawer link navigates but leaves the drawer mounted, so close it
   // whenever the route changes.
@@ -63,8 +65,9 @@ export function OwnerLayout() {
   return (
     <div className="flex min-h-dvh flex-col bg-background lg:pl-64">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-surface lg:flex">
+      <aside className={cn('fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r lg:flex', PANEL)}>
         <OwnerSidebar
+          darkPanel={darkPanel}
           nav={nav}
           businessName={businessName}
           businessLogo={business?.logoUrl}
@@ -74,21 +77,22 @@ export function OwnerLayout() {
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur lg:hidden">
+      <header className={cn('sticky top-0 z-30 border-b backdrop-blur lg:hidden', PANEL)}>
         <div className="app-container flex h-16 items-center justify-between">
           <div className="flex items-center gap-1">
-            <IconButton aria-label="Open menu" onClick={() => setMenuOpen(true)}>
+            <IconButton aria-label="Open menu" className={PANEL_BUTTON} onClick={() => setMenuOpen(true)}>
               <Menu aria-hidden />
             </IconButton>
             <Link to={ROUTES.owner.dashboard} aria-label="Business dashboard" className="flex items-center gap-2">
               <Logo size={30} />
-              <span className="max-w-32 truncate text-body font-semibold text-foreground">
-                {businessName}
+              <span className="grid min-w-0 leading-tight">
+                <span className="max-w-32 truncate text-body font-semibold">{businessName}</span>
+                {darkPanel && <span className={cn('text-[10px] font-semibold uppercase tracking-wider', PANEL_MUTED)}>Listee for Business</span>}
               </span>
             </Link>
           </div>
           <div className="flex items-center gap-2">
-            <IconButton aria-label="Sign out" onClick={() => void handleSignOut()}>
+            <IconButton aria-label="Sign out" className={PANEL_BUTTON} onClick={() => void handleSignOut()}>
               <LogOut aria-hidden />
             </IconButton>
             <Avatar name={user?.name ?? 'Owner'} src={user?.photoUrl} size="md" />
@@ -100,9 +104,10 @@ export function OwnerLayout() {
           else (Tables & service, Redeem, Reviews, Analytics, Plan & billing, …)
           lives here rather than being unreachable on a phone. */}
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent side="left" className="w-72 p-0 lg:hidden">
+        <SheetContent side="left" className={cn('w-72 p-0 lg:hidden', PANEL)}>
           <SheetTitle className="sr-only">Business menu</SheetTitle>
           <OwnerSidebar
+            darkPanel={darkPanel}
             nav={nav}
             businessName={businessName}
             businessLogo={business?.logoUrl}
@@ -131,13 +136,21 @@ export function OwnerLayout() {
   )
 }
 
+/** Panel surface: the admin's business colour with readable text (or the plain light look). */
+const PANEL = 'bg-[var(--business-bg)] text-[var(--business-fg)] border-[color-mix(in_srgb,var(--business-fg)_12%,transparent)]'
+const PANEL_MUTED = 'text-[color-mix(in_srgb,var(--business-fg)_62%,transparent)]'
+const PANEL_HOVER = 'hover:bg-[color-mix(in_srgb,var(--business-fg)_9%,transparent)]'
+const PANEL_BUTTON = cn('text-[var(--business-fg)]', PANEL_HOVER)
+
 function OwnerSidebar({
+  darkPanel,
   nav,
   businessName,
   businessLogo,
   userName,
   onSignOut,
 }: {
+  darkPanel: boolean
   nav: OwnerNavItem[]
   businessName: string
   businessLogo?: string | null
@@ -148,7 +161,7 @@ function OwnerSidebar({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center gap-2.5 border-b border-border px-4">
+      <div className="flex h-16 items-center gap-2.5 border-b border-[inherit] px-4">
         {businessLogo ? (
           <img src={businessLogo} alt="" className="size-9 rounded-lg object-cover" loading="lazy" />
         ) : (
@@ -156,7 +169,10 @@ function OwnerSidebar({
             <Store className="size-5" aria-hidden />
           </span>
         )}
-        <span className="truncate text-body font-bold text-foreground">{businessName}</span>
+        <span className="grid min-w-0 leading-tight">
+          <span className="truncate text-body font-bold">{businessName}</span>
+          <span className={cn('text-[10px] font-semibold uppercase tracking-wider', PANEL_MUTED)}>Listee for Business</span>
+        </span>
       </div>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3" aria-label="Business">
@@ -169,8 +185,10 @@ function OwnerSidebar({
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-caption font-medium transition-colors',
                 active
-                  ? 'bg-primary-soft text-primary'
-                  : 'text-text-secondary hover:bg-surface-muted hover:text-foreground',
+                  ? darkPanel
+                    ? 'bg-gold font-semibold text-gold-foreground'
+                    : 'bg-primary-soft text-primary'
+                  : cn(PANEL_MUTED, PANEL_HOVER, 'hover:text-[var(--business-fg)]'),
               )}
             >
               <Icon className="size-5 shrink-0" aria-hidden />
@@ -180,12 +198,12 @@ function OwnerSidebar({
         })}
       </nav>
 
-      <div className="border-t border-border p-3">
-        <p className="truncate px-3 pb-2 text-small text-text-muted">{userName}</p>
+      <div className="border-t border-[inherit] p-3">
+        <p className={cn('truncate px-3 pb-2 text-small', PANEL_MUTED)}>{userName}</p>
         <button
           type="button"
           onClick={onSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-caption font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-danger"
+          className={cn('flex w-full items-center gap-3 rounded-lg px-3 py-2 text-caption font-medium transition-colors hover:text-danger', PANEL_MUTED, PANEL_HOVER)}
         >
           <LogOut className="size-5" aria-hidden />
           Sign out

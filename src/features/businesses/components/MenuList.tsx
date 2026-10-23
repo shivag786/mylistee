@@ -513,7 +513,7 @@ function ProductCard({
             {(product.variants?.length ?? 0) > 0 && <span className="text-small text-text-muted">onwards</span>}
             {dish.strikePrice != null && <span className="text-small text-text-muted line-through">₹{dish.strikePrice}</span>}
             {product.discountPercent > 0 && !hasOffer && (
-              <Badge size="sm" className="bg-offer-soft text-offer">{product.discountPercent}% off</Badge>
+              <Badge size="sm" className="offer-tag bg-offer-soft text-offer">{product.discountPercent}% off</Badge>
             )}
           </div>
 

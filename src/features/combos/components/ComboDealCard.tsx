@@ -63,7 +63,7 @@ export function ComboDealCard({ combo }: ComboDealCardProps) {
           {combo.totalPrice > combo.comboPrice && (
             <span className="text-caption text-text-muted line-through">₹{combo.totalPrice}</span>
           )}
-          {combo.savings > 0 && <Badge size="sm" className="bg-offer-soft text-offer">Save ₹{combo.savings}</Badge>}
+          {combo.savings > 0 && <Badge size="sm" className="offer-tag bg-offer-soft text-offer">Save ₹{combo.savings}</Badge>}
         </div>
 
         <p className="mt-1 truncate text-caption text-text-secondary">{combo.business.name}</p>

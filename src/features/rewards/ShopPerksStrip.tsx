@@ -1,16 +1,16 @@
 import { Link, useLocation } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Award, Gift, Lock, Receipt, RotateCcw, Ticket } from 'lucide-react'
+import { Gift, Lock, Receipt, RotateCcw, Ticket } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
 import { rememberPostLoginTarget } from '@/features/auth/postLoginTarget'
 import { toast } from '@/utils/toast'
 import { cn } from '@/utils/cn'
 import type { ShopPerks } from './types'
-import { ordinal } from './format'
+import { LoyaltyJourney } from './LoyaltyJourney'
 
 /**
- * "Why order here" on the shop page: the bill discount, loyalty stamps,
- * come-back offer and coupon codes as swipeable tiles. Guests see every
+ * "Why order here" on the shop page: the loyalty journey on its own, then the
+ * bill discount, come-back offer and coupon codes as swipeable tiles. Guests see every
  * reward with a nudge to sign in; nothing renders when the shop has none.
  */
 export function ShopPerksStrip({ perks, isAuthenticated }: { perks?: ShopPerks; isAuthenticated: boolean }) {
@@ -44,6 +44,9 @@ export function ShopPerksStrip({ perks, isAuthenticated }: { perks?: ShopPerks; 
         )}
       </div>
 
+      {loyalty && <LoyaltyJourney loyalty={loyalty} />}
+
+      {(billDiscount || comeback || coupons.length > 0) && (
       <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
         {billDiscount && (
           <motion.div
@@ -57,23 +60,6 @@ export function ShopPerksStrip({ perks, isAuthenticated }: { perks?: ShopPerks; 
               {billDiscount.minBill > 0 ? `on bills above ₹${billDiscount.minBill}` : 'on every bill'} · applied automatically
             </p>
           </motion.div>
-        )}
-
-        {loyalty && (
-          <div className={cn(tile, 'bg-gradient-to-br from-gold-soft to-surface ring-1 ring-gold/40')}>
-            <Award className="size-5 text-premium" aria-hidden />
-            <p className="text-body font-extrabold leading-tight text-foreground">
-              Every {ordinal(loyalty.every)} order: {loyalty.label}
-            </p>
-            <Stamps every={loyalty.every} done={loyalty.done} />
-            <p className="text-small text-text-secondary">
-              {loyalty.done == null
-                ? 'Sign in to collect stamps'
-                : loyalty.every - loyalty.done === 1
-                  ? 'Your next order unlocks it!'
-                  : `${loyalty.every - loyalty.done} more orders to go`}
-            </p>
-          </div>
         )}
 
         {comeback && (
@@ -106,30 +92,7 @@ export function ShopPerksStrip({ perks, isAuthenticated }: { perks?: ShopPerks; 
           </button>
         ))}
       </div>
+      )}
     </section>
-  )
-}
-
-/** Loyalty stamps: filled for orders done, the last one is the gift. */
-export function Stamps({ every, done }: { every: number; done: number | null }) {
-  const shown = Math.min(every, 10)
-  return (
-    <div className="my-1 flex flex-wrap gap-1" aria-label={done == null ? undefined : `${done} of ${every} orders`}>
-      {Array.from({ length: shown }).map((_, i) => {
-        const filled = done != null && i < done
-        const gift = i === shown - 1
-        return (
-          <span
-            key={i}
-            className={cn(
-              'grid size-5 place-items-center rounded-full border text-[9px] font-bold',
-              filled ? 'border-premium bg-premium text-premium-foreground' : gift ? 'border-premium/60 bg-gold-soft text-premium' : 'border-border-strong bg-surface',
-            )}
-          >
-            {gift && !filled ? <Gift className="size-3" /> : filled ? '✓' : ''}
-          </span>
-        )
-      })}
-    </div>
   )
 }

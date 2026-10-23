@@ -16,6 +16,11 @@ export interface PlaceOrderPayload {
   table?: string
   /** Delivery address (required when serviceType is 'delivery'). */
   serviceAddress?: string
+  /** Home delivery: the number the shop calls (required for delivery). */
+  deliveryPhone?: string
+  /** Home delivery: the map pin, when the customer set one. Sent as a pair. */
+  deliveryLat?: number
+  deliveryLng?: number
   /** Pay online now, or cash at the counter. Omit ⇒ cash, as before. */
   paymentChoice?: PaymentMethodKey
   /** A coupon the customer applied. */

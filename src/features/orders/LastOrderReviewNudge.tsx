@@ -85,7 +85,7 @@ function Nudge() {
                     type="button"
                     onClick={() => openReview(n)}
                     aria-label={`Rate ${n} star${n > 1 ? 's' : ''}`}
-                    className="text-border-strong transition-colors hover:text-gold"
+                    className="text-border-strong transition-colors hover:text-star"
                   >
                     <Star className={cn('size-6')} aria-hidden />
                   </button>

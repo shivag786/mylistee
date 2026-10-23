@@ -232,7 +232,8 @@ function ServiceModesCard() {
       delivery: data.modes.includes('delivery'),
     })
     setDefaultMode(data.defaultMode)
-    setDeliveryFee(String(data.deliveryFee ?? 0))
+    // Free delivery shows as an empty box, not "0".
+    setDeliveryFee(data.deliveryFee ? String(data.deliveryFee) : '')
   }, [data])
 
   const enabledList = useMemo(
@@ -271,27 +272,68 @@ function ServiceModesCard() {
           const meta = SERVICE_META[mode]
           const Icon = meta.icon
           const isPickup = mode === 'pickup'
+          const isDelivery = mode === 'delivery'
           return (
-            <div key={mode} className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface p-3">
-              <span className="flex min-w-0 items-center gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-muted text-text-secondary">
-                  <Icon className="size-4" aria-hidden />
-                </span>
-                <span className="min-w-0">
-                  <span className="flex items-center gap-2 text-body font-medium text-foreground">
-                    {meta.label}
-                    {isPickup && <Badge tone="neutral">Always on</Badge>}
+            <div
+              key={mode}
+              className={cn(
+                'rounded-xl border bg-surface transition-colors',
+                isDelivery && enabled.delivery ? 'border-primary/40' : 'border-border',
+              )}
+            >
+              <div className="flex items-center justify-between gap-4 p-3">
+                <span className="flex min-w-0 items-center gap-3">
+                  <span
+                    className={cn(
+                      'grid size-9 shrink-0 place-items-center rounded-lg',
+                      isDelivery && enabled.delivery ? 'bg-primary text-primary-foreground' : 'bg-surface-muted text-text-secondary',
+                    )}
+                  >
+                    <Icon className="size-4" aria-hidden />
                   </span>
-                  <span className="block truncate text-caption text-text-muted">{meta.hint}</span>
+                  <span className="min-w-0">
+                    <span className="flex items-center gap-2 text-body font-medium text-foreground">
+                      {isDelivery ? 'Home delivery' : meta.label}
+                      {isPickup && <Badge tone="neutral">Always on</Badge>}
+                    </span>
+                    <span className="block truncate text-caption text-text-muted">
+                      {isDelivery ? 'Customers share address, location & mobile' : meta.hint}
+                    </span>
+                  </span>
                 </span>
-              </span>
-              <Switch checked={enabled[mode]} disabled={isPickup} onCheckedChange={(v) => toggle(mode, v)} />
+                <Switch checked={enabled[mode]} disabled={isPickup} onCheckedChange={(v) => toggle(mode, v)} />
+              </div>
+
+              {/* Delivery on → its charge, right where they switched it on. Optional: blank is free. */}
+              {isDelivery && enabled.delivery && (
+                <div className="space-y-1.5 border-t border-border px-3 pb-3 pt-3">
+                  <Label htmlFor="delivery-fee" className="flex items-center gap-1.5">
+                    <Bike className="size-3.5 text-text-muted" aria-hidden /> Delivery charge (optional)
+                  </Label>
+                  <div className="relative max-w-[200px]">
+                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 font-semibold text-text-secondary">₹</span>
+                    <Input
+                      id="delivery-fee"
+                      inputMode="decimal"
+                      value={deliveryFee}
+                      onChange={(e) => setDeliveryFee(e.target.value.replace(/[^\d.]/g, ''))}
+                      placeholder="Free"
+                      className="pl-8"
+                    />
+                  </div>
+                  <p className="text-small text-text-muted">
+                    {Number(deliveryFee) > 0
+                      ? `₹${Number(deliveryFee)} is added to every delivery order.`
+                      : 'Leave empty for free delivery.'}
+                  </p>
+                </div>
+              )}
             </div>
           )
         })}
       </div>
 
-      {/* Default mode + delivery fee */}
+      {/* Default mode */}
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1">
           <span className="text-caption font-medium text-foreground">Default at checkout</span>
@@ -307,21 +349,6 @@ function ServiceModesCard() {
             ))}
           </select>
         </label>
-
-        {enabled.delivery && (
-          <label className="space-y-1">
-            <span className="flex items-center gap-1.5 text-caption font-medium text-foreground">
-              <Bike className="size-3.5 text-text-muted" aria-hidden /> Delivery fee (₹)
-            </span>
-            <Input
-              type="number"
-              min={0}
-              inputMode="decimal"
-              value={deliveryFee}
-              onChange={(e) => setDeliveryFee(e.target.value)}
-            />
-          </label>
-        )}
       </div>
 
       <div className="flex justify-end">

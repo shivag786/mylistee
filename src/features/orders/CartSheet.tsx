@@ -1,8 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Minus, Plus, Trash2, Coins, Utensils, Smartphone, Banknote, CheckCircle2, Info } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Minus, Plus, Trash2, Coins, Utensils, Smartphone, Banknote, CheckCircle2, Info, Store, Bike } from 'lucide-react'
 import { SERVICE_META, type ServiceType } from './serviceTypes'
+import { DeliveryDetails } from './delivery/DeliveryDetails'
+import {
+  isValidPhone,
+  normalisePhone,
+  readSavedDelivery,
+  saveDelivery,
+  type DeliveryDraft,
+} from './delivery/deliveryDraft'
 import { cn } from '@/utils/cn'
 import {
   Sheet,
@@ -20,6 +29,7 @@ import { ApiError } from '@/types/api'
 import { MESSAGES } from '@/constants/messages'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useBusinessLoyalty } from '@/features/wallet/hooks/useCoins'
+import { useCoinValue } from '@/features/wallet/coinMoney'
 import { cart, cartSubtotal, lineKey, optionsLabel, useCart } from './cartStore'
 import { useOrderCheckout, isOrderPaymentCancelled } from './useOrderCheckout'
 import { waitForPageInteractive } from '@/features/payments/razorpay'
@@ -72,7 +82,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   const current = useCart()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const { isAuthenticated, signInWithGoogle } = useAuth()
+  const { isAuthenticated, signInWithGoogle, user } = useAuth()
   const [useCoins, setUseCoins] = useState(false)
   const [note, setNote] = useState('')
   // The coupon the customer chose; the server's quote says whether it holds.
@@ -90,7 +100,12 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
 
   const [serviceType, setServiceType] = useState<ServiceType>('pickup')
   const [tableId, setTableId] = useState<string | null>(null)
-  const [address, setAddress] = useState('')
+  const [delivery, setDelivery] = useState<DeliveryDraft>(() => readSavedDelivery())
+
+  // "Order at shop" covers every counter / table mode; "Home delivery" is its own.
+  const shopModes: ServiceType[] = modes.filter((m) => m !== 'delivery')
+  const offersDelivery = modes.includes('delivery')
+  const [lastShopMode, setLastShopMode] = useState<ServiceType>('pickup')
 
   // How the shop takes payment -- already reconciled with the gateway on the
   // server, so whatever is offered here is something it will accept.
@@ -103,6 +118,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   // The customer's coin balance at this shop (only when signed in).
   const { data: loyalty } = useBusinessLoyalty(current?.businessSlug ?? '', open && isAuthenticated && Boolean(current))
   const balance = loyalty?.businessBalance ?? 0
+  const coinValue = useCoinValue()
 
   /**
    * The sheet steps aside while Razorpay is open (see beforePaymentOpens) and
@@ -124,18 +140,32 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
       setCouponCode(null)
       // Scanned a table QR ⇒ default to dine-in; else the shop's preferred mode.
       const initial: ServiceType = preboundTableId ? 'dine_in' : service?.defaultMode ?? 'pickup'
-      setServiceType(modes.includes(initial) ? initial : modes[0])
+      const start = modes.includes(initial) ? initial : modes[0]
+      setServiceType(start)
+      setLastShopMode(start !== 'delivery' ? start : shopModes[0] ?? 'pickup')
       setTableId(preboundTableId)
-      setAddress('')
+      // Last address used on this device; the account's number if none saved.
+      setDelivery(readSavedDelivery(user?.phone))
       setPaymentChoice(defaultChoice(payment))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  const showModePicker = modes.length > 1
-  const needsAddress = serviceType === 'delivery'
-  const addressReady = !needsAddress || address.trim().length > 0
-  const fee = serviceType === 'delivery' ? deliveryFee : 0
+  const isDelivery = serviceType === 'delivery'
+  // Sub-choices under "Order at shop" (pickup / dine-in / takeaway) when there are several.
+  const showShopModes = !isDelivery && shopModes.length > 1
+  const deliveryPhone = normalisePhone(delivery.phone)
+  const addressReady = !isDelivery || (delivery.address.trim().length > 0 && isValidPhone(deliveryPhone))
+  const fee = isDelivery ? deliveryFee : 0
+
+  function chooseFulfilment(next: 'shop' | 'delivery') {
+    if (next === 'delivery') {
+      if (serviceType !== 'delivery') setLastShopMode(serviceType)
+      setServiceType('delivery')
+    } else {
+      setServiceType(shopModes.includes(lastShopMode) ? lastShopMode : shopModes[0] ?? 'pickup')
+    }
+  }
 
   // The server prices the cart — bill discount and coupon included — exactly as
   // the order will be; the local sums only fill in until the first quote lands.
@@ -203,9 +233,13 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
         note: note.trim() || undefined,
         serviceType,
         table: serviceType === 'dine_in' ? tableId ?? undefined : undefined,
-        serviceAddress: serviceType === 'delivery' ? address.trim() || undefined : undefined,
+        serviceAddress: isDelivery ? delivery.address.trim() || undefined : undefined,
+        deliveryPhone: isDelivery ? deliveryPhone : undefined,
+        deliveryLat: isDelivery ? delivery.point?.lat : undefined,
+        deliveryLng: isDelivery ? delivery.point?.lng : undefined,
         paymentChoice,
       })
+      if (isDelivery) saveDelivery({ ...delivery, phone: deliveryPhone })
 
       // Placed (and paid, if it was online) → empty the cart, close the sheet,
       // and go to the orders page where the token shows.
@@ -233,8 +267,12 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   }
 
   async function handlePlace() {
-    if (needsAddress && !addressReady) {
+    if (isDelivery && !delivery.address.trim()) {
       toast.info('Please add a delivery address.')
+      return
+    }
+    if (isDelivery && !isValidPhone(deliveryPhone)) {
+      toast.info('Please add a 10-digit mobile number for the delivery.')
       return
     }
     if (!isAuthenticated) {
@@ -323,12 +361,70 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                     ))}
                   </ul>
 
-                  {/* Service mode (Phase 7.6) — hidden for pickup-only shops. */}
-                  {showModePicker && (
+                  {/* Order at shop vs home delivery — only when the shop delivers. */}
+                  {offersDelivery && (
                     <div className="space-y-2">
-                      <p className="text-caption font-medium text-foreground">How would you like it?</p>
+                      <p className="text-caption font-bold text-foreground">How would you like your order?</p>
+                      <div role="radiogroup" className="relative grid grid-cols-2 gap-1 rounded-2xl bg-surface-muted p-1">
+                        {([
+                          { key: 'shop', label: 'Order at shop', hint: 'Pick up or eat here', icon: Store },
+                          {
+                            key: 'delivery',
+                            label: 'Home delivery',
+                            hint: deliveryFee > 0 ? `₹${deliveryFee} delivery` : 'Free delivery',
+                            icon: Bike,
+                          },
+                        ] as const).map((opt) => {
+                          const active = opt.key === 'delivery' ? isDelivery : !isDelivery
+                          const Icon = opt.icon
+                          return (
+                            <button
+                              key={opt.key}
+                              type="button"
+                              role="radio"
+                              aria-checked={active}
+                              onClick={() => chooseFulfilment(opt.key)}
+                              className="relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left"
+                            >
+                              {active && (
+                                <motion.span
+                                  layoutId="fulfilment-pill"
+                                  className="absolute inset-0 rounded-xl bg-surface shadow-soft ring-1 ring-primary/40"
+                                  transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                                />
+                              )}
+                              <span
+                                className={cn(
+                                  'relative grid size-9 shrink-0 place-items-center rounded-lg transition-colors',
+                                  active ? 'bg-primary text-primary-foreground' : 'bg-surface text-text-muted',
+                                )}
+                              >
+                                <Icon className="size-4" aria-hidden />
+                              </span>
+                              <span className="relative min-w-0">
+                                <span className="block text-caption font-bold text-foreground">{opt.label}</span>
+                                <span
+                                  className={cn(
+                                    'block truncate text-small',
+                                    opt.key === 'delivery' && deliveryFee === 0 ? 'font-semibold text-success' : 'text-text-muted',
+                                  )}
+                                >
+                                  {opt.hint}
+                                </span>
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* At the shop: pickup / dine-in / takeaway, when the shop offers more than one. */}
+                  {showShopModes && (
+                    <div className="space-y-2">
+                      {!offersDelivery && <p className="text-caption font-medium text-foreground">How would you like it?</p>}
                       <div className="grid grid-cols-2 gap-2">
-                        {modes.map((mode) => {
+                        {shopModes.map((mode) => {
                           const meta = SERVICE_META[mode]
                           const Icon = meta.icon
                           const active = serviceType === mode
@@ -383,29 +479,21 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                     ) : null
                   )}
 
-                  {/* Delivery address (Phase 7.6). */}
-                  {serviceType === 'delivery' && (
-                    <label className="block space-y-1">
-                      <span className="text-caption font-medium text-foreground">Delivery address</span>
-                      <Textarea
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        rows={2}
-                        placeholder="Flat / house, street, landmark…"
-                      />
-                    </label>
-                  )}
+                  {/* Home delivery: address (typed, current location or map) + mobile. */}
+                  <AnimatePresence initial={false}>
+                    {isDelivery && <DeliveryDetails key="delivery" value={delivery} onChange={setDelivery} />}
+                  </AnimatePresence>
 
                   {isAuthenticated && coinsAccepted && (
                     <label className="flex items-center justify-between gap-4 rounded-xl bg-surface-muted p-3">
                       <span className="min-w-0">
                         <span className="flex items-center gap-2 text-caption font-medium text-foreground">
-                          <Coins className="size-4 text-premium-foreground" aria-hidden /> Use my Listee coins
+                          <Coins className="size-4 text-premium" aria-hidden /> Pay with my Listee wallet
                         </span>
                         <span className="text-small text-text-secondary">
                           {balance > 0
-                            ? `You have ${balance} · this offer accepts up to ${comboCoinCap} coins.`
-                            : `No coins yet — this offer accepts up to ${comboCoinCap} coins.`}
+                            ? `You have ₹${(balance * coinValue).toLocaleString('en-IN')} (${balance} coins) · this offer takes up to ₹${(comboCoinCap * coinValue).toLocaleString('en-IN')}.`
+                            : `Wallet empty — this offer takes up to ₹${(comboCoinCap * coinValue).toLocaleString('en-IN')} in coins.`}
                         </span>
                       </span>
                       <Switch checked={useCoins} onCheckedChange={toggleCoins} />
@@ -468,7 +556,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                     {(quote?.billDiscount ?? 0) > 0 && <BillRow label="Bill discount" value={`−₹${quote!.billDiscount}`} saving />}
                     {couponHolds && <BillRow label={`Coupon (${quote!.coupon!.code})`} value={`−₹${quote!.couponDiscount}`} saving />}
                     {coinsToApply > 0 && <BillRow label={`Coins (${coinsToApply})`} value={`−₹${coinDiscount}`} saving />}
-                    {fee > 0 && <BillRow label="Delivery fee" value={`₹${fee}`} />}
+                    {isDelivery && <BillRow label="Delivery fee" value={fee > 0 ? `₹${fee}` : 'FREE'} saving={fee === 0} />}
                     {split.fee > 0 && (
                       <BillRow
                         label={

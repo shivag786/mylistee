@@ -1,10 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Gift, PartyPopper, Coins } from 'lucide-react'
+import { Gift, PartyPopper } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { VisuallyHidden } from '@/components/a11y/VisuallyHidden'
 import { CoinBurst } from '@/features/wallet/components/CoinBurst'
+import { ListeeCoin } from '@/features/wallet/components/ListeeCoin'
+import { coinsToRupees, formatRupees, useCoinValue } from '@/features/wallet/coinMoney'
+import { Confetti } from '@/components/motion/Confetti'
 import { ROUTES } from '@/constants/routes'
 import type { WonReward } from '@/features/businesses/publicTypes'
 
@@ -18,8 +21,11 @@ interface RewardModalProps {
 export function RewardModal({ reward, coinsEarned = 0, onClose }: RewardModalProps) {
   const navigate = useNavigate()
   const open = reward !== null
+  const coinValue = useCoinValue()
 
   return (
+    <>
+    {open && <Confetti count={90} />}
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-sm overflow-hidden text-center">
         <VisuallyHidden>
@@ -34,7 +40,7 @@ export function RewardModal({ reward, coinsEarned = 0, onClose }: RewardModalPro
                 initial={{ scale: 0, rotate: -20 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 14 }}
-                className="grid size-20 place-items-center rounded-full bg-premium-soft text-premium-foreground"
+                className="grid size-20 place-items-center rounded-full bg-gold text-gold-foreground shadow-[0_6px_20px_rgba(132,204,22,0.45)]"
               >
                 <Gift className="size-10" aria-hidden />
               </motion.div>
@@ -55,9 +61,10 @@ export function RewardModal({ reward, coinsEarned = 0, onClose }: RewardModalPro
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="flex items-center justify-center gap-1.5 pt-1 text-body font-semibold text-premium"
+                  className="mx-auto mt-2 flex w-fit items-center gap-2 rounded-full bg-gold py-1 pl-1 pr-3 font-heading font-bold text-gold-foreground"
                 >
-                  <Coins className="size-4" aria-hidden /> +{coinsEarned} coins
+                  <ListeeCoin size={26} shine />
+                  +{formatRupees(coinsToRupees(coinsEarned, coinValue))} added to your wallet
                 </motion.p>
               )}
             </div>
@@ -79,5 +86,6 @@ export function RewardModal({ reward, coinsEarned = 0, onClose }: RewardModalPro
         )}
       </DialogContent>
     </Dialog>
+    </>
   )
 }

@@ -85,6 +85,9 @@ export function LoginPage() {
       >
         <Logo size={64} />
         <h1 className="text-title font-bold text-foreground">Welcome to Listee</h1>
+        {config?.theme?.tagline && (
+          <p className="font-heading text-body-lg font-semibold text-primary">{config.theme.tagline}</p>
+        )}
         <p className="max-w-xs text-body text-text-secondary">
           Scan, spin and win rewards at local businesses near you.
         </p>

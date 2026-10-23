@@ -6,7 +6,9 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   History,
+  Gift,
 } from 'lucide-react'
+import { RewardCardsSection } from '@/features/rewards/ScratchCards'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Spinner } from '@/components/feedback/Spinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
@@ -31,8 +33,11 @@ export function WalletPage() {
 
       {coins && <CoinsHero summary={coins} />}
 
-      <Tabs defaultValue="rewards">
+      <Tabs defaultValue="cards">
         <TabsList className="w-full">
+          <TabsTrigger value="cards" className="flex-1 gap-1.5">
+            <Gift className="size-4" aria-hidden /> Scratch cards
+          </TabsTrigger>
           <TabsTrigger value="rewards" className="flex-1 gap-1.5">
             <Ticket className="size-4" aria-hidden /> Rewards
           </TabsTrigger>
@@ -40,6 +45,10 @@ export function WalletPage() {
             <Coins className="size-4" aria-hidden /> Coin activity
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="cards">
+          <RewardCardsSection />
+        </TabsContent>
 
         <TabsContent value="rewards" className="space-y-4">
           {summary && (

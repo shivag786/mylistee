@@ -27,6 +27,7 @@ export function OwnerLoginPage() {
         className="flex flex-col items-center gap-3 text-center"
       >
         <Logo size={56} />
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Listee for Business</span>
         <h1 className="text-title font-bold text-foreground">Sign in</h1>
         <p className="max-w-xs text-body text-text-secondary">
           For business owners and platform admins.

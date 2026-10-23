@@ -36,6 +36,7 @@ export interface BrandExtras {
 export type ThemeMode = 'light' | 'dark' | 'system'
 export type ThemeRadius = 'sharp' | 'rounded' | 'pill'
 export type ThemeTextSize = 'small' | 'normal' | 'large'
+export type OfferStyle = 'ticket' | 'pill'
 
 export interface BrandTheme {
   colors: BrandColors
@@ -51,21 +52,27 @@ export interface BrandTheme {
   menuCardColors: boolean
   /** App icon: drawn from the theme or uploaded; version busts caches. */
   icon: { mode: 'auto' | 'upload'; version: string | null }
+  /** Shop owners' panel colour (sidebar + top bar); null = same light look as the app. */
+  business: string | null
+  /** Offer chips as a notched coupon ticket or a plain pill. */
+  offerStyle: OfferStyle
+  /** One line that says what Listee is (login, home). */
+  tagline: string
 }
 
 /** Mirrors the stock palette in tokens.css (and SettingService defaults). */
 export const DEFAULT_THEME: BrandTheme = {
   colors: {
-    primary: '#e23744',
-    secondary: '#2d3436',
-    accent: '#fbbf24',
-    success: '#22c55e',
-    info: '#3b82f6',
+    primary: '#1f3a8a',
+    secondary: '#14213d',
+    accent: '#a3e635',
+    success: '#15803d',
+    info: '#1f3a8a',
     warning: '#f59e0b',
-    danger: '#ef4444',
-    background: '#f8f9fa',
+    danger: '#dc2626',
+    background: '#f4f6fa',
     surface: '#ffffff',
-    text: '#212121',
+    text: '#14213d',
   },
   extras: { header: null, nav: null, navActive: null, gradientFrom: null, gradientTo: null, star: null, offer: null },
   mode: 'light',
@@ -76,6 +83,9 @@ export const DEFAULT_THEME: BrandTheme = {
   headingFont: 'Metropolis',
   menuCardColors: true,
   icon: { mode: 'auto', version: null },
+  business: null,
+  offerStyle: 'pill',
+  tagline: '',
 }
 
 /** Component radii per corner style (px). 'rounded' is tokens.css as shipped. */
@@ -107,15 +117,81 @@ export const THEME_FONTS = [
   'Baloo 2',
 ] as const
 
-/** Ready-made palettes for one-tap picks in the admin. */
-export const THEME_PRESETS: { name: string; colors: Partial<BrandColors> }[] = [
-  { name: 'Listee red', colors: { primary: '#e23744', secondary: '#2d3436', accent: '#fbbf24' } },
+/** A one-tap look: colours plus, for full brand looks, fonts, shape and panel. */
+export interface ThemePreset {
+  name: string
+  /** One line on how it feels, shown in the admin. */
+  note?: string
+  colors: Partial<BrandColors>
+  extras?: Partial<BrandExtras>
+  font?: string
+  headingFont?: string
+  radius?: ThemeRadius
+  business?: string | null
+  offerStyle?: OfferStyle
+}
+
+/** Clear every optional colour so a preset is not mixed with the last theme's. */
+const FOLLOW: BrandExtras = { header: null, nav: null, navActive: null, gradientFrom: null, gradientTo: null, star: null, offer: null }
+
+/**
+ * Listee's own look. Not a food-delivery red or orange: indigo for actions,
+ * midnight for depth, lime only for rewards. Also what Reset goes back to.
+ */
+export const LISTEE_BRAND: ThemePreset = {
+  name: 'Midnight & Lime',
+  note: 'Listee brand — bold and modern',
+  colors: { ...DEFAULT_THEME.colors },
+  extras: FOLLOW,
+  font: 'Rubik',
+  headingFont: 'Montserrat',
+  radius: 'rounded',
+  business: '#14213d',
+  offerStyle: 'ticket',
+}
+
+/** Ready-made looks for one-tap picks in the admin. The first is the brand. */
+export const THEME_PRESETS: ThemePreset[] = [
+  LISTEE_BRAND,
+  {
+    name: 'Teal & Marigold',
+    note: 'Calm and local',
+    colors: { primary: '#0f766e', secondary: '#10283a', accent: '#f2a93b', background: '#f6f4ef', text: '#1b2430' },
+    extras: { ...FOLLOW, offer: '#b45309', star: '#f2a93b' },
+    font: 'DM Sans',
+    headingFont: 'Outfit',
+    radius: 'rounded',
+    business: '#10283a',
+    offerStyle: 'ticket',
+  },
+  {
+    name: 'Emerald & Saffron',
+    note: 'Warm, desi bazaar',
+    colors: { primary: '#0b6e4f', secondary: '#2a2118', accent: '#e8890c', background: '#fbf7f0', text: '#2a2118' },
+    extras: { ...FOLLOW, offer: '#c2410c', star: '#e8890c' },
+    font: 'Mukta',
+    headingFont: 'Baloo 2',
+    radius: 'rounded',
+    business: '#2a2118',
+    offerStyle: 'ticket',
+  },
   { name: 'Ocean blue', colors: { primary: '#2563eb', secondary: '#1e293b', accent: '#f59e0b' } },
-  { name: 'Fresh green', colors: { primary: '#16a34a', secondary: '#1f2937', accent: '#facc15' } },
   { name: 'Royal purple', colors: { primary: '#7c3aed', secondary: '#1e1b4b', accent: '#f472b6' } },
-  { name: 'Sunset orange', colors: { primary: '#ea580c', secondary: '#292524', accent: '#fde047' } },
-  { name: 'Teal', colors: { primary: '#0d9488', secondary: '#134e4a', accent: '#fbbf24' } },
 ]
+
+/** A theme with a preset laid over it (colour-only presets keep fonts and shape). */
+export function applyPreset(theme: BrandTheme, preset: ThemePreset): BrandTheme {
+  return {
+    ...theme,
+    colors: { ...theme.colors, ...preset.colors },
+    extras: preset.extras ? { ...FOLLOW, ...preset.extras } : theme.extras,
+    font: preset.font ?? theme.font,
+    headingFont: preset.headingFont ?? theme.headingFont,
+    radius: preset.radius ?? theme.radius,
+    business: preset.business !== undefined ? preset.business : theme.business,
+    offerStyle: preset.offerStyle ?? theme.offerStyle,
+  }
+}
 
 /** The one stock font that ships with the app (self-hosted, works offline). */
 const BUNDLED_FONT = 'Metropolis'
@@ -186,9 +262,12 @@ export function themeCss(theme: BrandTheme): string {
   }
   if (c.secondary !== d.secondary) root.push(...colorVars('secondary', c.secondary))
   if (c.accent !== d.accent) {
+    // The accent is a fill (gold); its darkened shade is the readable reward ink.
     root.push(
-      ...colorVars('gold', c.accent, { '--wallet-to': c.accent }),
-      ...colorVars('premium', c.accent),
+      ...colorVars('gold', c.accent, { '--gold-foreground': readableOn(c.accent) === '#ffffff' ? '#ffffff' : '#14213d' }),
+      `--premium: ${mix(c.accent, 52, 'black')};`,
+      `--premium-soft: ${mix(c.accent, 16, 'var(--surface)')};`,
+      `--premium-foreground: ${mix(c.accent, 42, 'black')};`,
     )
   }
   for (const key of ['success', 'info', 'warning', 'danger'] as const) {
@@ -220,6 +299,11 @@ export function themeCss(theme: BrandTheme): string {
       `--offer-soft: ${mix(x.offer, 13, 'var(--surface)')};`,
       `--offer-foreground: ${readableOn(x.offer)};`,
     )
+  }
+
+  // Owners' panel: a dark bar with light text (see OwnerLayout).
+  if (theme.business) {
+    root.push(`--business-bg: ${theme.business};`, `--business-fg: ${readableOn(theme.business)};`)
   }
 
   const radii = RADII[theme.radius]
@@ -274,6 +358,8 @@ export function applyTheme(theme: BrandTheme): void {
     existingLink?.remove()
   }
 
+  // Offer chips: notched coupon ticket or plain pill (styles in index.css).
+  document.documentElement.classList.toggle('offer-ticket', theme.offerStyle === 'ticket')
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.colors.primary)
   applyIcons(theme)
   publishIcon(theme.icon)
@@ -327,6 +413,9 @@ export function resolveTheme(input: Partial<BrandTheme> | null | undefined): Bra
     headingFont: input?.headingFont ?? DEFAULT_THEME.headingFont,
     menuCardColors: input?.menuCardColors ?? DEFAULT_THEME.menuCardColors,
     icon: { ...DEFAULT_THEME.icon, ...(input?.icon ?? {}) },
+    business: input?.business !== undefined ? input.business : DEFAULT_THEME.business,
+    offerStyle: input?.offerStyle ?? DEFAULT_THEME.offerStyle,
+    tagline: input?.tagline ?? DEFAULT_THEME.tagline,
   }
 }
 

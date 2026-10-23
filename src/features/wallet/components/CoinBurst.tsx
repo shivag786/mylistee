@@ -1,10 +1,6 @@
-import { Component, lazy, Suspense, useEffect, type ReactNode } from 'react'
+import { useEffect } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import coinAnimation from '../lottie/coin.json'
-
-// Lazy so the ~250KB lottie player only loads when a burst actually renders,
-// never in the main bundle.
-const Lottie = lazy(() => import('lottie-react'))
+import { ListeeCoin } from './ListeeCoin'
 
 interface CoinBurstProps {
   /** When true, the burst plays. */
@@ -15,90 +11,82 @@ interface CoinBurstProps {
   onDone?: () => void
 }
 
-const PARTICLES = 10
+const COINS = 10
+const SPARKS = 8
 
 /**
- * Guards the (decorative) Lottie so a failure — a malformed animation, a
- * lottie-web runtime throw, or a lazy-chunk load error — can never crash the
- * spin reward popup. Falls back to a static coin.
- */
-class LottieBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
-  state = { failed: false }
-
-  static getDerivedStateFromError() {
-    return { failed: true }
-  }
-
-  render() {
-    return this.state.failed ? this.props.fallback : this.props.children
-  }
-}
-
-/**
- * Celebratory coin burst — a Lottie coin pop surrounded by Framer-Motion coins
- * radiating outward. Purely decorative (aria-hidden) and reduced-motion aware:
- * when motion is reduced (or the Lottie fails) it shows a single static coin.
+ * The "money just landed" moment: the Listee Coin pops in, a ring shock-wave
+ * goes out, small coins fly off and sparks twinkle. Decorative (aria-hidden);
+ * with reduced motion it is just the coin.
  */
 export function CoinBurst({ show, size = 120, onDone }: CoinBurstProps) {
   const reduce = useReducedMotion()
 
   useEffect(() => {
     if (!show || !onDone) return
-    const t = setTimeout(onDone, reduce ? 400 : 1200)
+    const t = setTimeout(onDone, reduce ? 400 : 1300)
     return () => clearTimeout(t)
   }, [show, onDone, reduce])
 
   if (!show) return null
 
-  // Animated gold-coin fallback (also used for reduced motion / if the Lottie
-  // can't play) — a scale-pop so the celebration always looks intentional.
-  const staticCoin = (
-    <motion.div
-      initial={reduce ? false : { scale: 0, rotate: -25 }}
-      animate={{ scale: 1, rotate: 0 }}
-      transition={{ type: 'spring', stiffness: 240, damping: 12 }}
-      className="grid size-full place-items-center rounded-full border-4 border-premium-foreground/30 bg-gradient-to-br from-premium to-primary shadow-lg"
-    >
-      <span className="text-2xl font-black text-white/90">₹</span>
-    </motion.div>
-  )
-
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute inset-0 z-10 grid place-items-center overflow-visible"
-    >
-      {!reduce &&
-        Array.from({ length: PARTICLES }).map((_, i) => {
-          const angle = (i / PARTICLES) * Math.PI * 2
-          const distance = 70 + (i % 3) * 22
-          return (
-            <motion.span
-              key={i}
-              className="absolute block size-3 rounded-full bg-premium shadow-[0_0_8px_rgba(251,191,36,0.7)]"
-              initial={{ x: 0, y: 0, opacity: 0, scale: 0.4 }}
-              animate={{
-                x: Math.cos(angle) * distance,
-                y: Math.sin(angle) * distance,
-                opacity: [0, 1, 0],
-                scale: [0.4, 1, 0.6],
-              }}
-              transition={{ duration: 0.9, ease: 'easeOut', delay: 0.05 + (i % 4) * 0.04 }}
-            />
-          )
-        })}
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-10 grid place-items-center overflow-visible">
+      {!reduce && (
+        <>
+          {/* shock-wave ring */}
+          <motion.span
+            className="absolute rounded-full border-4 border-gold"
+            style={{ width: size, height: size }}
+            initial={{ scale: 0.6, opacity: 0.9 }}
+            animate={{ scale: 2.1, opacity: 0 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+          />
+          {/* flying mini coins */}
+          {Array.from({ length: COINS }).map((_, i) => {
+            const angle = (i / COINS) * Math.PI * 2 + 0.3
+            const distance = size * 0.62 + (i % 3) * 18
+            return (
+              <motion.span
+                key={`c${i}`}
+                className="absolute"
+                initial={{ x: 0, y: 0, opacity: 0, scale: 0.3, rotate: 0 }}
+                animate={{
+                  x: Math.cos(angle) * distance,
+                  y: Math.sin(angle) * distance,
+                  opacity: [0, 1, 1, 0],
+                  scale: [0.3, 1, 0.9, 0.6],
+                  rotate: (i % 2 ? 1 : -1) * 220,
+                }}
+                transition={{ duration: 1, ease: 'easeOut', delay: 0.08 + (i % 4) * 0.04 }}
+              >
+                <ListeeCoin size={14 + (i % 3) * 4} />
+              </motion.span>
+            )
+          })}
+          {/* sparks */}
+          {Array.from({ length: SPARKS }).map((_, i) => {
+            const angle = (i / SPARKS) * Math.PI * 2
+            return (
+              <motion.span
+                key={`s${i}`}
+                className="absolute block size-1.5 rounded-full bg-gold shadow-[0_0_10px_3px_rgba(163,230,53,0.7)]"
+                initial={{ x: 0, y: 0, opacity: 0 }}
+                animate={{ x: Math.cos(angle) * size * 0.9, y: Math.sin(angle) * size * 0.9, opacity: [0, 1, 0] }}
+                transition={{ duration: 0.7, ease: 'easeOut', delay: 0.15 }}
+              />
+            )
+          })}
+        </>
+      )}
 
-      <div style={{ width: size, height: size }}>
-        {reduce ? (
-          staticCoin
-        ) : (
-          <LottieBoundary fallback={staticCoin}>
-            <Suspense fallback={<div className="size-full rounded-full bg-premium/70" />}>
-              <Lottie animationData={coinAnimation} loop={false} autoplay />
-            </Suspense>
-          </LottieBoundary>
-        )}
-      </div>
+      <motion.div
+        initial={reduce ? false : { scale: 0, rotate: -30 }}
+        animate={{ scale: [0, 1.15, 1], rotate: 0 }}
+        transition={{ duration: 0.55, ease: 'easeOut' }}
+      >
+        <ListeeCoin size={size * 0.62} shine />
+      </motion.div>
     </div>
   )
 }

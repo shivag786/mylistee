@@ -67,9 +67,10 @@ export function onForegroundMessage(
   void getMessagingInstance().then((messaging) => {
     if (!messaging) return
     unsub = onMessage(messaging, (payload) => {
+      // Pushes are data-only (title/body in data); older ones used notification.
       handler({
-        title: payload.notification?.title,
-        body: payload.notification?.body,
+        title: payload.notification?.title ?? payload.data?.title,
+        body: payload.notification?.body ?? payload.data?.body,
       })
     })
   })

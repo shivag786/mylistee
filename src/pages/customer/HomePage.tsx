@@ -7,7 +7,6 @@ import {
   MapPin,
   RefreshCw,
   Tag,
-  Coins,
   PartyPopper,
   Layers,
   Zap,
@@ -37,7 +36,6 @@ import { useAppConfig } from '@/features/system/hooks/useAppConfig'
 import { useAppConfig as useBrandConfig } from '@/hooks/useAppConfig'
 import { useAppLocation } from '@/features/location/useAppLocation'
 import { PermissionsPrompt } from '@/features/permissions/PermissionsPrompt'
-import { useCoinSummary } from '@/features/wallet/hooks/useCoins'
 import { CoinsProgressCard } from '@/features/wallet/components/CoinsProgressCard'
 import { Card } from '@/components/ui/card'
 import { HorizontalScroller } from '@/components/navigation/HorizontalScroller'
@@ -78,7 +76,6 @@ function timeContext() {
 
 export function HomePage() {
   const { user, isAuthenticated } = useAuth()
-  const coins = useCoinSummary(isAuthenticated)
   const appConfig = useAppConfig()
   // The typed public config that carries the home layout (same /config endpoint).
   const brandConfig = useBrandConfig()
@@ -101,7 +98,6 @@ export function HomePage() {
   // "Open now" chip: narrows the nearby grid to shops open at this moment.
   const [openOnly, setOpenOnly] = useState(false)
   const shops = openOnly ? (nearby.data ?? []).filter((b) => b.isOpen) : nearby.data
-  const coinValue = brandConfig.data?.coins?.value ?? 1
 
   function toggleOpenOnly() {
     const next = !openOnly
@@ -133,17 +129,7 @@ export function HomePage() {
           </h1>
         </div>
 
-        {isAuthenticated && coins.data && (
-          <Link
-            to={ROUTES.wallet}
-            aria-label={`${coins.data.total} coins — open wallet`}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-caption font-semibold backdrop-blur transition-colors hover:bg-white/30"
-          >
-            <Coins className="size-4" aria-hidden />
-            {coins.data.total}
-            {coins.data.total > 0 && <span className="font-normal opacity-80">· ₹{coins.data.total * coinValue}</span>}
-          </Link>
-        )}
+        {/* The wallet amount lives in the top bar (CoinsPill); showing it twice is noise. */}
       </div>
       <p className="mt-1 text-body opacity-90">{line}</p>
     </>

@@ -179,7 +179,7 @@ export function ComboCard({ combo, subtitle, control, onOpen, tint, className }:
                 )}
                 {combo.coinsEarned ? (
                   <span className="inline-flex items-center gap-0.5 text-premium-foreground">
-                    <Coins className="size-3 text-gold" aria-hidden /> +{combo.coinsEarned} coins
+                    <Coins className="size-3 text-premium" aria-hidden /> +{combo.coinsEarned} coins
                   </span>
                 ) : null}
               </div>

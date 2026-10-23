@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Award, BadgePercent, Gift, Info, Plus, Receipt, RotateCcw, Ticket, Trash2 } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { Award, BadgePercent, Gift, Info, Plus, Receipt, Repeat, RotateCcw, Ticket, Trash2, Users } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,11 +18,12 @@ import {
 import { Spinner } from '@/components/feedback/Spinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { useOwnerRewards, useRewardActions } from '@/features/rewards/useRewards'
+import { useOwnerRewards, useRepeatCustomers, useRewardActions } from '@/features/rewards/useRewards'
 import { ordinal, ruleLabel } from '@/features/rewards/format'
 import type {
   CouponFormValues,
   DiscountType,
+  LoyaltyRule,
   OwnerCoupon,
   OwnerRewards,
   RewardRuleBase,
@@ -84,30 +86,40 @@ function RewardsEditor({ data }: { data: OwnerRewards }) {
   const { saveRules } = useRewardActions()
   const [bill, setBill] = useState(() => draftFrom(data.billDiscount, { minBill: '499', value: '50' }))
   const [comeback, setComeback] = useState(() => draftFrom(data.comeback, { type: 'percent', value: '10' }))
-  const [loyalty, setLoyalty] = useState(() => draftFrom(data.loyalty, { value: '100' }))
+  const [loyalty, setLoyalty] = useState(() => loyaltyDraftFrom(data.loyalty))
 
   useEffect(() => {
     setBill(draftFrom(data.billDiscount, { minBill: '499', value: '50' }))
     setComeback(draftFrom(data.comeback, { type: 'percent', value: '10' }))
-    setLoyalty(draftFrom(data.loyalty, { value: '100' }))
+    setLoyalty(loyaltyDraftFrom(data.loyalty))
   }, [data.billDiscount, data.comeback, data.loyalty])
 
-  const base = (d: RuleDraft) => ({
+  const base = (d: Pick<RuleDraft, 'type' | 'value' | 'maxOff'>) => ({
     type: d.type,
     value: Number(d.value) || 0,
     max_off: d.type === 'percent' ? num(d.maxOff) : null,
   })
 
   function save() {
-    for (const [name, d] of [['Bill discount', bill], ['Come-back offer', comeback], ['Loyalty reward', loyalty]] as const) {
+    for (const [name, d] of [['Bill discount', bill], ['Come-back offer', comeback]] as const) {
       if (d.on && !(Number(d.value) > 0)) return toast.error(`${name}: enter the discount amount.`)
       if (d.on && d.type === 'percent' && Number(d.value) > 90) return toast.error(`${name}: keep it at 90% or less.`)
     }
+    const loyaltyProblem = loyalty.on ? checkSteps(loyalty.steps) : null
+    if (loyaltyProblem) return toast.error(`Loyalty steps: ${loyaltyProblem}`)
+
     saveRules.mutate(
       {
         billDiscount: bill.on ? { ...base(bill), min_bill: Number(bill.minBill) || 0 } : null,
         comeback: comeback.on ? { ...base(comeback), min_bill: num(comeback.minBill), days: Number(comeback.days) || 15 } : null,
-        loyalty: loyalty.on ? { ...base(loyalty), every: Math.max(2, Number(loyalty.every) || 5) } : null,
+        loyalty: loyalty.on
+          ? {
+              repeat: loyalty.repeat,
+              steps: loyalty.steps
+                .map((s) => ({ at: Number(s.at), ...base(s) }))
+                .sort((a, b) => a.at - b.at),
+            }
+          : null,
       },
       {
         onSuccess: () => toast.success('Rewards saved — customers see them now'),
@@ -118,7 +130,11 @@ function RewardsEditor({ data }: { data: OwnerRewards }) {
 
   const preview = [
     bill.on && Number(bill.value) > 0 && `${ruleLabel(base(bill))} on bills above ₹${Number(bill.minBill) || 0}`,
-    loyalty.on && Number(loyalty.value) > 0 && `Every ${ordinal(Number(loyalty.every) || 5)} order: ${ruleLabel(base(loyalty))}`,
+    ...(loyalty.on
+      ? sortedSteps(loyalty.steps)
+          .filter((s) => Number(s.at) > 0 && Number(s.value) > 0)
+          .map((s) => `${ordinal(Number(s.at))} order: ${ruleLabel(base(s))}`)
+      : []),
     comeback.on && Number(comeback.value) > 0 && `${ruleLabel(base(comeback))} on the next visit`,
   ].filter(Boolean) as string[]
 
@@ -185,34 +201,9 @@ function RewardsEditor({ data }: { data: OwnerRewards }) {
         </div>
       </RuleCard>
 
-      <RuleCard
-        icon={<Award className="size-5" />}
-        title="Loyalty reward"
-        hint="Every Nth paid order unlocks a reward. Customers see their progress as stamps."
-        draft={loyalty}
-        onChange={setLoyalty}
-      >
-        <div className="space-y-1.5">
-          <Label>Reward on every</Label>
-          <div className="flex flex-wrap gap-2">
-            {['3', '5', '7', '10'].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setLoyalty({ ...loyalty, every: n })}
-                aria-pressed={loyalty.every === n}
-                className={cn(
-                  'rounded-full border px-4 py-1.5 text-caption font-semibold',
-                  loyalty.every === n ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-surface',
-                )}
-              >
-                {ordinal(Number(n))} order
-              </button>
-            ))}
-          </div>
-          <Stamps every={Number(loyalty.every) || 5} />
-        </div>
-      </RuleCard>
+      <LoyaltyStepsCard draft={loyalty} onChange={setLoyalty} />
+
+      <RepeatCustomersCard />
 
       <CouponsCard coupons={data.coupons} />
 
@@ -333,22 +324,367 @@ function MoneyField({ label, value, onChange }: { label: string; value: string; 
   )
 }
 
-/** The loyalty card as customers see it: N stamps, the last one is the gift. */
-function Stamps({ every }: { every: number }) {
+/* ------------------------------------------------------- loyalty steps -- */
+
+/** Mirrors RewardService::MAX_STEPS / MAX_STEP_AT on the server. */
+const MAX_STEPS = 10
+const MAX_STEP_AT = 100
+
+interface StepDraft {
+  /** Stable key for animations while the order number is being edited. */
+  key: string
+  at: string
+  type: DiscountType
+  value: string
+  maxOff: string
+}
+
+interface LoyaltyDraft {
+  on: boolean
+  repeat: boolean
+  steps: StepDraft[]
+}
+
+let stepSeq = 0
+const stepKey = () => `step-${++stepSeq}`
+
+function loyaltyDraftFrom(rule: LoyaltyRule | null): LoyaltyDraft {
+  if (!rule || rule.steps.length === 0) {
+    // A sensible card to start from: something small on the 3rd, more on the 5th.
+    return {
+      on: false,
+      repeat: true,
+      steps: [
+        { key: stepKey(), at: '3', type: 'flat', value: '20', maxOff: '' },
+        { key: stepKey(), at: '5', type: 'flat', value: '50', maxOff: '' },
+      ],
+    }
+  }
+  return {
+    on: true,
+    repeat: rule.repeat,
+    steps: rule.steps.map((s) => ({
+      key: stepKey(),
+      at: String(s.at),
+      type: s.type,
+      value: String(s.value),
+      maxOff: s.max_off != null ? String(s.max_off) : '',
+    })),
+  }
+}
+
+function sortedSteps(steps: StepDraft[]): StepDraft[] {
+  return [...steps].sort((a, b) => (Number(a.at) || 999) - (Number(b.at) || 999))
+}
+
+/** What is wrong with the steps, in words — or null when they can be saved. */
+function checkSteps(steps: StepDraft[]): string | null {
+  if (steps.length === 0) return 'add at least one step, or switch loyalty off.'
+  const seen = new Set<number>()
+  for (const s of steps) {
+    const at = Number(s.at)
+    if (!Number.isInteger(at) || at < 1 || at > MAX_STEP_AT) return `order numbers go from 1 to ${MAX_STEP_AT}.`
+    if (seen.has(at)) return `there are two rewards on the ${ordinal(at)} order.`
+    seen.add(at)
+    if (!(Number(s.value) > 0)) return `enter the reward for the ${ordinal(at)} order.`
+    if (s.type === 'percent' && Number(s.value) > 90) return `keep the ${ordinal(at)} order at 90% or less.`
+  }
+  return null
+}
+
+/**
+ * The loyalty card, built step by step: a reward on the 3rd order, a bigger
+ * one on the 5th, another on the 6th… Set up once, edited any time. Each
+ * reward reaches the customer as a scratch card.
+ */
+function LoyaltyStepsCard({ draft, onChange }: { draft: LoyaltyDraft; onChange: (d: LoyaltyDraft) => void }) {
+  const reduce = useReducedMotion()
+  const steps = draft.steps
+  const valid = sortedSteps(steps).filter((s) => Number(s.at) > 0 && Number(s.value) > 0)
+  const cycle = valid.length ? Number(valid[valid.length - 1].at) : 0
+  const atCounts = steps.reduce<Record<string, number>>((m, s) => ({ ...m, [s.at]: (m[s.at] ?? 0) + 1 }), {})
+
+  function update(key: string, patch: Partial<StepDraft>) {
+    onChange({ ...draft, steps: steps.map((s) => (s.key === key ? { ...s, ...patch } : s)) })
+  }
+
+  function addStep() {
+    const last = Math.max(0, ...steps.map((s) => Number(s.at) || 0))
+    onChange({
+      ...draft,
+      steps: [...steps, { key: stepKey(), at: String(Math.min(MAX_STEP_AT, last + 2)), type: 'flat', value: '', maxOff: '' }],
+    })
+  }
+
   return (
-    <div className="mt-2 flex flex-wrap gap-1.5" aria-hidden>
-      {Array.from({ length: Math.min(every, 12) }).map((_, i) => (
+    <Card padding="md" className={cn('space-y-4 transition-colors', draft.on && 'border-primary/40')}>
+      <label className="flex items-start gap-3">
         <span
-          key={i}
           className={cn(
-            'grid size-8 place-items-center rounded-full border-2 border-dashed text-[10px] font-bold',
-            i === every - 1 ? 'border-premium bg-gold-soft text-premium-foreground' : 'border-border text-text-muted',
+            'grid size-10 shrink-0 place-items-center rounded-xl',
+            draft.on ? 'bg-gradient-to-br from-[#4f46e5] to-[#9333ea] text-white' : 'bg-surface-muted text-text-muted',
           )}
         >
-          {i === every - 1 ? <Gift className="size-4" /> : i + 1}
+          <Award className="size-5" />
         </span>
-      ))}
+        <span className="min-w-0 flex-1">
+          <span className="block text-body font-bold text-foreground">Loyalty steps</span>
+          <span className="block text-small text-text-secondary">
+            Reward regulars on their 3rd, 5th, 6th… order. Each reward arrives as a scratch card.
+          </span>
+        </span>
+        <Switch checked={draft.on} onCheckedChange={(on) => onChange({ ...draft, on })} aria-label="Loyalty steps" />
+      </label>
+
+      <AnimatePresence initial={false}>
+        {draft.on && (
+          <motion.div
+            initial={reduce ? false : { height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-3 border-t border-border pt-4">
+              {/* Live preview of the card customers will see */}
+              {valid.length > 0 && <StepsPreview steps={valid} cycle={cycle} />}
+
+              <ul className="space-y-2">
+                <AnimatePresence initial={false}>
+                  {steps.map((s) => {
+                    const at = Number(s.at)
+                    const clash = s.at !== '' && (atCounts[s.at] ?? 0) > 1
+                    return (
+                      <motion.li
+                        key={s.key}
+                        layout={!reduce}
+                        initial={reduce ? false : { opacity: 0, y: -8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -24, transition: { duration: 0.18 } }}
+                        className={cn('rounded-2xl border bg-surface p-3', clash ? 'border-danger' : 'border-border')}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-300 to-yellow-400 text-amber-900">
+                            <Gift className="size-4" aria-hidden />
+                          </span>
+                          <div className="flex items-center gap-1.5 text-caption font-semibold text-foreground">
+                            On order
+                            <Input
+                              inputMode="numeric"
+                              value={s.at}
+                              onChange={(e) => update(s.key, { at: e.target.value.replace(/\D/g, '').slice(0, 3) })}
+                              className="h-9 w-14 px-2 text-center font-bold"
+                              aria-label="Order number"
+                            />
+                            <span className="text-text-muted">{at > 0 ? ordinal(at).replace(String(at), '') : ''}</span>
+                          </div>
+                          <button
+                            type="button"
+                            aria-label={`Remove the ${at > 0 ? ordinal(at) : ''} order step`}
+                            onClick={() => onChange({ ...draft, steps: steps.filter((x) => x.key !== s.key) })}
+                            className="ml-auto grid size-9 place-items-center rounded-full text-text-muted hover:bg-danger-soft hover:text-danger"
+                          >
+                            <Trash2 className="size-4" aria-hidden />
+                          </button>
+                        </div>
+                        <div className="mt-2.5">
+                          <DiscountFields
+                            draft={{ ...s, on: true, minBill: '', days: '', every: '' }}
+                            onChange={(d) => update(s.key, { type: d.type, value: d.value, maxOff: d.maxOff })}
+                          />
+                        </div>
+                        {clash && <p className="mt-1.5 text-small text-danger">Another step is on this order too.</p>}
+                      </motion.li>
+                    )
+                  })}
+                </AnimatePresence>
+              </ul>
+
+              {steps.length < MAX_STEPS && (
+                <Button variant="outline" fullWidth leftIcon={<Plus className="size-4" />} onClick={addStep}>
+                  Add a step
+                </Button>
+              )}
+
+              <label className="flex items-start justify-between gap-4 rounded-xl bg-surface-muted p-3">
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5 text-caption font-semibold text-foreground">
+                    <Repeat className="size-4 text-primary" aria-hidden /> Start over after the last step
+                  </span>
+                  <span className="block text-small text-text-secondary">
+                    {cycle > 0
+                      ? draft.repeat
+                        ? `After the ${ordinal(cycle)} order the card restarts — order ${cycle + Number(valid[0].at)} earns the first reward again.`
+                        : `Each reward is earned once. After the ${ordinal(cycle)} order, the card is complete.`
+                      : 'Add a step to see how it works.'}
+                  </span>
+                </span>
+                <Switch
+                  checked={draft.repeat}
+                  onCheckedChange={(repeat) => onChange({ ...draft, repeat })}
+                  aria-label="Start over after the last step"
+                />
+              </label>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Card>
+  )
+}
+
+/** The steps along a track, as the customer's card will show them. */
+function StepsPreview({ steps, cycle }: { steps: StepDraft[]; cycle: number }) {
+  const reduce = useReducedMotion()
+  return (
+    <div className="rounded-2xl bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#6d28d9] px-4 pb-4 pt-3 text-white">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-white/70">Customers see</p>
+      <div className="relative mb-1 mt-6">
+        <div className="mx-3 h-1.5 rounded-full bg-white/20" />
+        {steps.map((s, i) => (
+          <motion.div
+            key={s.key}
+            layout={!reduce}
+            className="absolute top-[3px] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+            style={{ left: `calc(12px + (100% - 24px) * ${Number(s.at) / cycle})` }}
+            initial={reduce ? false : { scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: i * 0.05, type: 'spring', stiffness: 400, damping: 20 }}
+          >
+            <span className="grid size-7 place-items-center rounded-full border-2 border-yellow-200 bg-gradient-to-br from-amber-300 to-yellow-400 text-amber-900">
+              <Gift className="size-3.5" aria-hidden />
+            </span>
+          </motion.div>
+        ))}
+      </div>
+      <div className="mt-5 flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
+        {steps.map((s) => (
+          <span key={s.key} className="shrink-0 rounded-xl bg-white/10 px-2.5 py-1.5">
+            <span className="block text-[10px] font-bold uppercase text-white/70">{ordinal(Number(s.at))}</span>
+            <span className="block text-small font-extrabold">
+              {ruleLabel({ type: s.type, value: Number(s.value), max_off: s.type === 'percent' ? num(s.maxOff) : null })}
+            </span>
+          </span>
+        ))}
+      </div>
     </div>
+  )
+}
+
+/* ---------------------------------------------------- repeat customers -- */
+
+function relativeDay(iso: string | null): string {
+  if (!iso) return '—'
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
+  if (days <= 0) return 'today'
+  if (days === 1) return 'yesterday'
+  if (days < 30) return `${days} days ago`
+  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+}
+
+/** Who keeps coming back, how often, and how close each is to their next reward. */
+function RepeatCustomersCard() {
+  const reduce = useReducedMotion()
+  const { data, isLoading, isError, refetch } = useRepeatCustomers()
+  const [showAll, setShowAll] = useState(false)
+
+  const customers = data?.customers ?? []
+  const shown = showAll ? customers : customers.slice(0, 6)
+  const maxOrders = Math.max(1, ...customers.map((c) => c.orders))
+
+  return (
+    <Card padding="md" className="space-y-4">
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-success text-white">
+          <Users className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-body font-bold text-foreground">Repeat customers</p>
+          <p className="text-small text-text-secondary">Who keeps ordering, and how close they are to their next reward.</p>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center py-6">
+          <Spinner size={24} label="Loading customers" />
+        </div>
+      ) : isError ? (
+        <ErrorState onRetry={() => void refetch()} />
+      ) : customers.length === 0 ? (
+        <p className="rounded-xl bg-surface-muted px-3 py-4 text-center text-caption text-text-secondary">
+          No paid orders yet. Customers show up here after their first paid order.
+        </p>
+      ) : (
+        <>
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { label: 'Customers', value: data!.summary.customers },
+              { label: 'Came back', value: data!.summary.repeat },
+              { label: 'Rewards won', value: data!.summary.rewardsEarned },
+              { label: 'Used', value: data!.summary.rewardsUsed },
+            ].map((s) => (
+              <div key={s.label} className="rounded-xl bg-surface-muted px-1 py-2 text-center">
+                <p className="text-subtitle font-extrabold tabular-nums text-foreground">{s.value}</p>
+                <p className="text-[10px] font-semibold uppercase leading-tight text-text-muted">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <ul className="divide-y divide-border">
+            {shown.map((c, i) => (
+              <motion.li
+                key={`${c.name}-${i}`}
+                initial={reduce ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i, 10) * 0.03 }}
+                className="flex items-center gap-3 py-2.5"
+              >
+                <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-caption font-bold text-primary">
+                  {c.avatar ? <img src={c.avatar} alt="" className="size-full object-cover" /> : c.name.slice(0, 1).toUpperCase()}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-2">
+                    <span className="truncate text-caption font-semibold text-foreground">{c.name}</span>
+                    {c.orders > 1 && (
+                      <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-success-soft px-1.5 py-0.5 text-[10px] font-bold text-success">
+                        <Repeat className="size-2.5" aria-hidden /> {c.orders}×
+                      </span>
+                    )}
+                  </p>
+                  <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-muted">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-premium"
+                      initial={reduce ? false : { width: 0 }}
+                      animate={{ width: `${(c.orders / maxOrders) * 100}%` }}
+                      transition={{ type: 'spring', stiffness: 90, damping: 20 }}
+                    />
+                  </div>
+                  <p className="mt-1 truncate text-small text-text-muted">
+                    Last order {relativeDay(c.lastOrderAt)} · ₹{Math.round(c.spent).toLocaleString('en-IN')}
+                    {c.rewardsEarned > 0 && ` · ${c.rewardsEarned} reward${c.rewardsEarned > 1 ? 's' : ''} won`}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  {c.next ? (
+                    <>
+                      <p className="text-caption font-bold text-foreground">{c.next.ordersLeft} to go</p>
+                      <p className="text-[10px] text-text-muted">for {ordinal(c.next.at)} order</p>
+                    </>
+                  ) : c.finished ? (
+                    <p className="text-[11px] font-semibold text-success">All rewards won</p>
+                  ) : null}
+                </div>
+              </motion.li>
+            ))}
+          </ul>
+
+          {customers.length > 6 && (
+            <Button variant="ghost" fullWidth onClick={() => setShowAll((v) => !v)}>
+              {showAll ? 'Show fewer' : `Show all ${customers.length}`}
+            </Button>
+          )}
+        </>
+      )}
+    </Card>
   )
 }
 

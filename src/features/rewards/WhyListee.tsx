@@ -40,7 +40,7 @@ export function WhyListee() {
             transition={{ delay: i * 0.07 }}
             className="rounded-2xl bg-white/10 p-3 backdrop-blur"
           >
-            <b.icon className="size-5 text-gold" aria-hidden />
+            <b.icon className="size-5 text-premium" aria-hidden />
             <p className="mt-1.5 text-caption font-bold">{b.title}</p>
             <p className="text-small opacity-80">{b.text}</p>
           </motion.div>

@@ -6,7 +6,7 @@ import {
 /**
  * PWA icon/splash generation from the brand mark (document/phase/11 §App Icons,
  * §Splash Screen). Run with `npm run generate-pwa-assets`. The maskable variant
- * is padded onto the brand red so the icon fills the safe zone on Android.
+ * is padded onto the brand indigo so the icon fills the safe zone on Android.
  */
 export default defineConfig({
   headLinkOptions: { preset: '2023' },
@@ -15,12 +15,12 @@ export default defineConfig({
     maskable: {
       sizes: [512],
       padding: 0.3,
-      resizeOptions: { background: '#E23744' },
+      resizeOptions: { background: '#1F3A8A' },
     },
     apple: {
       sizes: [180],
       padding: 0.3,
-      resizeOptions: { background: '#E23744' },
+      resizeOptions: { background: '#1F3A8A' },
     },
   },
   images: ['public/logo.svg'],

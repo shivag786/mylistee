@@ -21,6 +21,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useDashboard } from '@/features/owner/hooks/useOwner'
 import { OnboardingChecklist } from '@/features/owner/components/OnboardingChecklist'
 import { PersonalLinkCard } from '@/features/owner/components/PersonalLinkCard'
+import { OrderAlertsBanner } from '@/features/owner/components/OrderAlertsBanner'
 import type { DashboardMetrics } from '@/features/owner/types'
 
 interface MetricDef {
@@ -54,7 +55,9 @@ export function OwnerDashboardPage() {
     return <ErrorState onRetry={() => void refetch()} />
   }
 
-  const firstName = user?.name?.split(' ')[0] ?? 'there'
+  // First real name word — skip titles/articles ("The Anika Bakery" → "Anika").
+  const SKIP = new Set(['the', 'mr', 'mr.', 'mrs', 'mrs.', 'ms', 'dr', 'dr.', 'shri', 'sri', 'smt'])
+  const firstName = user?.name?.split(/\s+/).find((w) => w && !SKIP.has(w.toLowerCase())) ?? 'there'
 
   return (
     <div className="space-y-5">
@@ -62,6 +65,8 @@ export function OwnerDashboardPage() {
         <p className="text-caption text-text-secondary">Welcome back,</p>
         <h1 className="text-title font-bold text-foreground">{firstName} 👋</h1>
       </div>
+
+      <OrderAlertsBanner />
 
       <OnboardingChecklist items={data.onboarding} />
 

@@ -110,3 +110,24 @@
     }
   }
 }
+
+/* Offer chips as a coupon ticket (admin Theme → Offer badges). The notches are
+   cut with a mask, so the chip keeps its own colours in light and dark. */
+html.offer-ticket .offer-tag {
+  border-radius: 4px;
+  padding-inline: 0.6rem;
+  -webkit-mask:
+    radial-gradient(circle 4px at 0 50%, transparent 96%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 4px at 100% 50%, transparent 96%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle 4px at 0 50%, transparent 96%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 4px at 100% 50%, transparent 96%, #000) right / 51% 100% no-repeat;
+}
+
+/* Offer chips are a reward, so they wear the reward colour: a filled lime chip
+   with midnight text (10:1), never pale lime text on white. */
+.offer-tag {
+  background-color: var(--gold) !important;
+  color: var(--gold-foreground) !important;
+  font-weight: 700;
+}

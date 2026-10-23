@@ -1,15 +1,36 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { rewardService } from './rewardService'
-import type { CouponFormValues, OwnerRewards } from './types'
+import type { CouponFormValues, OwnerRewards, ScratchCard } from './types'
 import type { PlaceOrderPayload } from '@/features/orders/customerOrderService'
 
 export const rewardKeys = {
   owner: ['owner', 'rewards'] as const,
+  repeatCustomers: ['owner', 'rewards', 'customers'] as const,
+  cards: ['customer', 'reward-cards'] as const,
   quote: (payload: unknown) => ['cart', 'quote', payload] as const,
 }
 
 export function useOwnerRewards() {
   return useQuery({ queryKey: rewardKeys.owner, queryFn: rewardService.get })
+}
+
+export function useRepeatCustomers(enabled = true) {
+  return useQuery({ queryKey: rewardKeys.repeatCustomers, queryFn: rewardService.repeatCustomers, enabled })
+}
+
+/** The signed-in customer's scratch cards. */
+export function useScratchCards(enabled = true) {
+  return useQuery({ queryKey: rewardKeys.cards, queryFn: rewardService.cards, enabled })
+}
+
+/** Scratch one open; the list updates in place so the card stays where it is. */
+export function useRevealCard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => rewardService.reveal(id),
+    onSuccess: (card) =>
+      qc.setQueryData<ScratchCard[]>(rewardKeys.cards, (list) => list?.map((c) => (c.id === card.id ? card : c))),
+  })
 }
 
 export function useRewardActions() {

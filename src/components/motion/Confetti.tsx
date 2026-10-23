@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 
-const COLORS = ['bg-primary', 'bg-gold', 'bg-success', 'bg-info', 'bg-premium', 'bg-secondary']
+// Brand confetti: lime leads, with indigo, midnight, white and a little amber.
+const COLORS = ['bg-gold', 'bg-primary', 'bg-gold', 'bg-secondary', 'bg-white', 'bg-gold-hover', 'bg-star']
 
 interface Piece {
   id: number

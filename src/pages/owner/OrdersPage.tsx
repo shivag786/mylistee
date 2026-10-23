@@ -16,6 +16,7 @@ import { MESSAGES } from '@/constants/messages'
 import { armBeep, beep } from '@/utils/beep'
 import { cn } from '@/utils/cn'
 import type { Order, OrderStatusKey, PaymentMethodKey } from '@/features/owner/orderTypes'
+import { OrderAlertsBanner } from '@/features/owner/components/OrderAlertsBanner'
 
 const TABS = [
   { value: 'active', label: 'Active' },
@@ -85,6 +86,8 @@ export function OrdersPage() {
           Sound {soundOn ? 'on' : 'off'}
         </Button>
       </header>
+
+      <OrderAlertsBanner />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs value={tab} onValueChange={setTab}>

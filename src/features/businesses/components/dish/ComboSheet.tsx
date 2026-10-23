@@ -104,7 +104,7 @@ export function ComboSheet({ combo, onOpenChange, subtitle, action }: ComboSheet
                   )}
                   {combo.coinsEarned ? (
                     <div className="flex items-center gap-1 pt-1 font-medium text-premium-foreground">
-                      <Coins className="size-3.5 text-gold" aria-hidden /> Earn +{combo.coinsEarned} coins with this combo
+                      <Coins className="size-3.5 text-premium" aria-hidden /> Earn +{combo.coinsEarned} coins with this combo
                     </div>
                   ) : null}
                 </div>

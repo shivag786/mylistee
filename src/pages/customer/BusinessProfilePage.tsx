@@ -182,7 +182,7 @@ export function BusinessProfilePage() {
               <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[sheen_3.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent motion-reduce:hidden" />
             </Badge>
           )}
-          {maxOff > 0 && <Badge tone="primary">Up to {maxOff}% off</Badge>}
+          {maxOff > 0 && <Badge className="offer-tag bg-offer-soft text-offer">Up to {maxOff}% off</Badge>}
           {activeCombos.length > 0 && (
             <Badge tone="success">
               {activeCombos.length} {activeCombos.length === 1 ? 'combo' : 'combos'}

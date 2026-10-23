@@ -33,6 +33,9 @@ export interface Order {
   paymentLabel: string | null
   tableLabel: string | null
   serviceAddress: string | null
+  /** Home delivery: the number to call, and the map pin when one was set. */
+  deliveryPhone?: string | null
+  deliveryLocation?: { lat: number; lng: number } | null
   subtotal: number
   coinsUsed: number
   coinDiscount: number
