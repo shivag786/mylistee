@@ -153,6 +153,8 @@ export interface ShopPerks {
 export interface CartQuote {
   subtotal: number
   billDiscount: number
+  /** The bill discount this cart gets without a coupon — a coupon replaces it (one offer per order). */
+  billDiscountAvailable?: number
   billNudge: { needed: number; minBill: number; label: string } | null
   coupon: PublicCoupon | null
   couponDiscount: number
@@ -160,6 +162,8 @@ export interface CartQuote {
   savings: number
   deliveryFee: number
   comboCoinCap: number
+  /** False while the shop is closed or has paused orders (absent on older servers). */
+  acceptingOrders?: boolean
   total: number
   coupons: (PublicCoupon & { minBillMet: boolean; saves: number })[]
   /** What this order earns for next time. */

@@ -142,6 +142,12 @@ export const cart = {
     commit({ ...current, items: current.items.filter((i) => lineKey(i) !== key) })
   },
 
+  /** Take an item out entirely — every size / add-on pick of it. */
+  removeItem(type: CartItem['type'], id: string) {
+    if (!current) return
+    commit({ ...current, items: current.items.filter((i) => !(i.type === type && i.id === id)) })
+  },
+
   /** "−" on a menu item with several picks in the cart: take one off the newest. */
   decrementLatest(type: CartItem['type'], id: string) {
     const line = current?.items.filter((i) => i.type === type && i.id === id).at(-1)

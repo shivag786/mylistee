@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { BellRing, ChevronRight, Clock, Link2, PauseCircle, Store, Volume2 } from 'lucide-react'
+import { BellRing, Bike, ChevronRight, Clock, Link2, PauseCircle, Store, Volume2 } from 'lucide-react'
 import { apiClient } from '@/services/apiClient'
 import { ApiError } from '@/types/api'
 import { Card } from '@/components/ui/card'
@@ -18,6 +18,8 @@ import { PushToggle } from '@/features/notifications/components/PushToggle'
 import { setOrderSound, useOrderSound } from '@/features/owner/orderSound'
 import { beep } from '@/utils/beep'
 import { formatClosedUntil, useCloseShop, usePauseOrders, useReopenShop } from '@/features/owner/availability'
+import { useServiceSettings, useUpdateServiceSettings } from '@/features/owner/hooks/useServiceSettings'
+import { SERVICE_TYPES } from '@/features/orders/serviceTypes'
 
 /** Owner settings — switches an owner reaches for day to day. */
 export function OwnerSettingsPage() {
@@ -91,12 +93,12 @@ export function OwnerSettingsPage() {
         </Row>
         <Row
           icon={<PauseCircle className="size-5" />}
-          title="Pause new orders"
+          title="Show menu only (pause orders)"
           tone={business.ordersPaused ? 'warning' : undefined}
           hint={
             business.ordersPaused
-              ? 'Customers can see your shop but cannot order. Switch off when you are ready.'
-              : 'Too busy right now? Stay open but stop new orders for a while.'
+              ? 'Customers see your menu as a catalogue and “We are not taking orders right now”. Switch off when you are ready.'
+              : 'Too busy right now? Keep showing your menu but stop new orders for a while.'
           }
         >
           <Switch
@@ -108,9 +110,10 @@ export function OwnerSettingsPage() {
               })
             }
             disabled={pause.isPending}
-            aria-label="Pause new orders"
+            aria-label="Show menu only (pause orders)"
           />
         </Row>
+        <DeliveryRow />
       </Section>
 
       <Section title="More">
@@ -237,6 +240,44 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
         {children}
       </Card>
     </section>
+  )
+}
+
+/** Home delivery on/off in one tap (the charge and other modes live in Tables & service). */
+function DeliveryRow() {
+  const { data } = useServiceSettings()
+  const update = useUpdateServiceSettings()
+  if (!data) return null
+
+  const on = data.modes.includes('delivery')
+
+  function toggle(next: boolean) {
+    if (!data) return
+    // Pickup is the always-on floor (as in Tables & service), so turning delivery
+    // off never leaves the shop with no way to order.
+    const modes = SERVICE_TYPES.filter((m) => m === 'pickup' || (m === 'delivery' ? next : data.modes.includes(m)))
+    const defaultMode = modes.includes(data.defaultMode) ? data.defaultMode : 'pickup'
+    update.mutate(
+      { modes, defaultMode, deliveryFee: data.deliveryFee },
+      {
+        onSuccess: () => toast.success(next ? 'Home delivery is on' : 'Home delivery is off'),
+        onError: (e) => toast.error(e instanceof Error ? e.message : 'Could not update delivery.'),
+      },
+    )
+  }
+
+  return (
+    <Row
+      icon={<Bike className="size-5" />}
+      title="Delivery available"
+      hint={
+        on
+          ? `Customers can order home delivery${data.deliveryFee ? ` (₹${data.deliveryFee} charge)` : ' (free)'}.`
+          : 'Off — customers order at the shop only. Set the delivery charge in Tables & service.'
+      }
+    >
+      <Switch checked={on} onCheckedChange={toggle} disabled={update.isPending} aria-label="Delivery available" />
+    </Row>
   )
 }
 

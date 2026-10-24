@@ -138,6 +138,9 @@ export function BusinessProfilePage() {
     }
   }
 
+  // Closed or orders paused: the menu is a catalogue only, with no add buttons.
+  const takingOrders = !business.closedUntil && !business.ordersPaused
+
   function handleAdd(item: Omit<CartItem, 'quantity'>, opts?: { quiet?: boolean; quantity?: number }) {
     const res = cart.add({ slug, name: business!.name }, item, opts?.quantity ?? 1, serviceContext())
     if (res === 'conflict') setConflictItem(item)
@@ -204,7 +207,7 @@ export function BusinessProfilePage() {
         <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning-soft px-3 py-2.5 text-caption text-foreground">
           <Clock className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
           <span>
-            <b>Not taking orders right now.</b> The shop is busy — please check back in a little while.
+            <b>We are not taking orders right now.</b> Have a look at the menu — please check back in a little while.
           </span>
         </div>
       ) : null}
@@ -259,7 +262,7 @@ export function BusinessProfilePage() {
             menu={business.menu}
             combos={business.combos}
             businessSlug={slug}
-            onAdd={handleAdd}
+            onAdd={takingOrders ? handleAdd : undefined}
             focusProductId={focusItem}
           />
           {/* No Offers tab to hold it, so loyalty rewards (if any) sit here. */}

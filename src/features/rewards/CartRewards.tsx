@@ -13,6 +13,8 @@ import { ordinal } from './format'
  */
 export function BillDiscountProgress({ quote }: { quote: CartQuote }) {
   const reduce = useReducedMotion()
+  // A coupon is on instead (one offer per order) — the coupon row says so.
+  if (quote.coupon && !quote.couponError) return null
   if (quote.billDiscount > 0) {
     return (
       <motion.div
@@ -74,6 +76,9 @@ export function CouponPicker({
             ‘{quote.coupon.code}’ applied
           </p>
           <p className="text-small font-semibold text-success">You save ₹{quote.couponDiscount}</p>
+          {(quote.billDiscountAvailable ?? 0) > 0 && (
+            <p className="text-small text-text-muted">Used instead of the ₹{quote.billDiscountAvailable} bill discount</p>
+          )}
         </div>
         <button type="button" onClick={() => onApply(null)} className="text-small font-bold text-danger">
           Remove
@@ -83,6 +88,8 @@ export function CouponPicker({
   }
 
   const count = quote.coupons.length
+  // One offer per order: a coupon that saves less than the bill discount is no use.
+  const billOff = quote.billDiscountAvailable ?? quote.billDiscount
 
   return (
     <div className="rounded-xl border border-border bg-surface">
@@ -152,14 +159,19 @@ export function CouponPicker({
                       {c.label}
                       {c.minBill ? ` · above ₹${c.minBill}` : ''}
                     </p>
-                    {c.minBillMet && c.saves > 0 && <p className="text-small font-semibold text-success">Save ₹{c.saves}</p>}
+                    {c.minBillMet && c.saves > 0 && c.saves > billOff && (
+                      <p className="text-small font-semibold text-success">Save ₹{c.saves}</p>
+                    )}
+                    {c.minBillMet && billOff > 0 && c.saves <= billOff && (
+                      <p className="text-small text-text-muted">Your ₹{billOff} bill discount saves more</p>
+                    )}
                     {!c.minBillMet && c.minBill && (
                       <p className="text-small text-text-muted">Add ₹{Math.round((c.minBill - quote.subtotal) * 100) / 100} more</p>
                     )}
                   </div>
                   <Button
                     size="sm"
-                    disabled={!c.minBillMet}
+                    disabled={!c.minBillMet || (billOff > 0 && c.saves <= billOff)}
                     onClick={() => {
                       onApply(c.code)
                       setOpen(false)
@@ -169,6 +181,8 @@ export function CouponPicker({
                   </Button>
                 </div>
               ))}
+
+              <p className="text-small text-text-muted">One coupon or offer per order.</p>
 
               {!signedIn && (
                 <p className="text-small text-text-muted">Sign in to see the rewards you’ve earned here.</p>

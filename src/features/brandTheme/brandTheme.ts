@@ -150,9 +150,64 @@ export const LISTEE_BRAND: ThemePreset = {
   offerStyle: 'ticket',
 }
 
+/**
+ * The "Listee Business" splash art: cream paper, ink type, a marker-yellow
+ * highlight, teal corners and a coral awning. Teal carries actions (white text
+ * reads on it), yellow is the reward/star colour, coral marks offers. The owner
+ * panel stays white.
+ */
+export const LISTEE_SPLASH: ThemePreset = {
+  name: 'Listee Splash',
+  note: 'Cream, teal & sunny yellow — from the app splash',
+  colors: {
+    primary: '#198077',
+    secondary: '#16232a',
+    accent: '#fac83a',
+    success: '#15803d',
+    info: '#198077',
+    warning: '#d97706',
+    danger: '#e5484d',
+    background: '#fefbf3',
+    surface: '#ffffff',
+    text: '#16232a',
+  },
+  extras: { ...FOLLOW, offer: '#ef5b4c', star: '#fac83a', gradientFrom: '#198077', gradientTo: '#fac83a' },
+  font: 'Poppins',
+  headingFont: 'Poppins',
+  radius: 'rounded',
+  business: null,
+  offerStyle: 'ticket',
+}
+
+/** The look listee.org runs today (saved as a preset so it is one tap away after trying others). */
+export const LISTEE_CLASSIC: ThemePreset = {
+  name: 'Classic',
+  note: 'The current live look — red & gold',
+  colors: {
+    primary: '#e23744',
+    secondary: '#2d3436',
+    accent: '#fbbf24',
+    success: '#08a60e',
+    info: '#3b82f6',
+    warning: '#ca8207',
+    danger: '#ef4444',
+    background: '#f8f9fa',
+    surface: '#ffffff',
+    text: '#212121',
+  },
+  extras: FOLLOW,
+  font: 'Rubik',
+  headingFont: 'Nunito',
+  radius: 'rounded',
+  business: null,
+  offerStyle: 'pill',
+}
+
 /** Ready-made looks for one-tap picks in the admin. The first is the brand. */
 export const THEME_PRESETS: ThemePreset[] = [
+  LISTEE_SPLASH,
   LISTEE_BRAND,
+  LISTEE_CLASSIC,
   {
     name: 'Teal & Marigold',
     note: 'Calm and local',

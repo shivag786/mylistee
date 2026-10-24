@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ChevronRight, ShoppingBag, Trash2 } from 'lucide-react'
 import { toast } from '@/utils/toast'
 import { useCart, cart, cartCount, cartSubtotal, onOpenCartSheet } from './cartStore'
 import { CartSheet } from './CartSheet'
+
+/** The cart is an entry in the browser history, so Back closes it instead of leaving the page. */
+const CART_HASH = '#cart'
 
 /**
  * Persistent cart bar (Phase 7.5). Floats above the bottom tabs on every
@@ -13,13 +17,28 @@ import { CartSheet } from './CartSheet'
  */
 export function GlobalCartBar() {
   const current = useCart()
-  const [open, setOpen] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const open = location.hash === CART_HASH
   const reduce = useReducedMotion()
   const count = cartCount(current)
   const subtotal = cartSubtotal(current)
   const thumbs = (current?.items ?? []).filter((i) => i.imageUrl).slice(0, 3)
 
-  useEffect(() => onOpenCartSheet(() => setOpen(true)), [])
+  function setOpen(next: boolean) {
+    if (next === open) return
+    if (next) {
+      navigate({ pathname: location.pathname, search: location.search, hash: CART_HASH }, { state: { cartSheet: true } })
+    } else if ((location.state as { cartSheet?: boolean } | null)?.cartSheet) {
+      // Opened here: step back off the cart entry, like the Back button does.
+      navigate(-1)
+    } else {
+      // Landed on #cart directly (a reload or a shared link): just drop it.
+      navigate({ pathname: location.pathname, search: location.search }, { replace: true })
+    }
+  }
+
+  useEffect(() => onOpenCartSheet(() => setOpen(true)))
 
   function clearCart() {
     if (!current) return

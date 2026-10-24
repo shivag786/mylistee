@@ -77,7 +77,7 @@ export function OwnerLayout() {
       </aside>
 
       {/* Mobile top bar */}
-      <header className={cn('sticky top-0 z-30 border-b backdrop-blur lg:hidden', PANEL)}>
+      <header className={cn('sticky top-0 z-30 border-b shadow-soft lg:hidden', PANEL)}>
         <div className="app-container flex h-16 items-center justify-between">
           <div className="flex items-center gap-1">
             <IconButton aria-label="Open menu" className={PANEL_BUTTON} onClick={() => setMenuOpen(true)}>
@@ -104,7 +104,10 @@ export function OwnerLayout() {
           else (Tables & service, Redeem, Reviews, Analytics, Plan & billing, …)
           lives here rather than being unreachable on a phone. */}
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent side="left" className={cn('w-72 p-0 lg:hidden', PANEL)}>
+        <SheetContent
+          side="left"
+          className={cn('w-[82%] max-w-xs gap-0 overflow-hidden rounded-r-3xl p-0 shadow-2xl lg:hidden', PANEL)}
+        >
           <SheetTitle className="sr-only">Business menu</SheetTitle>
           <OwnerSidebar
             darkPanel={darkPanel}
@@ -136,11 +139,16 @@ export function OwnerLayout() {
   )
 }
 
-/** Panel surface: the admin's business colour with readable text (or the plain light look). */
-const PANEL = 'bg-[var(--business-bg)] text-[var(--business-fg)] border-[color-mix(in_srgb,var(--business-fg)_12%,transparent)]'
-const PANEL_MUTED = 'text-[color-mix(in_srgb,var(--business-fg)_62%,transparent)]'
-const PANEL_HOVER = 'hover:bg-[color-mix(in_srgb,var(--business-fg)_9%,transparent)]'
-const PANEL_BUTTON = cn('text-[var(--business-fg)]', PANEL_HOVER)
+/**
+ * Panel surface: the admin's business colour with readable text (or the plain
+ * light look). The fallbacks matter: without them a stylesheet that does not
+ * define --business-bg leaves the panel (and the mobile drawer) see-through.
+ */
+const PANEL =
+  'bg-[var(--business-bg,var(--surface))] text-[var(--business-fg,var(--foreground))] border-[color-mix(in_srgb,var(--business-fg,var(--foreground))_12%,transparent)]'
+const PANEL_MUTED = 'text-[color-mix(in_srgb,var(--business-fg,var(--foreground))_62%,transparent)]'
+const PANEL_HOVER = 'hover:bg-[color-mix(in_srgb,var(--business-fg,var(--foreground))_9%,transparent)]'
+const PANEL_BUTTON = cn('text-[var(--business-fg,var(--foreground))]', PANEL_HOVER)
 
 function OwnerSidebar({
   darkPanel,
@@ -188,7 +196,7 @@ function OwnerSidebar({
                   ? darkPanel
                     ? 'bg-gold font-semibold text-gold-foreground'
                     : 'bg-primary-soft text-primary'
-                  : cn(PANEL_MUTED, PANEL_HOVER, 'hover:text-[var(--business-fg)]'),
+                  : cn(PANEL_MUTED, PANEL_HOVER, 'hover:text-[var(--business-fg,var(--foreground))]'),
               )}
             >
               <Icon className="size-5 shrink-0" aria-hidden />

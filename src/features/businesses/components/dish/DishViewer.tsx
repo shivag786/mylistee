@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { Dialog as DialogPrimitive } from 'radix-ui'
 import {
   AnimatePresence,
@@ -7,7 +7,7 @@ import {
   useTransform,
   type PanInfo,
 } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Minus, Plus, X, Smartphone, ShoppingCart } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Minus, Plus, X, Smartphone, ShoppingCart, Trash2 } from 'lucide-react'
 import { cart, cartCount, cartSubtotal, openCartSheet, useCart } from '@/features/orders/cartStore'
 import { cn } from '@/utils/cn'
 import { useTilt } from '../../hooks/useTilt'
@@ -87,9 +87,18 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd, onStep }: Di
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, many, safeIndex])
 
+  // A swipe ends in a click on the same spot; it must not count as a tap on empty space.
+  const dragged = useRef(false)
+
   function onDragEnd(_: unknown, info: PanInfo) {
+    setTimeout(() => (dragged.current = false), 0)
     if (info.offset.x < -70 || info.velocity.x < -450) go(safeIndex + 1)
     else if (info.offset.x > 70 || info.velocity.x > 450) go(safeIndex - 1)
+  }
+
+  /** Tapping anywhere that is not the photo or a control closes the viewer. */
+  function closeOnEmpty(e: MouseEvent) {
+    if (e.target === e.currentTarget && !dragged.current) onClose()
   }
 
   // The shadow slides opposite the tilt and the sheen follows the light, which
@@ -124,6 +133,7 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd, onStep }: Di
             e.preventDefault()
             ;(e.currentTarget as HTMLElement).focus()
           }}
+          onClick={closeOnEmpty}
         >
           <DialogPrimitive.Title className="sr-only">{dish?.name ?? 'Dish'}</DialogPrimitive.Title>
 
@@ -146,7 +156,10 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd, onStep }: Di
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/85" />
 
           {/* Top bar */}
-          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-center gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))]">
+          <div
+            onClick={closeOnEmpty}
+            className="absolute inset-x-0 top-0 z-10 flex items-center justify-center gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))]"
+          >
             <span className="rounded-full bg-black/30 px-3 py-1 text-small font-medium backdrop-blur">
               {dish?.section}
               {many && <span className="text-white/60"> · {safeIndex + 1}/{dishes.length}</span>}
@@ -162,7 +175,9 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd, onStep }: Di
             drag={many ? 'x' : false}
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.6}
+            onDragStart={() => (dragged.current = true)}
             onDragEnd={onDragEnd}
+            onClick={closeOnEmpty}
             {...tilt.bind}
           >
             <AnimatePresence initial={false} custom={dir} mode="popLayout">
@@ -258,7 +273,7 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd, onStep }: Di
 
           {/* Details */}
           {dish && (
-            <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div onClick={closeOnEmpty} className="absolute inset-x-0 bottom-0 z-10 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={dish.key}
@@ -305,31 +320,42 @@ export function DishViewer({ dishes, openAt, onClose, qtyOf, onAdd, onStep }: Di
                       (!dish.inStock ? (
                         <span className="text-caption font-medium text-red-300">Out of stock</span>
                       ) : qty > 0 ? (
-                        <div className="flex items-center gap-3 rounded-full bg-white px-1.5 py-1 text-neutral-900">
-                          <button
+                        <div className="flex items-center gap-2">
+                          <motion.button
                             type="button"
-                            aria-label="Decrease"
-                            onClick={() => stepBy(dish, -1)}
-                            className="grid size-8 place-items-center rounded-full hover:bg-neutral-100"
+                            whileTap={{ scale: 0.92 }}
+                            onClick={() => cart.removeItem(dish.type, dish.id)}
+                            aria-label={`Remove ${dish.name} from cart`}
+                            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/15 px-3 text-small font-semibold text-white ring-1 ring-white/25 backdrop-blur hover:bg-red-500/80"
                           >
-                            <Minus className="size-4" aria-hidden />
-                          </button>
-                          <motion.span
-                            key={qty}
-                            initial={reduce ? false : { scale: 1.4 }}
-                            animate={{ scale: 1 }}
-                            className="w-5 text-center text-body font-bold"
-                          >
-                            {qty}
-                          </motion.span>
-                          <button
-                            type="button"
-                            aria-label="Increase"
-                            onClick={() => stepBy(dish, 1)}
-                            className="grid size-8 place-items-center rounded-full hover:bg-neutral-100"
-                          >
-                            <Plus className="size-4" aria-hidden />
-                          </button>
+                            <Trash2 className="size-4" aria-hidden /> Remove
+                          </motion.button>
+                          <div className="flex items-center gap-3 rounded-full bg-white px-1.5 py-1 text-neutral-900">
+                            <button
+                              type="button"
+                              aria-label="Decrease"
+                              onClick={() => stepBy(dish, -1)}
+                              className="grid size-8 place-items-center rounded-full hover:bg-neutral-100"
+                            >
+                              <Minus className="size-4" aria-hidden />
+                            </button>
+                            <motion.span
+                              key={qty}
+                              initial={reduce ? false : { scale: 1.4 }}
+                              animate={{ scale: 1 }}
+                              className="w-5 text-center text-body font-bold"
+                            >
+                              {qty}
+                            </motion.span>
+                            <button
+                              type="button"
+                              aria-label="Increase"
+                              onClick={() => stepBy(dish, 1)}
+                              className="grid size-8 place-items-center rounded-full hover:bg-neutral-100"
+                            >
+                              <Plus className="size-4" aria-hidden />
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <motion.button

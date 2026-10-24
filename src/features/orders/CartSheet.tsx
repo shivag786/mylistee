@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Minus, Plus, Trash2, Coins, Utensils, Smartphone, Banknote, CheckCircle2, Info, Store, Bike } from 'lucide-react'
+import { Minus, Plus, Trash2, Coins, Utensils, Smartphone, Banknote, CheckCircle2, Info, Store, Bike, Clock } from 'lucide-react'
 import { SERVICE_META, type ServiceType } from './serviceTypes'
 import { DeliveryDetails } from './delivery/DeliveryDetails'
 import {
@@ -190,6 +190,8 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   const payable = Math.round((Math.max(0, discounted - coinDiscount) + fee) * 100) / 100
   const totalSaved = Math.round((savings + coinDiscount) * 100) / 100
   const couponHolds = Boolean(couponCode && quote?.coupon && !quote.couponError)
+  // The shop paused orders (or closed) — the menu stays browsable, checkout does not.
+  const notTaking = quote?.acceptingOrders === false
   const split = splitPayment(payable, paymentChoice, payment)
   const showPaymentPicker = Boolean(payment?.onlineAvailable && payment?.codAvailable)
 
@@ -249,8 +251,8 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
       toast.success(
         order.paidOnline ? `Paid! Your token is ${order.token}.` : `Order placed! Your token is ${order.token}.`,
       )
-      onOpenChange(false)
-      navigate(ROUTES.orders)
+      // Replacing the cart's history entry closes the sheet; Back then returns to the shop.
+      navigate(ROUTES.orders, { replace: true })
     } catch (err) {
       // Closing the payment window is a decision, not an error: the order was
       // withdrawn and the cart is still here to try again.
@@ -281,8 +283,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
       // this shop afterwards. The cart is kept in storage meanwhile.
       if (!googleSignIn) {
         rememberPostLoginTarget(window.location.pathname + window.location.search)
-        onOpenChange(false)
-        navigate(ROUTES.login, { state: { from: { pathname: window.location.pathname } } })
+        navigate(ROUTES.login, { replace: true, state: { from: { pathname: window.location.pathname } } })
         return
       }
 
@@ -309,6 +310,15 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
             </SheetHeader>
 
             <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+              {notTaking && (
+                <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning-soft px-3 py-2.5 text-caption text-foreground">
+                  <Clock className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
+                  <span>
+                    <b>We are not taking orders right now.</b> You can still look through the menu — please check back
+                    in a little while.
+                  </span>
+                </div>
+              )}
               {!current || current.items.length === 0 ? (
                 <p className="py-8 text-center text-body text-text-muted">Your cart is empty.</p>
               ) : (
@@ -597,9 +607,9 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                 className="flex-1"
                 onClick={() => void handlePlace()}
                 isLoading={checkout.isPending || signingIn}
-                disabled={!current || current.items.length === 0 || !addressReady}
+                disabled={!current || current.items.length === 0 || !addressReady || notTaking}
               >
-                {placeLabel(isAuthenticated, split.chargedNow, checkout.stage, payable)}
+                {notTaking ? 'Not taking orders' : placeLabel(isAuthenticated, split.chargedNow, checkout.stage, payable)}
               </Button>
             </SheetFooter>
         </>
