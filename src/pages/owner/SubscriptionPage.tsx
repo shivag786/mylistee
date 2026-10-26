@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Check, Crown, Receipt, ShieldCheck, Sparkles } from 'lucide-react'
+import { Check, Clock, Crown, Lock, Receipt, ShieldCheck, Sparkles, Timer } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,9 +20,23 @@ import {
 import { usePlanCheckout, type CheckoutStage } from '@/features/owner/hooks/usePlanCheckout'
 import { useAppConfig } from '@/hooks/useAppConfig'
 import type { Invoice, Plan, PlanUsageItem, SubscriptionState } from '@/features/owner/types'
-import { featureLabel, formatPrice, intervalSuffix, formatLimit } from '@/features/owner/planDisplay'
+import {
+  PLAN_MODULES,
+  daysLabel,
+  featureLabel,
+  formatLimit,
+  formatPrice,
+  planPeriod,
+  timeLeft,
+} from '@/features/owner/planDisplay'
 import { ROUTES } from '@/constants/routes'
 import { cn } from '@/utils/cn'
+
+/** The first-time offer this shop can take on a plan, if any. */
+function introFor(plan: Plan | null | undefined, state: SubscriptionState | undefined) {
+  if (!plan?.intro?.active) return null
+  return state?.introEligible?.includes(plan.key) ? plan.intro : null
+}
 
 export function SubscriptionPage() {
   const { data: state, isLoading, isError, refetch } = useSubscription()
@@ -53,6 +67,7 @@ export function SubscriptionPage() {
 
   const current = state.plan
   const isDowngrade = pendingPlan?.isFree ?? false
+  const pendingIntro = introFor(pendingPlan, state)
 
   /**
    * Two different actions behind one dialog: dropping to Free is a plain plan
@@ -107,6 +122,8 @@ export function SubscriptionPage() {
             <PlanCard
               key={plan.key}
               plan={plan}
+              intro={introFor(plan, state)}
+              onFreeNow={Boolean(state.access?.onFreePlan)}
               currentKey={current?.key}
               busy={checkout.activePlanKey === plan.key ? checkout.stage : 'idle'}
               disabled={checkout.isPending}
@@ -133,8 +150,10 @@ export function SubscriptionPage() {
             <>
               You'll be charged{' '}
               <span className="font-semibold text-foreground">
-                {pendingPlan && formatPrice(pendingPlan.price, pendingPlan.currency)}
-                {pendingPlan && intervalSuffix(pendingPlan.interval)}
+                {pendingPlan &&
+                  (pendingIntro
+                    ? `${formatPrice(pendingIntro.price, pendingPlan.currency)} for ${daysLabel(pendingIntro.days)}`
+                    : `${formatPrice(pendingPlan.price, pendingPlan.currency)}${planPeriod(pendingPlan)}`)}
               </span>{' '}
               through Razorpay, and {pendingPlan?.name} features unlock as soon as the payment goes
               through. Renewal is not automatic — we'll remind you before the period ends. See our{' '}
@@ -184,7 +203,7 @@ function CurrentPlanCard({ state, onCancel }: { state: SubscriptionState; onCanc
               <p className="mt-0.5 text-body font-semibold text-foreground">
                 {formatPrice(plan.price, plan.currency)}
                 <span className="text-caption font-normal text-text-secondary">
-                  {plan.price > 0 ? intervalSuffix(plan.interval) : ''}
+                  {plan.price > 0 ? planPeriod(plan) : ''}
                 </span>
               </p>
             )}
@@ -194,6 +213,8 @@ function CurrentPlanCard({ state, onCancel }: { state: SubscriptionState; onCanc
           </span>
         </div>
 
+        <PlanTimeLine state={state} />
+
         {cancelPending && (
           <p className="rounded-md bg-warning-soft px-3 py-2 text-small text-warning-foreground">
             Cancels on {new Date(subscription!.endsAt!).toLocaleDateString()} — you'll move to Free
@@ -202,6 +223,7 @@ function CurrentPlanCard({ state, onCancel }: { state: SubscriptionState; onCanc
         )}
 
         <div className="space-y-3">
+          {usage.products && <UsageRow label="Products" item={usage.products} unit="products" />}
           <UsageRow label="Active offers" item={usage.activeOffers} unit="offers" />
           <UsageRow label="Active combos" item={usage.activeCombos} unit="combos" />
           <UsageRow label="Active promotions" item={usage.activePromotions} unit="promotions" />
@@ -216,6 +238,34 @@ function CurrentPlanCard({ state, onCancel }: { state: SubscriptionState; onCanc
         )}
       </Card>
     </Reveal>
+  )
+}
+
+/** "12 days left · till 8 Nov", "Ends today" or "Ended — choose a plan". */
+function PlanTimeLine({ state }: { state: SubscriptionState }) {
+  const access = state.access
+  if (!access) return null
+  if (access.expired) {
+    return (
+      <p className="flex items-start gap-2 rounded-md bg-danger-soft px-3 py-2 text-small text-foreground">
+        <Clock className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden />
+        <span>
+          <b>{access.onFreePlan ? 'Your free days are over.' : 'Your plan has ended.'}</b> Your shop, menu and QR stay
+          live. Choose a plan below to turn ordering and the other features back on.
+        </span>
+      </p>
+    )
+  }
+  if (access.daysLeft === null || !access.endsAt) return null
+  const date = new Date(access.endsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+  return (
+    <p className="flex items-center gap-2 text-caption text-text-secondary">
+      <Clock className="size-4 shrink-0 text-primary" aria-hidden />
+      <span>
+        <b className="text-foreground">{access.daysLeft === 0 ? 'Ends today' : `${daysLabel(access.daysLeft)} left`}</b> · till{' '}
+        {date}
+      </span>
+    </p>
   )
 }
 
@@ -250,12 +300,17 @@ const STAGE_LABELS: Record<Exclude<CheckoutStage, 'idle'>, string> = {
 
 function PlanCard({
   plan,
+  intro,
+  onFreeNow,
   currentKey,
   busy,
   disabled,
   onSelect,
 }: {
   plan: Plan
+  /** The first-time offer this shop can take on this plan. */
+  intro: Plan['intro']
+  onFreeNow: boolean
   currentKey?: string
   /** This card's stage in the checkout flow; 'idle' unless it is the one paying. */
   busy: CheckoutStage
@@ -265,6 +320,8 @@ function PlanCard({
 }) {
   const isCurrent = plan.key === currentKey
   const Icon = plan.isFree ? Sparkles : Crown
+  const included = PLAN_MODULES.filter((m) => plan.modules?.[m.id]?.on ?? true)
+  const left = PLAN_MODULES.filter((m) => plan.modules && !plan.modules[m.id]?.on)
 
   return (
     <Card
@@ -283,30 +340,49 @@ function PlanCard({
           </span>
           <span className="text-body-lg font-semibold text-foreground">{plan.name}</span>
         </div>
-        {plan.badge && <Badge tone="premium" size="sm">{plan.badge}</Badge>}
-      </div>
-
-      <div>
-        <span className="text-title font-bold text-foreground">
-          {formatPrice(plan.price, plan.currency)}
-        </span>
-        {plan.price > 0 && (
-          <span className="text-caption text-text-secondary">{intervalSuffix(plan.interval)}</span>
+        {intro ? (
+          <Badge tone="success" size="sm">{intro.label || 'First-time offer'}</Badge>
+        ) : (
+          plan.badge && <Badge tone="premium" size="sm">{plan.badge}</Badge>
         )}
       </div>
+
+      {intro ? (
+        <IntroPrice plan={plan} intro={intro} />
+      ) : (
+        <div>
+          <span className="text-title font-bold text-foreground">{formatPrice(plan.price, plan.currency)}</span>
+          {plan.price > 0 && <span className="text-caption text-text-secondary">{planPeriod(plan)}</span>}
+          {plan.isFree && plan.durationDays && (
+            <span className="text-caption text-text-secondary"> · {daysLabel(plan.durationDays)}</span>
+          )}
+        </div>
+      )}
 
       {plan.description && <p className="text-caption text-text-secondary">{plan.description}</p>}
 
       <ul className="space-y-1.5">
+        {plan.limits.maxProducts != null && <PlanLimit text={formatLimit(plan.limits.maxProducts, 'products')} />}
+        {included.map((m) => {
+          const days = plan.modules?.[m.id]?.days
+          return <PlanLimit key={m.id} text={days ? `${m.label} · ${daysLabel(days)}` : m.label} />
+        })}
         <PlanLimit text={formatLimit(plan.limits.maxActiveOffers, 'active offers')} />
-        <PlanLimit text={formatLimit(plan.limits.maxOfferDays, 'day validity')} />
-        {plan.features.map((f) => (
-          <PlanLimit key={f} text={featureLabel(f)} />
+        {plan.features
+          .filter((f) => !['store_mode', 'push_notifications', 'loyalty', 'analytics'].includes(f))
+          .map((f) => (
+            <PlanLimit key={f} text={featureLabel(f)} />
+          ))}
+        {left.map((m) => (
+          <li key={m.id} className="flex items-start gap-2 text-caption text-text-muted">
+            <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+            <span className="line-through decoration-text-disabled">{m.label}</span>
+          </li>
         ))}
       </ul>
 
       <div className="mt-auto pt-1">
-        {isCurrent ? (
+        {isCurrent || (plan.isFree && onFreeNow) ? (
           <Button variant="secondary" size="md" disabled className="w-full">
             Current plan
           </Button>
@@ -322,12 +398,54 @@ function PlanCard({
             {busy === 'idle'
               ? plan.isFree
                 ? 'Switch to Free'
-                : `Choose ${plan.name}`
+                : intro
+                  ? `Get it for ${formatPrice(intro.price, plan.currency)}`
+                  : `Choose ${plan.name}`
               : STAGE_LABELS[busy]}
           </Button>
         )}
       </div>
     </Card>
+  )
+}
+
+/**
+ * The first-time price: the normal price for the same days struck through, the
+ * offer price, what it becomes afterwards, and a live countdown to the offer's
+ * end date (a real date the admin set — it never resets).
+ */
+function IntroPrice({ plan, intro }: { plan: Plan; intro: NonNullable<Plan['intro']> }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (!intro.endsAt) return
+    const id = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(id)
+  }, [intro.endsAt])
+
+  // The normal price for as many days as the offer gives, when the plan is priced by days or months.
+  const perDay = plan.durationDays ? plan.price / plan.durationDays : plan.interval === 'month' ? plan.price / 30 : null
+  const normal = perDay ? Math.round(perDay * intro.days) : null
+  const left = timeLeft(intro.endsAt, now)
+
+  return (
+    <div className="space-y-1">
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        {normal !== null && normal > intro.price && (
+          <span className="text-body text-text-muted line-through">{formatPrice(normal, plan.currency)}</span>
+        )}
+        <span className="text-title font-bold text-foreground">{formatPrice(intro.price, plan.currency)}</span>
+        <span className="text-caption text-text-secondary">for {daysLabel(intro.days)}</span>
+      </div>
+      <p className="text-small text-text-secondary">
+        Then {formatPrice(plan.price, plan.currency)}
+        {planPeriod(plan)} · once per shop
+      </p>
+      {left && (
+        <p className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2 py-0.5 text-small font-semibold text-danger">
+          <Timer className="size-3.5" aria-hidden /> Offer ends in {left.replace(' left', '')}
+        </p>
+      )}
+    </div>
   )
 }
 

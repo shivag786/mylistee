@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
-import { LogOut, Menu, Store } from 'lucide-react'
+import { Clock, Lock, LogOut, Menu, Store } from 'lucide-react'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Logo } from '@/components/icons/Logo'
 import { Avatar } from '@/components/ui/avatar'
@@ -15,6 +15,7 @@ import { OwnerNav } from '@/features/owner/components/OwnerNav'
 import { FloatingOrderButton } from '@/features/owner/components/FloatingOrderButton'
 import { OWNER_NAV, visibleOwnerNav, type OwnerNavItem } from '@/features/owner/ownerNav'
 import { useAppConfig } from '@/hooks/useAppConfig'
+import { usePlanAccess } from '@/features/owner/hooks/usePlanAccess'
 import { SuspenseOutlet } from '@/app/PageLoader'
 import { LegalFooter } from '@/components/navigation/LegalFooter'
 import { cn } from '@/utils/cn'
@@ -120,6 +121,8 @@ export function OwnerLayout() {
         </SheetContent>
       </Sheet>
 
+      <PlanEndingBanner />
+
       <main id="main-content" className="app-container max-w-5xl flex-1 py-5 pb-24 lg:pb-8">
         <AnimatePresence mode="wait">
           <PageTransition key={location.pathname}>
@@ -166,6 +169,7 @@ function OwnerSidebar({
   onSignOut: () => void
 }) {
   const location = useLocation()
+  const { isLocked } = usePlanAccess()
 
   return (
     <div className="flex h-full flex-col">
@@ -184,7 +188,7 @@ function OwnerSidebar({
       </div>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3" aria-label="Business">
-        {nav.map(({ to, label, icon: Icon }) => {
+        {nav.map(({ to, label, icon: Icon, module }) => {
           const active = location.pathname === to || location.pathname.startsWith(`${to}/`)
           return (
             <NavLink
@@ -200,7 +204,8 @@ function OwnerSidebar({
               )}
             >
               <Icon className="size-5 shrink-0" aria-hidden />
-              {label}
+              <span className="flex-1">{label}</span>
+              {isLocked(module) && <Lock className="size-3.5 shrink-0 opacity-70" aria-label="Not in your plan" />}
             </NavLink>
           )
         })}
@@ -216,6 +221,55 @@ function OwnerSidebar({
           <LogOut className="size-5" aria-hidden />
           Sign out
         </button>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Plan time running out, or already over, said once across the top of every
+ * page: the shop stays live either way, but modules lock when it ends.
+ */
+function PlanEndingBanner() {
+  const { access } = usePlanAccess()
+  const location = useLocation()
+  if (!access || location.pathname === ROUTES.owner.subscription) return null
+
+  const soon = !access.expired && access.daysLeft !== null && access.daysLeft <= 3
+  if (!access.expired && !soon) return null
+
+  return (
+    <div
+      className={cn(
+        'border-b px-4 py-2.5 text-caption',
+        access.expired ? 'border-danger/30 bg-danger-soft' : 'border-warning/40 bg-warning-soft',
+      )}
+    >
+      <div className="app-container flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1.5 px-0">
+        <Clock className={cn('size-4 shrink-0', access.expired ? 'text-danger' : 'text-warning')} aria-hidden />
+        <span className="min-w-0 flex-1 text-foreground">
+          {access.expired ? (
+            <>
+              <b>{access.onFreePlan ? 'Your free days are over.' : 'Your plan has ended.'}</b> Your shop, menu and QR stay
+              live, but ordering and other features are paused.
+            </>
+          ) : (
+            <>
+              <b>
+                {access.daysLeft === 0
+                  ? 'Your plan ends today.'
+                  : `${access.daysLeft} ${access.daysLeft === 1 ? 'day' : 'days'} left on your ${access.onFreePlan ? 'free time' : 'plan'}.`}
+              </b>{' '}
+              Choose a plan to keep everything running.
+            </>
+          )}
+        </span>
+        <Link
+          to={ROUTES.owner.subscription}
+          className="rounded-full bg-primary px-3 py-1 text-small font-semibold text-primary-foreground"
+        >
+          See plans
+        </Link>
       </div>
     </div>
   )

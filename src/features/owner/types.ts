@@ -104,6 +104,14 @@ export interface Plan {
   price: number
   currency: string
   interval: string
+  /** Days one purchase lasts (null = by the interval); on the free plan, the free period. */
+  durationDays?: number | null
+  /** Every module with whether this plan includes it, and for how many days. */
+  modules?: Record<string, PlanModuleConfig>
+  /** False until the admin has saved this plan's modules (all on until then). */
+  modulesSet?: boolean
+  /** First-time offer: a lower price for a first period, open until a date. */
+  intro?: PlanIntro | null
   limits: {
     maxActiveOffers: number | null
     maxActiveCombos: number | null
@@ -114,12 +122,45 @@ export interface Plan {
     maxOfferDays: number | null
     maxQrCodes: number | null
     maxGalleryImages: number | null
+    maxProducts?: number | null
   }
   features: string[]
   badge: string | null
   isDefault: boolean
   isFree: boolean
   sortOrder: number
+}
+
+export interface PlanModuleConfig {
+  on: boolean
+  /** Days from the start of the period; null = the whole period. */
+  days: number | null
+}
+
+export interface PlanIntro {
+  price: number
+  days: number
+  endsAt: string | null
+  label: string | null
+  active: boolean
+}
+
+/** One module's state for this shop right now. */
+export interface ModuleAccess {
+  allowed: boolean
+  /** Why it is locked: not in the plan, its days ran out, the plan ended, or the admin turned it off. */
+  reason: 'plan' | 'days' | 'expired' | 'off' | null
+  /** When an allowed module stops (end of its days or of the plan). */
+  until: string | null
+}
+
+export interface PlanAccess {
+  /** Free days used up or a paid plan ended: menu only until a plan is bought. */
+  expired: boolean
+  endsAt: string | null
+  daysLeft: number | null
+  onFreePlan: boolean
+  modules: Record<string, ModuleAccess>
 }
 
 export interface Subscription {
@@ -149,7 +190,12 @@ export interface SubscriptionState {
     activePromotions: PlanUsageItem
     galleryImages: PlanUsageItem
     qrCodes: PlanUsageItem
+    products?: PlanUsageItem
   }
+  /** Absent on an older server (everything open). */
+  access?: PlanAccess
+  /** Plans whose first-time offer this shop can still take. */
+  introEligible?: string[]
 }
 
 export interface Invoice {

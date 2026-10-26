@@ -20,6 +20,7 @@ import { beep } from '@/utils/beep'
 import { formatClosedUntil, useCloseShop, usePauseOrders, useReopenShop } from '@/features/owner/availability'
 import { useServiceSettings, useUpdateServiceSettings } from '@/features/owner/hooks/useServiceSettings'
 import { SERVICE_TYPES } from '@/features/orders/serviceTypes'
+import { usePlanAccess } from '@/features/owner/hooks/usePlanAccess'
 
 /** Owner settings — switches an owner reaches for day to day. */
 export function OwnerSettingsPage() {
@@ -247,9 +248,12 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 function DeliveryRow() {
   const { data } = useServiceSettings()
   const update = useUpdateServiceSettings()
+  const { isLocked } = usePlanAccess()
   if (!data) return null
 
   const on = data.modes.includes('delivery')
+  // Not in the plan: customers do not see delivery whatever this says.
+  const locked = isLocked('delivery')
 
   function toggle(next: boolean) {
     if (!data) return
@@ -271,12 +275,14 @@ function DeliveryRow() {
       icon={<Bike className="size-5" />}
       title="Delivery available"
       hint={
-        on
-          ? `Customers can order home delivery${data.deliveryFee ? ` (₹${data.deliveryFee} charge)` : ' (free)'}.`
-          : 'Off — customers order at the shop only. Set the delivery charge in Tables & service.'
+        locked
+          ? 'Home delivery is not in your plan — upgrade in Plan & billing to offer it.'
+          : on
+            ? `Customers can order home delivery${data.deliveryFee ? ` (₹${data.deliveryFee} charge)` : ' (free)'}.`
+            : 'Off — customers order at the shop only. Set the delivery charge in Tables & service.'
       }
     >
-      <Switch checked={on} onCheckedChange={toggle} disabled={update.isPending} aria-label="Delivery available" />
+      <Switch checked={on && !locked} onCheckedChange={toggle} disabled={update.isPending || locked} aria-label="Delivery available" />
     </Row>
   )
 }

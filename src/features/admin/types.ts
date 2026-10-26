@@ -526,6 +526,8 @@ export interface AdminCategory {
   status: string
   showOnHomepage: boolean
   showInSearch: boolean
+  /** Which vendor-app tools shops in this category get. */
+  businessType: BusinessType
   businessCount: number
   createdAt: string | null
   updatedAt: string | null
@@ -540,8 +542,12 @@ export interface CategoryInput {
   status?: string
   showOnHomepage?: boolean
   showInSearch?: boolean
+  businessType?: BusinessType
   image?: File | null
 }
+
+/** Kind of shop: food & bakery get the kitchen screen in the vendor app. */
+export type BusinessType = 'food' | 'bakery' | 'retail' | 'service'
 
 export interface CategoryRequestItem {
   id: string

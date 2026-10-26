@@ -75,6 +75,7 @@ function categoryFormData(input: CategoryInput): FormData {
     form.append('show_on_homepage', input.showOnHomepage ? '1' : '0')
   if (input.showInSearch !== undefined)
     form.append('show_in_search', input.showInSearch ? '1' : '0')
+  if (input.businessType !== undefined) form.append('business_type', input.businessType)
   if (input.image) form.append('image', input.image)
   return form
 }

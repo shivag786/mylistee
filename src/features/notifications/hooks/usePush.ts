@@ -64,6 +64,8 @@ export function usePushRegistration({ registerEffects = true }: PushRegistration
       // A new-order alert while the shop has the app open: show it in the queue now,
       // not at the next poll.
       void qc.invalidateQueries({ queryKey: ['owner', 'orders'] })
+      // The shop accepted / finished the customer's order: update it now.
+      void qc.invalidateQueries({ queryKey: ['customer', 'orders'] })
     })
     return unsub
   }, [registerEffects, isAuthenticated, qc])

@@ -15,6 +15,7 @@ const NOUN: Record<Metric, string> = {
   activePromotions: 'promotions',
   qrCodes: 'QR codes',
   galleryImages: 'gallery images',
+  products: 'products',
 }
 
 /**
@@ -25,9 +26,10 @@ const NOUN: Record<Metric, string> = {
 export function PlanUsageBanner({ metric, className }: { metric: Metric; className?: string }) {
   const navigate = useNavigate()
   const { data } = useSubscription()
-  if (!data) return null
+  const item = data?.usage[metric]
+  if (!data || !item) return null
 
-  const { used, limit } = data.usage[metric]
+  const { used, limit } = item
   const planName = data.plan?.name ?? 'Free'
   const noun = NOUN[metric]
   const unlimited = limit === null

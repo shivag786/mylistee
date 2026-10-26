@@ -17,7 +17,14 @@ import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { MESSAGES } from '@/constants/messages'
 import { useCategoryActions } from '@/features/admin/hooks/useAdmin'
-import type { AdminCategory, CategoryInput } from '@/features/admin/types'
+import type { AdminCategory, BusinessType, CategoryInput } from '@/features/admin/types'
+
+const BUSINESS_TYPES: { value: BusinessType; label: string; hint: string }[] = [
+  { value: 'food', label: 'Food & drinks', hint: 'Kitchen screen, veg marks, tables' },
+  { value: 'bakery', label: 'Bakery & sweets', hint: 'Kitchen screen, eggless marks' },
+  { value: 'retail', label: 'Retail shop', hint: 'Ready stock, no kitchen' },
+  { value: 'service', label: 'Services', hint: 'Salon, gym, coaching — no kitchen' },
+]
 
 interface CategoryFormSheetProps {
   open: boolean
@@ -42,6 +49,7 @@ export function CategoryFormSheet({ open, onOpenChange, category }: CategoryForm
   const [showOnHomepage, setShowOnHomepage] = useState(true)
   const [showInSearch, setShowInSearch] = useState(true)
   const [active, setActive] = useState(true)
+  const [businessType, setBusinessType] = useState<BusinessType>('food')
   const [error, setError] = useState<string | null>(null)
 
   // Sync form state whenever the target category (or open) changes.
@@ -54,6 +62,7 @@ export function CategoryFormSheet({ open, onOpenChange, category }: CategoryForm
     setShowOnHomepage(category?.showOnHomepage ?? true)
     setShowInSearch(category?.showInSearch ?? true)
     setActive(category ? category.status === 'active' : true)
+    setBusinessType(category?.businessType ?? 'food')
     setError(null)
   }, [open, category])
 
@@ -71,6 +80,7 @@ export function CategoryFormSheet({ open, onOpenChange, category }: CategoryForm
       status: active ? 'active' : 'inactive',
       showOnHomepage,
       showInSearch,
+      businessType,
       image,
     }
 
@@ -139,6 +149,26 @@ export function CategoryFormSheet({ open, onOpenChange, category }: CategoryForm
               placeholder="Short description of this category"
               rows={3}
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="cat-type">Shop type</Label>
+            <select
+              id="cat-type"
+              value={businessType}
+              onChange={(e) => setBusinessType(e.target.value as BusinessType)}
+              className="h-[52px] w-full rounded-input border border-border bg-surface px-3 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            >
+              {BUSINESS_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-small text-text-muted">
+              {BUSINESS_TYPES.find((t) => t.value === businessType)?.hint}. Decides which tools shops get in the
+              Listee Business app.
+            </p>
           </div>
 
           <ToggleRow

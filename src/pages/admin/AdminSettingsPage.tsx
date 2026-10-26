@@ -19,6 +19,7 @@ import {
 import type { PlatformSettings } from '@/features/admin/types'
 import { AppIconCard, MenuCardColorsCard, ThemeCard } from '@/features/admin/components/AppearanceSettings'
 import { PersonalLinkPricingCard, PersonalLinkRemindersCard } from '@/features/admin/components/PersonalLinkSettings'
+import { VendorAppThemeCard } from '@/features/admin/components/VendorAppThemeCard'
 
 export function AdminSettingsPage() {
   const { data, isLoading, isError, refetch } = useAdminSettings()
@@ -121,6 +122,8 @@ export function AdminSettingsPage() {
       <AppIconCard settings={data ?? form} />
 
       <MenuCardColorsCard settings={data ?? form} />
+
+      <VendorAppThemeCard />
 
       <PaymentsCard settings={data ?? form} />
 
