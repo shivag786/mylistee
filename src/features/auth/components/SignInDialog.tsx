@@ -12,12 +12,12 @@
  * full-page redirect, which does leave the page. `returnTo` is remembered for
  * that case so they come back to where they were rather than the home screen.
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { GoogleIcon } from '@/components/icons/GoogleIcon'
 import { useAuth } from '../hooks/useAuth'
-import { REDIRECT_IN_PROGRESS } from '../services/firebaseAuth'
+import { REDIRECT_IN_PROGRESS, warmUpGoogleSignIn } from '../services/firebaseAuth'
 import { rememberPostLoginTarget } from '../postLoginTarget'
 import { firebaseErrorMessage, isCancelledSignIn } from '@/utils/firebaseErrors'
 import { MESSAGES } from '@/constants/messages'
@@ -50,6 +50,11 @@ export function SignInDialog({
   // An older API had no auth block and only ever offered Google.
   const showGoogle = config?.auth?.google ?? true
   const showMobile = config?.auth?.mobile ?? false
+
+  // Ready Google sign-in as the dialog opens, so the tap opens it at once.
+  useEffect(() => {
+    if (open && showGoogle) warmUpGoogleSignIn()
+  }, [open, showGoogle])
 
   async function handleMobileSignedIn() {
     onOpenChange(false)

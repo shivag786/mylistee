@@ -18,6 +18,10 @@ import { ApiError } from '@/types/api'
 import { cn } from '@/utils/cn'
 import type { AuthUser } from '../types'
 import { weakPinReason } from '../strongPin'
+import { storage } from '@/utils/storage'
+
+/** The number last used on this device, so it is never typed twice. */
+const LAST_MOBILE_KEY = 'listee.lastMobile'
 
 type Mode = 'signin' | 'signup'
 
@@ -28,7 +32,7 @@ export function CustomerMobileAuth({ onSignedIn }: { onSignedIn: (user: AuthUser
   const { pinLogin, registerCustomer } = useAuth()
   const [mode, setMode] = useState<Mode>('signin')
   const [name, setName] = useState('')
-  const [mobile, setMobile] = useState('')
+  const [mobile, setMobile] = useState(() => storage.get(LAST_MOBILE_KEY) ?? '')
   const [pin, setPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
   const [loading, setLoading] = useState(false)
@@ -62,6 +66,7 @@ export function CustomerMobileAuth({ onSignedIn }: { onSignedIn: (user: AuthUser
         mode === 'signin'
           ? await pinLogin(phone, pin)
           : await registerCustomer(name.trim(), phone, pin)
+      storage.set(LAST_MOBILE_KEY, phone)
       onSignedIn(user)
     } catch (err) {
       // Prefer the field message ("…already exists…") over the generic one.

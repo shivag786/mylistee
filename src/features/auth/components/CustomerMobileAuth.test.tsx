@@ -26,6 +26,8 @@ describe('CustomerMobileAuth', () => {
     pinLogin.mockReset().mockResolvedValue({ id: 1, role: 'customer' })
     registerCustomer.mockReset().mockResolvedValue({ id: 2, role: 'customer' })
     onSignedIn.mockReset()
+    // The last number used is remembered; each test starts on a new device.
+    localStorage.clear()
   })
 
   it('signs an existing customer in with mobile and PIN', async () => {
@@ -36,6 +38,18 @@ describe('CustomerMobileAuth', () => {
 
     await waitFor(() => expect(pinLogin).toHaveBeenCalledWith('9876543210', '4321'))
     expect(onSignedIn).toHaveBeenCalled()
+  })
+
+  it('fills in the number used last time on this device', async () => {
+    const first = renderForm()
+    await userEvent.type(screen.getByLabelText('Mobile number'), '9876543210')
+    await userEvent.type(screen.getByLabelText('PIN'), '4321')
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+    await waitFor(() => expect(onSignedIn).toHaveBeenCalled())
+    first.unmount()
+
+    renderForm()
+    expect((screen.getByLabelText('Mobile number') as HTMLInputElement).value).toBe('9876543210')
   })
 
   it('refuses a mobile number that is not ten digits', async () => {

@@ -60,6 +60,20 @@ const POPUP_FALLBACK_CODES = new Set([
   'auth/timeout',
 ])
 
+/**
+ * Get Firebase Auth ready before the button is tapped. Setting it up (storage
+ * checks, restoring state) otherwise happens on the tap, which is the pause
+ * people notice before Google's window opens. Safe to call any number of times.
+ */
+export function warmUpGoogleSignIn(): void {
+  if (!isFirebaseConfigured) return
+  try {
+    getFirebaseAuth()
+  } catch {
+    // The tap will try again and report it properly.
+  }
+}
+
 function assertConfigured(): Auth {
   const auth = getFirebaseAuth()
   if (!auth || !isFirebaseConfigured) {

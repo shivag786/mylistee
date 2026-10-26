@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Logo } from '@/components/icons/Logo'
 import { GoogleIcon } from '@/components/icons/GoogleIcon'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { REDIRECT_IN_PROGRESS } from '@/features/auth/services/firebaseAuth'
+import { REDIRECT_IN_PROGRESS, warmUpGoogleSignIn } from '@/features/auth/services/firebaseAuth'
 import { landingPathForRole } from '@/features/auth/roleRoutes'
 import { rememberPostLoginTarget } from '@/features/auth/postLoginTarget'
 import { firebaseErrorMessage, isCancelledSignIn } from '@/utils/firebaseErrors'
@@ -41,6 +41,11 @@ export function LoginPage() {
   const { data: config } = useAppConfig()
 
   const showGoogle = config?.auth?.google ?? true
+
+  // Ready Google sign-in while the page shows, so the tap opens it at once.
+  useEffect(() => {
+    if (showGoogle) warmUpGoogleSignIn()
+  }, [showGoogle])
   const showMobile = config?.auth?.mobile ?? false
 
   const from = (location.state as LocationState | null)?.from?.pathname
