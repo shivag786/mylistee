@@ -34,8 +34,7 @@ import { cart, cartSubtotal, lineKey, optionsLabel, useCart } from './cartStore'
 import { useOrderCheckout, isOrderPaymentCancelled } from './useOrderCheckout'
 import { waitForPageInteractive } from '@/features/payments/razorpay'
 import { defaultChoice, splitPayment, type PaymentChoice } from './paymentSplit'
-import { useAppConfig } from '@/hooks/useAppConfig'
-import { rememberPostLoginTarget } from '@/features/auth/postLoginTarget'
+import { SignInDialog } from '@/features/auth/components/SignInDialog'
 import { ROUTES } from '@/constants/routes'
 import { useCartQuote } from '@/features/rewards/useRewards'
 import { BillDiscountProgress, CouponPicker, NextRewardHint } from '@/features/rewards/CartRewards'
@@ -68,7 +67,7 @@ function codLabel(serviceType: ServiceType): string {
 function placeLabel(signedIn: boolean, chargedNow: number, stage: string, total: number): string {
   if (stage === 'paying') return 'Complete the payment…'
   if (stage === 'verifying') return 'Confirming payment…'
-  if (!signedIn) return 'Sign in & place order'
+  if (!signedIn) return 'Sign in to order'
   return chargedNow > 0 ? `Pay ₹${chargedNow}` : `Place order · ₹${total}`
 }
 
@@ -82,12 +81,15 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   const current = useCart()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const { isAuthenticated, signInWithGoogle, user } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const [useCoins, setUseCoins] = useState(false)
   const [note, setNote] = useState('')
   // The coupon the customer chose; the server's quote says whether it holds.
   const [couponCode, setCouponCode] = useState<string | null>(null)
-  const [signingIn, setSigningIn] = useState(false)
+  // Signing in (or signing up) happens over the cart and never places the order
+  // by itself: once in, coins, coupons and payment options appear and the
+  // customer reviews them and taps Place order.
+  const [askSignIn, setAskSignIn] = useState(false)
 
   // Service (fulfilment) context (Phase 7.6). Config is captured on the cart; a
   // pickup-only shop falls back cleanly so bakeries see no change.
@@ -111,9 +113,6 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   // server, so whatever is offered here is something it will accept.
   const payment = service?.payment
   const [paymentChoice, setPaymentChoice] = useState<PaymentChoice>(() => defaultChoice(payment))
-  const { data: appConfig } = useAppConfig()
-  // An older API had no auth block and only ever offered Google.
-  const googleSignIn = appConfig?.auth?.google ?? true
 
   // The customer's coin balance at this shop (only when signed in).
   const { data: loyalty } = useBusinessLoyalty(current?.businessSlug ?? '', open && isAuthenticated && Boolean(current))
@@ -278,24 +277,8 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
       return
     }
     if (!isAuthenticated) {
-      // With Google switched off by the admin there is no popup to open --
-      // send them to the login page, which offers mobile sign-in, and back to
-      // this shop afterwards. The cart is kept in storage meanwhile.
-      if (!googleSignIn) {
-        rememberPostLoginTarget(window.location.pathname + window.location.search)
-        navigate(ROUTES.login, { replace: true, state: { from: { pathname: window.location.pathname } } })
-        return
-      }
-
-      setSigningIn(true)
-      try {
-        await signInWithGoogle()
-      } catch {
-        toast.error('Sign-in was cancelled.')
-        return
-      } finally {
-        setSigningIn(false)
-      }
+      setAskSignIn(true)
+      return
     }
     await submitOrder()
   }
@@ -606,7 +589,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
               <Button
                 className="flex-1"
                 onClick={() => void handlePlace()}
-                isLoading={checkout.isPending || signingIn}
+                isLoading={checkout.isPending}
                 disabled={!current || current.items.length === 0 || !addressReady || notTaking}
               >
                 {notTaking ? 'Not taking orders' : placeLabel(isAuthenticated, split.chargedNow, checkout.stage, payable)}
@@ -614,6 +597,14 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
             </SheetFooter>
         </>
       </SheetContent>
+      <SignInDialog
+        open={askSignIn}
+        onOpenChange={setAskSignIn}
+        reason="Sign in or create an account to order. Your cart stays right here."
+        onSignedIn={() => {
+          toast.success('You’re signed in. Check your order, then tap Place order.')
+        }}
+      />
     </Sheet>
   )
 }
