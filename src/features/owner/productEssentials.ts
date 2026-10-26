@@ -28,11 +28,22 @@ export function applyDiscount(price: number, discount: ProductDiscount | null): 
   return Math.max(0, Math.round((price - off) * 100) / 100)
 }
 
-/** Sizes the owner has actually filled in (blank rows are ignored). */
-export function filledOptions(rows: { name: string; price: string; id?: string }[]): ProductOption[] {
+/**
+ * Sizes / add-ons the owner has actually filled in (blank rows are ignored). A
+ * size row may be a type alone ("Fried"), so a type counts as a name.
+ */
+export function filledOptions(
+  rows: { name: string; price: string; id?: string; type?: string; qty?: string }[],
+): ProductOption[] {
   return rows
-    .filter((r) => r.name.trim() && r.price.trim() !== '' && !Number.isNaN(Number(r.price)))
-    .map((r) => ({ ...(r.id ? { id: r.id } : {}), name: r.name.trim(), price: Number(r.price) }))
+    .filter((r) => (r.name.trim() || r.type?.trim()) && r.price.trim() !== '' && !Number.isNaN(Number(r.price)))
+    .map((r) => ({
+      ...(r.id ? { id: r.id } : {}),
+      ...(r.type?.trim() ? { type: r.type.trim() } : {}),
+      name: r.name.trim(),
+      ...(r.qty?.trim() ? { qty: r.qty.trim() } : {}),
+      price: Number(r.price),
+    }))
 }
 
 /**
@@ -66,6 +77,9 @@ export interface OptionRow {
   id?: string
   name: string
   price: string
+  /** Sizes only: "Steam" / "Fried" and "6 pcs" / "500 g". */
+  type?: string
+  qty?: string
   /** Local key for React; not sent. */
   key: string
 }

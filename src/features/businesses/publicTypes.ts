@@ -33,7 +33,7 @@ export interface PublicProduct {
   promo?: { name: string; type: string; typeLabel: string; label: string; endsAt?: string | null } | null
   foodType: 'veg' | 'non_veg' | 'egg' | null
   /** Sizes to pick one of; `sellingPrice` is after the product's discount. */
-  variants?: { id: string; name: string; price: number; sellingPrice: number }[]
+  variants?: PublicVariant[]
   /** Extras to add any of, priced on top. */
   addons?: { id: string; name: string; price: number }[]
   isTodaysSpecial: boolean
@@ -183,4 +183,19 @@ export interface SpinResult {
   reward: WonReward
   offer: PublicOffer
   coinsEarned: number
+}
+
+/**
+ * One way to buy a product: a type ("Fried"), a size ("Half") or both, with an
+ * optional quantity ("6 pcs"). `label` reads them together; `sellingPrice` is
+ * after the product's own discount.
+ */
+export interface PublicVariant {
+  id: string
+  type?: string | null
+  name: string
+  qty?: string | null
+  label?: string
+  price: number
+  sellingPrice: number
 }

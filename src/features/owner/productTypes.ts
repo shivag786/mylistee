@@ -8,6 +8,9 @@ export interface ProductOption {
   id?: string
   name: string
   price: number
+  /** Sizes only: a type such as "Steam" / "Fried", and a quantity such as "6 pcs". */
+  type?: string | null
+  qty?: string | null
 }
 
 /** The product's own discount: `percent` off, or a `flat` ₹ amount off. */

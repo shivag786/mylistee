@@ -210,9 +210,8 @@ function RewardsEditor({ data }: { data: OwnerRewards }) {
       <Card padding="md" className="flex items-start gap-3 bg-surface-muted">
         <Info className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />
         <p className="text-small text-text-secondary">
-          <span className="font-semibold text-foreground">Listee fee:</span> {data.fees.platformPercent}% on every order, plus{' '}
-          {data.fees.gatewayPercent}% payment charges on online payments. Customers pay the same price online or in cash — your
-          earning per item shows on each product card.
+          <span className="font-semibold text-foreground">Listee fee:</span> a small fee on every order. Customers pay the
+          same price online or in cash — what you get per item shows on each product card.
         </p>
       </Card>
 

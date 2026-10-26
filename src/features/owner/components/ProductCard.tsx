@@ -124,8 +124,7 @@ export function ProductCard({
           <p className="flex items-center gap-1 text-[11px] text-text-muted" title="After Listee's fee">
             <Wallet className="size-3 shrink-0" aria-hidden />
             <span className="truncate">
-              You get <span className="font-semibold text-success">₹{earning.online}</span> online ·{' '}
-              <span className="font-semibold text-foreground">₹{earning.cash}</span> cash
+              You get <span className="font-semibold text-success">₹{earning.cash}</span>
             </span>
           </p>
         )}

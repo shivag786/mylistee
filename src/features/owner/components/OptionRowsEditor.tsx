@@ -4,7 +4,8 @@ import { newOptionRow, type OptionRow } from '../productEssentials'
 
 /**
  * Name + price rows for sizes or add-ons: type, tab across, "+ Add" for
- * another. Quick-pick chips fill common names in one tap.
+ * another. Quick-pick chips fill common names in one tap. Sizes also take an
+ * optional type ("Steam" / "Fried") and quantity ("6 pcs", "500 g").
  */
 export function OptionRowsEditor({
   rows,
@@ -14,6 +15,7 @@ export function OptionRowsEditor({
   addLabel,
   suggestions = [],
   max,
+  withTypeAndQty = false,
 }: {
   rows: OptionRow[]
   onChange: (rows: OptionRow[]) => void
@@ -22,6 +24,7 @@ export function OptionRowsEditor({
   addLabel: string
   suggestions?: string[]
   max: number
+  withTypeAndQty?: boolean
 }) {
   const unused = suggestions.filter((s) => !rows.some((r) => r.name.trim().toLowerCase() === s.toLowerCase()))
 
@@ -53,7 +56,68 @@ export function OptionRowsEditor({
         </div>
       )}
 
-      {rows.map((row) => (
+      {withTypeAndQty && (
+        <p className="text-small text-text-muted">
+          Type is optional — e.g. Steam / Fried for momos. Size can be anything: Half, Full, 1 plate, 500 g.
+        </p>
+      )}
+
+      {withTypeAndQty &&
+        rows.map((row) => (
+          <div key={row.key} className="space-y-2 rounded-xl border border-border bg-surface-muted/50 p-2.5">
+            <div className="flex items-center gap-2">
+              <Input
+                value={row.type ?? ''}
+                onChange={(e) => update(row.key, { type: e.target.value })}
+                placeholder="Type (optional), e.g. Fried"
+                aria-label="Type"
+                maxLength={30}
+                className="min-w-0 flex-1 bg-surface"
+              />
+              <Input
+                value={row.name}
+                onChange={(e) => update(row.key, { name: e.target.value })}
+                placeholder={namePlaceholder}
+                aria-label="Size"
+                maxLength={40}
+                className="min-w-0 flex-1 bg-surface"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                value={row.qty ?? ''}
+                onChange={(e) => update(row.key, { qty: e.target.value })}
+                placeholder="Quantity, e.g. 6 pcs"
+                aria-label="Quantity"
+                maxLength={20}
+                className="min-w-0 flex-1 bg-surface"
+              />
+              <div className="relative w-28 shrink-0">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-caption font-semibold text-text-secondary">
+                  ₹
+                </span>
+                <Input
+                  value={row.price}
+                  onChange={(e) => update(row.key, { price: e.target.value.replace(/[^\d.]/g, '') })}
+                  inputMode="decimal"
+                  placeholder={pricePlaceholder}
+                  aria-label="Price"
+                  className="bg-surface pl-7"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => onChange(rows.filter((r) => r.key !== row.key))}
+                aria-label={`Remove ${row.type || row.name || 'row'}`}
+                className="grid size-10 shrink-0 place-items-center rounded-full text-text-muted transition-colors hover:bg-danger-soft hover:text-danger"
+              >
+                <Trash2 className="size-4" aria-hidden />
+              </button>
+            </div>
+          </div>
+        ))}
+
+      {!withTypeAndQty && rows.map((row) => (
         <div key={row.key} className="flex items-center gap-2">
           <Input
             value={row.name}

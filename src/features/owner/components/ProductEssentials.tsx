@@ -93,7 +93,7 @@ export function ProductEssentials({
         />
         <FeeBreakdown
           price={applyDiscount(priceLocked ? sizesFrom : Number(value.price) || 0, value.discount)}
-          note={priceLocked ? 'For the cheapest size. Same fee % applies to every size.' : 'Same price for the customer in cash or online.'}
+          note={priceLocked ? 'For the cheapest size — every size works the same way.' : 'Same price for the customer in cash or online.'}
         />
       </div>
 

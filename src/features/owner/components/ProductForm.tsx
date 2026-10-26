@@ -91,8 +91,14 @@ function initialMore(product: Product | null): MoreState {
   }
 }
 
-const toRows = (list: { id?: string; name: string; price: number }[] | undefined): OptionRow[] =>
-  (list ?? []).map((o) => ({ ...newOptionRow(o.name, String(o.price)), id: o.id }))
+const toRows = (
+  list: { id?: string; name: string; price: number; type?: string | null; qty?: string | null }[] | undefined,
+): OptionRow[] =>
+  (list ?? []).map((o) => ({ ...newOptionRow(o.name, String(o.price)), id: o.id, type: o.type ?? '', qty: o.qty ?? '' }))
+
+/** "Fried · Half · 6 pcs" for the closed Sizes card. */
+const sizeLabel = (s: { name: string; type?: string | null; qty?: string | null }) =>
+  [s.type, s.name, s.qty].filter(Boolean).join(' · ')
 
 /**
  * Create / edit a product (07B rule 9). Step one is all a product needs —
@@ -191,7 +197,13 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex w-full max-w-md flex-col gap-0 p-0">
+      <SheetContent
+        side="right"
+        className="flex w-full max-w-md flex-col gap-0 p-0"
+        // A stray tap beside the form must not throw away what was typed — the
+        // ✕ above and Cancel below close it.
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <SheetHeader className="border-b border-border px-5 py-4">
           <SheetTitle>{isEdit ? 'Edit product' : 'Add product'}</SheetTitle>
           <SheetDescription>Photo, name and price — that's all you need.</SheetDescription>
@@ -230,11 +242,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
             <div className="space-y-3">
               <MorePanel
                 icon={<Layers className="size-4" />}
-                title="Sizes"
+                title="Sizes & types"
                 summary={
                   filledSizes.length > 0
-                    ? filledSizes.map((s) => s.name).join(' · ')
-                    : 'e.g. Small, Medium, Large — each with its own price'
+                    ? filledSizes.map(sizeLabel).join(', ')
+                    : 'Half / Full, 6 pcs, Steam / Fried — each with its own price'
                 }
                 count={filledSizes.length}
                 open={openPanel === 'sizes'}
@@ -247,7 +259,8 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                   pricePlaceholder="199"
                   addLabel="Add size"
                   suggestions={['Small', 'Medium', 'Large', 'Half', 'Full', 'Regular']}
-                  max={10}
+                  max={30}
+                  withTypeAndQty
                 />
                 {sizesFrom != null && essentials.discount && essentials.discount.value > 0 && (
                   <p className="text-small text-text-secondary">
@@ -374,13 +387,12 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         </div>
 
         <SheetFooter className="flex-row justify-between gap-3 border-t border-border px-5 py-4">
-          {step > 0 ? (
-            <Button variant="ghost" onClick={() => setStep(0)} disabled={pending}>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={pending}>
+            Cancel
+          </Button>
+          {step > 0 && (
+            <Button variant="outline" onClick={() => setStep(0)} disabled={pending}>
               Back
-            </Button>
-          ) : (
-            <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={pending}>
-              Cancel
             </Button>
           )}
           <Button className="flex-1" onClick={() => void handleSubmit()} isLoading={pending}>

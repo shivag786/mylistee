@@ -4,7 +4,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 import type { CartItem } from '@/features/orders/cartStore'
-import type { PublicProduct } from '../publicTypes'
+import type { PublicProduct, PublicVariant } from '../publicTypes'
 
 /**
  * A running promotion as a share of the price, so it can be shown on each size.
@@ -17,6 +17,9 @@ function promoFactor(product: PublicProduct): number {
 }
 
 const money = (n: number) => Math.round(n * 100) / 100
+
+/** "Fried · Full · 10 pcs" — older servers send no label. */
+const variantLabel = (v: PublicVariant) => v.label || [v.type, v.name, v.qty].filter(Boolean).join(' · ')
 
 /**
  * "Customise" sheet for a product with sizes and/or add-ons: pick one size,
@@ -46,6 +49,13 @@ export function ProductOptionsSheet({
   const addons = product?.addons ?? []
   const factor = product ? promoFactor(product) : 1
   const variant = variants.find((v) => v.id === variantId) ?? null
+
+  // Types ("Steam" / "Fried") are picked first, then a size within the type.
+  const types = [...new Set(variants.map((v) => v.type ?? ''))]
+  const showTypes = types.length > 1 || (types.length === 1 && types[0] !== '')
+  const currentType = variant?.type ?? ''
+  const sizes = showTypes ? variants.filter((v) => (v.type ?? '') === currentType) : variants
+  const showSizes = sizes.length > 1 || Boolean(sizes[0]?.name)
   const base = product
     ? variant
       ? money(variant.sellingPrice * factor)
@@ -66,7 +76,7 @@ export function ProductOptionsSheet({
         unitPrice: unit,
         options: {
           variantId: variant?.id ?? null,
-          variantName: variant?.name ?? null,
+          variantName: variant ? variantLabel(variant) : null,
           addonIds: picked.map((a) => a.id),
           addonNames: picked.map((a) => a.name),
         },
@@ -87,14 +97,50 @@ export function ProductOptionsSheet({
               <div className="min-w-0">
                 <SheetTitle className="line-clamp-2 text-body-lg font-bold">{product.name}</SheetTitle>
                 <SheetDescription className="text-small">
-                  {variants.length > 0 ? 'Pick a size' : 'Add extras'}
+                  {variants.length > 0 ? (showTypes ? 'Pick a type' : 'Pick a size') : 'Add extras'}
                   {variants.length > 0 && addons.length > 0 && ' and extras'}
                 </SheetDescription>
               </div>
             </div>
 
             <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
-              {variants.length > 0 && (
+              {showTypes && (
+                <section className="space-y-2">
+                  <h4 className="flex items-center justify-between text-caption font-bold text-foreground">
+                    Type
+                    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-text-secondary">
+                      Required
+                    </span>
+                  </h4>
+                  <div role="radiogroup" className="flex flex-wrap gap-2">
+                    {types.map((t) => {
+                      const inType = variants.filter((v) => (v.type ?? '') === t)
+                      const active = t === currentType
+                      const from = Math.min(...inType.map((v) => money(v.sellingPrice * factor)))
+                      return (
+                        <button
+                          key={t || 'regular'}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          onClick={() => setVariantId(inType[0].id)}
+                          className={cn(
+                            'rounded-full border px-4 py-2 text-caption font-semibold transition-colors',
+                            active ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-border-strong',
+                          )}
+                        >
+                          {t || 'Regular'}
+                          <span className={cn('ml-1.5 font-normal', active ? 'opacity-85' : 'text-text-muted')}>
+                            {inType.length > 1 ? `from ₹${from}` : `₹${from}`}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </section>
+              )}
+
+              {variants.length > 0 && showSizes && (
                 <section className="space-y-2">
                   <h4 className="flex items-center justify-between text-caption font-bold text-foreground">
                     Size
@@ -103,7 +149,7 @@ export function ProductOptionsSheet({
                     </span>
                   </h4>
                   <div role="radiogroup" className="space-y-2">
-                    {variants.map((v) => {
+                    {sizes.map((v) => {
                       const active = v.id === variantId
                       const now = money(v.sellingPrice * factor)
                       return (
@@ -126,7 +172,10 @@ export function ProductOptionsSheet({
                           >
                             {active && <span className="size-2.5 rounded-full bg-primary" />}
                           </span>
-                          <span className="flex-1 text-body font-medium text-foreground">{v.name}</span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-body font-medium text-foreground">{v.name || v.type || 'Regular'}</span>
+                            {v.qty && <span className="block text-small text-text-muted">{v.qty}</span>}
+                          </span>
                           <span className="text-body font-semibold text-foreground">₹{now}</span>
                           {v.price > now && <span className="text-small text-text-muted line-through">₹{v.price}</span>}
                         </button>
