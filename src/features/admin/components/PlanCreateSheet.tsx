@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -23,6 +24,8 @@ import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { useCreatePlan } from '@/features/admin/hooks/useAdmin'
 import { FEATURE_LABELS } from '@/features/owner/planDisplay'
+import { DurationInput } from '@/features/admin/components/PlanDurationInput'
+import { durationPayload, type DurationUnit } from '@/features/admin/planDuration'
 
 const ALL_FEATURES = Object.keys(FEATURE_LABELS)
 
@@ -32,6 +35,7 @@ const LIMIT_FIELDS = [
   { key: 'maxActivePromotions', label: 'Max active promotions' },
   { key: 'maxPushPerMonth', label: 'Notifications / month' },
   { key: 'pushReachPerMonth', label: 'Customers reached / month' },
+  { key: 'pushPerCustomerPerMonth', label: 'Notifications to one customer / month' },
   { key: 'maxOfferDays', label: 'Max offer days' },
   { key: 'maxQrCodes', label: 'Max QR codes' },
   { key: 'maxGalleryImages', label: 'Max gallery images' },
@@ -60,6 +64,10 @@ export function PlanCreateSheet({ open, onOpenChange, existingKeys }: PlanCreate
   const [form, setForm] = useState({ ...EMPTY })
   const [limits, setLimits] = useState<Record<LimitKey, string>>({} as Record<LimitKey, string>)
   const [features, setFeatures] = useState<string[]>([])
+  const [duration, setDuration] = useState('')
+  const [durationUnit, setDurationUnit] = useState<DurationUnit>('months')
+  const [isActive, setIsActive] = useState(true)
+  const [customerDetails, setCustomerDetails] = useState<'full' | 'masked'>('masked')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -67,6 +75,10 @@ export function PlanCreateSheet({ open, onOpenChange, existingKeys }: PlanCreate
       setForm({ ...EMPTY })
       setLimits({} as Record<LimitKey, string>)
       setFeatures([])
+      setDuration('')
+      setDurationUnit('months')
+      setIsActive(true)
+      setCustomerDetails('masked')
       setError(null)
     }
   }, [open])
@@ -98,7 +110,7 @@ export function PlanCreateSheet({ open, onOpenChange, existingKeys }: PlanCreate
     const limitPayload: Record<string, number | null> = {}
     for (const { key: k } of LIMIT_FIELDS) {
       const raw = limits[k]
-      limitPayload[k] = raw == null || raw === '' ? null : Math.max(0, Number(raw))
+      limitPayload[k] = raw == null || raw === '' ? null : Math.max(k === 'pushPerCustomerPerMonth' ? 1 : 0, Number(raw))
     }
 
     try {
@@ -109,6 +121,9 @@ export function PlanCreateSheet({ open, onOpenChange, existingKeys }: PlanCreate
         price: Number(form.price) || 0,
         interval: form.interval,
         badge: form.badge.trim() || null,
+        ...durationPayload(duration, durationUnit),
+        isActive,
+        customerDetails,
         features,
         ...limitPayload,
       })
@@ -167,6 +182,39 @@ export function PlanCreateSheet({ open, onOpenChange, existingKeys }: PlanCreate
               <Label htmlFor="p-badge">Badge</Label>
               <Input id="p-badge" value={form.badge} onChange={(e) => set('badge', e.target.value)} placeholder="Popular" />
             </div>
+          </div>
+
+          <div className="space-y-1">
+            <DurationInput
+              label="Plan lasts"
+              value={duration}
+              unit={durationUnit}
+              onChange={setDuration}
+              onUnitChange={setDurationUnit}
+              placeholder="Empty = by billing"
+            />
+            <p className="text-small text-text-muted">How long one payment lasts, e.g. 15 days or 6 months.</p>
+          </div>
+
+          <label className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
+            <span>
+              <span className="block text-caption font-semibold text-foreground">Active</span>
+              <span className="block text-small text-text-muted">Off = saved but hidden from shops until you switch it on.</span>
+            </span>
+            <Switch checked={isActive} onCheckedChange={setIsActive} aria-label="Active" />
+          </label>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="p-details">Customer details shops see</Label>
+            <Select value={customerDetails} onValueChange={(v) => setCustomerDetails(v as 'full' | 'masked')}>
+              <SelectTrigger id="p-details" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="masked">Masked (ra***@gmail.com, 98******10)</SelectItem>
+                <SelectItem value="full">Full email and phone</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

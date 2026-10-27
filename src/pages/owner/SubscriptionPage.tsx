@@ -27,6 +27,7 @@ import {
   formatLimit,
   formatPrice,
   planPeriod,
+  durationLabel,
   timeLeft,
 } from '@/features/owner/planDisplay'
 import { ROUTES } from '@/constants/routes'
@@ -353,8 +354,8 @@ function PlanCard({
         <div>
           <span className="text-title font-bold text-foreground">{formatPrice(plan.price, plan.currency)}</span>
           {plan.price > 0 && <span className="text-caption text-text-secondary">{planPeriod(plan)}</span>}
-          {plan.isFree && plan.durationDays && (
-            <span className="text-caption text-text-secondary"> · {daysLabel(plan.durationDays)}</span>
+          {plan.isFree && durationLabel(plan) && (
+            <span className="text-caption text-text-secondary"> · {durationLabel(plan)}</span>
           )}
         </div>
       )}
@@ -423,7 +424,13 @@ function IntroPrice({ plan, intro }: { plan: Plan; intro: NonNullable<Plan['intr
   }, [intro.endsAt])
 
   // The normal price for as many days as the offer gives, when the plan is priced by days or months.
-  const perDay = plan.durationDays ? plan.price / plan.durationDays : plan.interval === 'month' ? plan.price / 30 : null
+  const perDay = plan.durationMonths
+    ? plan.price / (plan.durationMonths * 30)
+    : plan.durationDays
+      ? plan.price / plan.durationDays
+      : plan.interval === 'month'
+        ? plan.price / 30
+        : null
   const normal = perDay ? Math.round(perDay * intro.days) : null
   const left = timeLeft(intro.endsAt, now)
 

@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BellRing, Users, Send, Clock, Smartphone, Info, CheckCircle2 } from 'lucide-react'
+import { BellRing, Users, Send, Clock, Smartphone, Info, CheckCircle2, Search, Mail, Phone } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Spinner } from '@/components/feedback/Spinner'
 import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { SkeletonList } from '@/components/feedback/skeletons'
 import { ConfirmationDialog } from '@/components/feedback/ConfirmationDialog'
-import { usePushSummary, useSendPush } from '@/features/owner/hooks/usePush'
+import { usePushCustomers, usePushSummary, useSendPush } from '@/features/owner/hooks/usePush'
 import { useOwnerBusiness } from '@/features/owner/hooks/useOwner'
 import { useProducts } from '@/features/owner/hooks/useProducts'
 import type { PushAudience } from '@/features/owner/services/pushService'
@@ -50,14 +52,26 @@ export function OwnerNotifyPage() {
   const [target, setTarget] = useState('shop')
   const [howMany, setHowMany] = useState('')
   const [confirming, setConfirming] = useState(false)
+  // Customers ticked in the list; none ticked = the whole group.
+  const [picked, setPicked] = useState<Set<string>>(new Set())
 
   const selected = data?.audiences.find((a) => a.key === audience)
   const remaining = data?.reach.remaining ?? null
   // The most this send can reach: the group, capped by what's left this month.
   const maxSend = selected ? (remaining === null ? selected.count : Math.min(selected.count, remaining)) : 0
-  const count = howMany ? Math.min(Number(howMany) || 0, maxSend) : maxSend
+  const count =
+    picked.size > 0
+      ? remaining === null
+        ? picked.size
+        : Math.min(picked.size, remaining)
+      : howMany
+        ? Math.min(Number(howMany) || 0, maxSend)
+        : maxSend
 
-  useEffect(() => setHowMany(''), [audience])
+  useEffect(() => {
+    setHowMany('')
+    setPicked(new Set())
+  }, [audience])
 
   const link = useMemo(() => {
     if (!business) return undefined
@@ -75,10 +89,12 @@ export function OwnerNotifyPage() {
         body: body.trim() || undefined,
         link,
         limit: count,
+        customerIds: picked.size > 0 ? [...picked] : undefined,
       })
       toast.success(`Sent to ${res.recipients} customers`)
       setTitle('')
       setBody('')
+      setPicked(new Set())
       setConfirming(false)
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : MESSAGES.errors.generic)
@@ -152,7 +168,16 @@ export function OwnerNotifyPage() {
             </button>
           ))}
         </div>
+        {data.perCustomer?.limit != null && (
+          <p className="text-small text-text-muted">
+            One customer can get {data.perCustomer.limit} {data.perCustomer.limit === 1 ? 'notification' : 'notifications'} from
+            you a month. Anyone who already got them is skipped.
+          </p>
+        )}
         {selected && selected.count > 0 && (
+          <CustomerPicker audience={audience} masked={data.customerDetails !== 'full'} picked={picked} onChange={setPicked} />
+        )}
+        {selected && selected.count > 0 && picked.size === 0 && (
           <div className="flex items-center gap-3">
             <Label htmlFor="push-count" className="shrink-0">Send to</Label>
             <Input
@@ -275,6 +300,125 @@ export function OwnerNotifyPage() {
         isLoading={send.isPending}
         onConfirm={() => void doSend()}
       />
+    </div>
+  )
+}
+
+/**
+ * The chosen group as a scrolling list: name, email and phone (masked unless
+ * the plan shows them in full), how many notifications each got this month.
+ * Tick people to send only to them; the next 30 load as you scroll.
+ */
+function CustomerPicker({
+  audience,
+  masked,
+  picked,
+  onChange,
+}: {
+  audience: PushAudience
+  masked: boolean
+  picked: Set<string>
+  onChange: (next: Set<string>) => void
+}) {
+  const [search, setSearch] = useState('')
+  const [query, setQuery] = useState('')
+  useEffect(() => {
+    const id = setTimeout(() => setQuery(search.trim()), 300)
+    return () => clearTimeout(id)
+  }, [search])
+
+  const list = usePushCustomers(audience, query)
+  const customers = list.data?.pages.flatMap((p) => p.customers) ?? []
+  const total = list.data?.pages[0]?.total ?? 0
+
+  function toggle(id: string, on: boolean) {
+    const next = new Set(picked)
+    if (on) next.add(id)
+    else next.delete(id)
+    onChange(next)
+  }
+
+  function onScroll(e: React.UIEvent<HTMLDivElement>) {
+    const el = e.currentTarget
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 80 && list.hasNextPage && !list.isFetchingNextPage) {
+      void list.fetchNextPage()
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-caption font-medium text-foreground">
+          Customers <span className="font-normal text-text-muted">({total})</span>
+        </p>
+        {picked.size > 0 ? (
+          <button type="button" onClick={() => onChange(new Set())} className="text-small font-semibold text-primary hover:underline">
+            Clear {picked.size} picked
+          </button>
+        ) : (
+          <span className="text-small text-text-muted">Tick to send only to them</span>
+        )}
+      </div>
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-muted" aria-hidden />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={masked ? 'Search by name' : 'Search name, email or phone'}
+          aria-label="Search customers"
+          className="pl-9"
+        />
+      </div>
+      <div onScroll={onScroll} className="max-h-72 overflow-y-auto rounded-2xl border border-border">
+        {list.isLoading ? (
+          <div className="flex justify-center p-6">
+            <Spinner size={20} label="Loading customers" />
+          </div>
+        ) : customers.length === 0 ? (
+          <p className="p-4 text-center text-small text-text-muted">{query ? 'No one matches.' : 'Nobody in this group yet.'}</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {customers.map((c) => (
+              <li key={c.id}>
+                <label className={cn('flex items-start gap-3 px-3 py-2.5', c.capped ? 'opacity-60' : 'cursor-pointer hover:bg-surface-muted')}>
+                  <Checkbox
+                    className="mt-0.5"
+                    checked={picked.has(c.id)}
+                    disabled={c.capped}
+                    onCheckedChange={(v) => toggle(c.id, v === true)}
+                    aria-label={`Pick ${c.name}`}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate text-caption font-semibold text-foreground">{c.name}</span>
+                      {c.onPhone && <Smartphone className="size-3 shrink-0 text-success" aria-label="Notifications on" />}
+                    </span>
+                    {c.email && (
+                      <span className="flex items-center gap-1 truncate text-small text-text-muted">
+                        <Mail className="size-3 shrink-0" aria-hidden /> {c.email}
+                      </span>
+                    )}
+                    {c.phone && (
+                      <span className="flex items-center gap-1 text-small text-text-muted">
+                        <Phone className="size-3 shrink-0" aria-hidden /> {c.phone}
+                      </span>
+                    )}
+                  </span>
+                  <Badge tone={c.capped ? 'warning' : 'neutral'} size="sm" className="shrink-0">
+                    {c.capped ? 'Limit reached' : `${c.sentThisMonth} this month`}
+                  </Badge>
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+        {list.isFetchingNextPage && (
+          <div className="flex justify-center p-3">
+            <Spinner size={16} label="Loading more" />
+          </div>
+        )}
+      </div>
+      {masked && <p className="text-small text-text-muted">Email and phone are partly hidden on your plan.</p>}
     </div>
   )
 }

@@ -106,6 +106,8 @@ export interface Plan {
   interval: string
   /** Days one purchase lasts (null = by the interval); on the free plan, the free period. */
   durationDays?: number | null
+  /** Or months one purchase lasts (only one of days / months is set). */
+  durationMonths?: number | null
   /** Every module with whether this plan includes it, and for how many days. */
   modules?: Record<string, PlanModuleConfig>
   /** False until the admin has saved this plan's modules (all on until then). */
@@ -119,6 +121,8 @@ export interface Plan {
     maxPushPerMonth: number | null
     /** Customers a shop can notify per month (null = unlimited). */
     pushReachPerMonth?: number | null
+    /** Notifications one customer can get from a shop per month (null = no cap). */
+    pushPerCustomerPerMonth?: number | null
     maxOfferDays: number | null
     maxQrCodes: number | null
     maxGalleryImages: number | null
@@ -127,6 +131,10 @@ export interface Plan {
   features: string[]
   badge: string | null
   isDefault: boolean
+  /** False = hidden and can't be bought; shops already on it keep it. */
+  isActive?: boolean
+  /** Customers' email / phone on the notify screen. */
+  customerDetails?: 'full' | 'masked'
   isFree: boolean
   sortOrder: number
 }

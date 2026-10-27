@@ -93,7 +93,20 @@ export function timeLeft(iso: string | null, now = Date.now()): string | null {
   return h >= 1 ? `${h}h ${m}m left` : `${m}m left`
 }
 
-/** How long a plan runs, for cards: "30 days" or "/mo". */
-export function planPeriod(plan: { durationDays?: number | null; interval: string }): string {
-  return plan.durationDays ? ` / ${daysLabel(plan.durationDays)}` : intervalSuffix(plan.interval)
+/** "3 months" / "1 month" */
+export function monthsLabel(n: number): string {
+  return `${n} ${n === 1 ? 'month' : 'months'}`
+}
+
+/** A plan's own length, if it has one: "30 days" / "3 months". */
+export function durationLabel(plan: { durationDays?: number | null; durationMonths?: number | null }): string | null {
+  if (plan.durationMonths) return monthsLabel(plan.durationMonths)
+  if (plan.durationDays) return daysLabel(plan.durationDays)
+  return null
+}
+
+/** How long a plan runs, for cards: " / 30 days", " / 3 months" or "/mo". */
+export function planPeriod(plan: { durationDays?: number | null; durationMonths?: number | null; interval: string }): string {
+  const length = durationLabel(plan)
+  return length ? ` / ${length}` : intervalSuffix(plan.interval)
 }
