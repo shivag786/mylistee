@@ -18,6 +18,7 @@ import { ApiError } from '@/types/api'
 import { cn } from '@/utils/cn'
 import type { AuthUser } from '../types'
 import { weakPinReason } from '../strongPin'
+import { ForgotPinLink } from './ForgotPinDialog'
 import { storage } from '@/utils/storage'
 
 /** The number last used on this device, so it is never typed twice. */
@@ -130,6 +131,17 @@ export function CustomerMobileAuth({ onSignedIn }: { onSignedIn: (user: AuthUser
           value={pin}
           onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
         />
+        {mode === 'signin' && (
+          <div className="flex justify-end">
+            <ForgotPinLink
+              mobile={mobile}
+              onReset={(m, p) => {
+                setMobile(m.replace(/\D/g, '').slice(-10))
+                setPin(p)
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {mode === 'signup' && (

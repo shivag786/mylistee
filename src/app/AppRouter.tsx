@@ -49,6 +49,7 @@ const OwnerFollowersPage = lazyPage(() => import('@/pages/owner/OwnerFollowersPa
 const OwnerCustomersPage = lazyPage(() => import('@/pages/owner/OwnerCustomersPage'), 'OwnerCustomersPage')
 const OwnerReelsPage = lazyPage(() => import('@/pages/owner/OwnerReelsPage'), 'OwnerReelsPage')
 const OwnerNotifyPage = lazyPage(() => import('@/pages/owner/OwnerNotifyPage'), 'OwnerNotifyPage')
+const OwnerWhatsAppPage = lazyPage(() => import('@/pages/owner/OwnerWhatsAppPage'), 'OwnerWhatsAppPage')
 const ReviewLinkPage = lazyPage(() => import('@/pages/customer/ReviewLinkPage'), 'ReviewLinkPage')
 
 const AdminDashboardPage = lazyPage(() => import('@/pages/admin/AdminDashboardPage'), 'AdminDashboardPage')
@@ -74,6 +75,7 @@ const AdminFraudPage = lazyPage(() => import('@/pages/admin/AdminFraudPage'), 'A
 const AdminAuditLogsPage = lazyPage(() => import('@/pages/admin/AdminAuditLogsPage'), 'AdminAuditLogsPage')
 const AdminReportsPage = lazyPage(() => import('@/pages/admin/AdminReportsPage'), 'AdminReportsPage')
 const AdminSettingsPage = lazyPage(() => import('@/pages/admin/AdminSettingsPage'), 'AdminSettingsPage')
+const AdminWhatsAppPage = lazyPage(() => import('@/pages/admin/AdminWhatsAppPage'), 'AdminWhatsAppPage')
 
 // Legal pages. Lazy like everything else, but reachable signed-out: payment
 // providers and app stores open these URLs cold.
@@ -212,6 +214,7 @@ export function AppRouter() {
             <Route path={ROUTES.owner.customers} element={<OwnerModuleGuard module="customers"><OwnerCustomersPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.reels} element={<OwnerModuleGuard module="reels"><OwnerReelsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.notify} element={<OwnerModuleGuard module="notifications"><OwnerNotifyPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.whatsapp} element={<OwnerModuleGuard module="whatsapp"><OwnerWhatsAppPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.subscription} element={<SubscriptionPage />} />
             <Route path={ROUTES.owner.personalLink} element={<PersonalLinkPage />} />
             <Route path={ROUTES.owner.settings} element={<OwnerSettingsPage />} />
@@ -252,6 +255,7 @@ export function AppRouter() {
             <Route path={ROUTES.admin.auditLogs} element={<AdminAuditLogsPage />} />
             <Route path={ROUTES.admin.reports} element={<AdminReportsPage />} />
             <Route path={ROUTES.admin.settings} element={<AdminSettingsPage />} />
+            <Route path={ROUTES.admin.whatsapp} element={<AdminWhatsAppPage />} />
           </Route>
         </Route>
       </Route>

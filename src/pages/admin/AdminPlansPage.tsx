@@ -76,6 +76,7 @@ function PlanEditor({ plan }: { plan: Plan }) {
     maxPushPerMonth: plan.limits.maxPushPerMonth,
     pushReachPerMonth: plan.limits.pushReachPerMonth ?? null,
     pushPerCustomerPerMonth: plan.limits.pushPerCustomerPerMonth ?? null,
+    whatsappPerMonth: plan.limits.whatsappPerMonth ?? null,
     maxOfferDays: plan.limits.maxOfferDays,
     maxQrCodes: plan.limits.maxQrCodes,
     maxGalleryImages: plan.limits.maxGalleryImages,
@@ -280,6 +281,7 @@ function PlanEditor({ plan }: { plan: Plan }) {
           <LabeledInput label="Notifications / month" value={numStr(limits.maxPushPerMonth)} onChange={(v) => setLimit('maxPushPerMonth', v)} type="number" placeholder="∞" />
           <LabeledInput label="Customers reached / month" value={numStr(limits.pushReachPerMonth)} onChange={(v) => setLimit('pushReachPerMonth', v)} type="number" placeholder="∞" />
           <LabeledInput label="Notifications to one customer / month" value={numStr(limits.pushPerCustomerPerMonth)} onChange={(v) => setLimit('pushPerCustomerPerMonth', v)} type="number" placeholder="∞" />
+          <LabeledInput label="WhatsApp messages / month" value={numStr(limits.whatsappPerMonth)} onChange={(v) => setLimit('whatsappPerMonth', v)} type="number" placeholder="∞" />
           <div className="space-y-1">
             <Label className="text-small">Customer details shops see</Label>
             <Select value={customerDetails} onValueChange={(v) => setCustomerDetails(v as 'full' | 'masked')}>

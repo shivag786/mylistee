@@ -9,6 +9,7 @@ import { landingPathForRole } from '@/features/auth/roleRoutes'
 import { MESSAGES } from '@/constants/messages'
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
+import { ForgotPinLink } from './ForgotPinDialog'
 
 interface LocationState {
   from?: { pathname: string }
@@ -91,6 +92,15 @@ export function PinLoginForm({
           placeholder="Your PIN"
           maxLength={8}
         />
+        <div className="flex justify-end">
+          <ForgotPinLink
+            mobile={mobile}
+            onReset={(m, p) => {
+              setMobile(m)
+              setPin(p)
+            }}
+          />
+        </div>
       </div>
 
       {error && (

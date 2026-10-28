@@ -13,6 +13,10 @@ const pinLogin = vi.fn()
 const registerCustomer = vi.fn()
 const onSignedIn = vi.fn()
 
+// "Forgot PIN?" shows only while the admin has WhatsApp login codes on.
+let appConfig: { auth?: { google: boolean; mobile: boolean; whatsappOtp?: boolean } } | undefined
+vi.mock('@/hooks/useAppConfig', () => ({ useAppConfig: () => ({ data: appConfig }) }))
+
 function renderForm() {
   return render(
     <AuthContext.Provider value={{ pinLogin, registerCustomer } as never}>
@@ -28,6 +32,17 @@ describe('CustomerMobileAuth', () => {
     onSignedIn.mockReset()
     // The last number used is remembered; each test starts on a new device.
     localStorage.clear()
+    appConfig = undefined
+  })
+
+  it('offers "Forgot PIN?" only while WhatsApp codes are on', () => {
+    const first = renderForm()
+    expect(screen.queryByRole('button', { name: 'Forgot PIN?' })).toBeNull()
+    first.unmount()
+
+    appConfig = { auth: { google: true, mobile: true, whatsappOtp: true } }
+    renderForm()
+    expect(screen.getByRole('button', { name: 'Forgot PIN?' })).toBeTruthy()
   })
 
   it('signs an existing customer in with mobile and PIN', async () => {

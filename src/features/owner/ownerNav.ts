@@ -17,6 +17,7 @@ import {
   Contact,
   Clapperboard,
   BellRing,
+  MessageCircle,
   Gift,
   Link2,
   Settings,
@@ -44,6 +45,7 @@ export type OwnerModuleId =
   | 'reels'
   | 'qr'
   | 'notifications'
+  | 'whatsapp'
 
 export interface OwnerNavItem {
   to: string
@@ -86,6 +88,7 @@ export const OWNER_NAV: OwnerNavItem[] = [
   { to: ROUTES.owner.rewards, label: 'Rewards & coupons', shortLabel: 'Rewards', icon: Gift, module: 'loyalty' },
   { to: ROUTES.owner.growSales, label: 'Grow sales', shortLabel: 'Grow', icon: Megaphone, module: 'grow_sales' },
   { to: ROUTES.owner.notify, label: 'Notify customers', shortLabel: 'Notify', icon: BellRing, module: 'notifications' },
+  { to: ROUTES.owner.whatsapp, label: 'WhatsApp offers', shortLabel: 'WhatsApp', icon: MessageCircle, module: 'whatsapp' },
   { to: ROUTES.owner.loyalty, label: 'Loyalty', shortLabel: 'Coins', icon: Coins, module: 'loyalty' },
   { to: ROUTES.owner.offers, label: 'Spin rewards', shortLabel: 'Rewards', icon: Tag, module: 'spin_rewards' },
   { to: ROUTES.owner.qr, label: 'QR code', shortLabel: 'QR', icon: QrCode, module: 'qr' },

@@ -123,6 +123,8 @@ export interface Plan {
     pushReachPerMonth?: number | null
     /** Notifications one customer can get from a shop per month (null = no cap). */
     pushPerCustomerPerMonth?: number | null
+    /** WhatsApp offer messages a shop can send per month (null = unlimited, 0 = none). */
+    whatsappPerMonth?: number | null
     maxOfferDays: number | null
     maxQrCodes: number | null
     maxGalleryImages: number | null

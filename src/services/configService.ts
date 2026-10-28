@@ -35,7 +35,7 @@ export interface AppConfig {
    * Which ways in the customer login page offers. The server keeps at least one
    * on. Absent on an older API, which only had Google.
    */
-  auth?: { google: boolean; mobile: boolean }
+  auth?: { google: boolean; mobile: boolean; /** "Forgot PIN?" by a WhatsApp code is available. */ whatsappOtp?: boolean }
   /** ₹ per coin, and the coins a new account starts with. */
   coins?: { value: number; welcome: number }
   /** Admin-set colours/fonts and the menu-card colour switch. Absent on an older API. */

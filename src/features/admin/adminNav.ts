@@ -22,6 +22,7 @@ import {
   Inbox,
   PanelLeft,
   Link2,
+  MessageCircle,
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
@@ -48,6 +49,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { to: ROUTES.admin.payments, label: 'Payments', icon: Receipt },
   { to: ROUTES.admin.personalLinks, label: 'Personal links', icon: Link2 },
   { to: ROUTES.admin.broadcast, label: 'Broadcast', icon: Megaphone },
+  { to: ROUTES.admin.whatsapp, label: 'WhatsApp', icon: MessageCircle },
   { to: ROUTES.admin.homeLayout, label: 'Home layout', icon: LayoutList },
   { to: ROUTES.admin.banners, label: 'Home banners', icon: GalleryHorizontalEnd },
   { to: ROUTES.admin.featureFlags, label: 'Feature flags', icon: Flag },
