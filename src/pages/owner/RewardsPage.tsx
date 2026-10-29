@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Award, BadgePercent, Gift, Info, Plus, Receipt, Repeat, RotateCcw, Ticket, Trash2, Users } from 'lucide-react'
+import { AlertCircle, Award, BadgePercent, CheckCircle2, Gift, Info, Plus, Receipt, Repeat, RotateCcw, Ticket, Trash2, Users } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -88,11 +88,26 @@ function RewardsEditor({ data }: { data: OwnerRewards }) {
   const [comeback, setComeback] = useState(() => draftFrom(data.comeback, { type: 'percent', value: '10' }))
   const [loyalty, setLoyalty] = useState(() => loyaltyDraftFrom(data.loyalty))
 
-  useEffect(() => {
+  function reset() {
     setBill(draftFrom(data.billDiscount, { minBill: '499', value: '50' }))
     setComeback(draftFrom(data.comeback, { type: 'percent', value: '10' }))
     setLoyalty(loyaltyDraftFrom(data.loyalty))
-  }, [data.billDiscount, data.comeback, data.loyalty])
+  }
+
+  useEffect(reset, [data.billDiscount, data.comeback, data.loyalty])
+
+  // What is saved, in the same shape as the drafts — the bar turns to
+  // "unsaved changes" as soon as anything differs.
+  const saved = useMemo(
+    () =>
+      snapshot(
+        draftFrom(data.billDiscount, { minBill: '499', value: '50' }),
+        draftFrom(data.comeback, { type: 'percent', value: '10' }),
+        loyaltyDraftFrom(data.loyalty),
+      ),
+    [data.billDiscount, data.comeback, data.loyalty],
+  )
+  const dirty = snapshot(bill, comeback, loyalty) !== saved
 
   const base = (d: Pick<RuleDraft, 'type' | 'value' | 'maxOff'>) => ({
     type: d.type,
@@ -116,7 +131,7 @@ function RewardsEditor({ data }: { data: OwnerRewards }) {
           ? {
               repeat: loyalty.repeat,
               steps: loyalty.steps
-                .map((s) => ({ at: Number(s.at), ...base(s) }))
+                .map((s) => ({ at: Number(s.at), ...base(s), min_bill: num(s.minBill) }))
                 .sort((a, b) => a.at - b.at),
             }
           : null,
@@ -215,9 +230,52 @@ function RewardsEditor({ data }: { data: OwnerRewards }) {
         </p>
       </Card>
 
-      <div className="fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 px-4 lg:bottom-6 lg:left-64">
-        <Button size="lg" className="mx-auto flex w-full max-w-md shadow-premium" isLoading={saveRules.isPending} onClick={save}>
-          Save rewards
+      <SaveBar dirty={dirty} saving={saveRules.isPending} onSave={save} onCancel={reset} />
+    </div>
+  )
+}
+
+/** The drafts as one comparable string; step keys and "new" marks left out. */
+function snapshot(bill: RuleDraft, comeback: RuleDraft, loyalty: LoyaltyDraft): string {
+  const rule = (d: RuleDraft) => (d.on ? [d.type, d.value, d.type === 'percent' ? d.maxOff : '', d.minBill, d.days] : null)
+  return JSON.stringify({
+    bill: rule(bill),
+    comeback: rule(comeback),
+    loyalty: loyalty.on
+      ? { repeat: loyalty.repeat, steps: loyalty.steps.map((s) => [s.at, s.type, s.value, s.type === 'percent' ? s.maxOff : '', s.minBill]) }
+      : null,
+  })
+}
+
+/**
+ * Pinned under the page. Quiet while everything is saved; turns amber with
+ * "unsaved changes" and a Cancel the moment the owner edits anything.
+ */
+function SaveBar({ dirty, saving, onSave, onCancel }: { dirty: boolean; saving: boolean; onSave: () => void; onCancel: () => void }) {
+  return (
+    <div className="fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 px-4 lg:bottom-6 lg:left-64">
+      <div
+        role="status"
+        className={cn(
+          'mx-auto flex w-full max-w-xl items-center gap-2 rounded-2xl border p-2 pl-4 shadow-premium transition-colors',
+          dirty ? 'border-warning bg-warning-soft' : 'border-border bg-surface',
+        )}
+      >
+        {dirty ? (
+          <AlertCircle className="size-5 shrink-0 text-warning" aria-hidden />
+        ) : (
+          <CheckCircle2 className="size-5 shrink-0 text-success" aria-hidden />
+        )}
+        <p className={cn('min-w-0 flex-1 text-caption font-semibold', dirty ? 'text-foreground' : 'text-text-secondary')}>
+          {dirty ? 'You have unsaved changes — save to make them live.' : 'All changes saved'}
+        </p>
+        {dirty && (
+          <Button variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
+            Cancel
+          </Button>
+        )}
+        <Button size="sm" isLoading={saving} disabled={!dirty} onClick={onSave}>
+          Save
         </Button>
       </div>
     </div>
@@ -336,7 +394,15 @@ interface StepDraft {
   type: DiscountType
   value: string
   maxOff: string
+  /** The earned coupon needs a bill of at least this much (optional). */
+  minBill: string
+  /** Added since the last save. */
+  isNew?: boolean
+  /** The step as saved, to mark it "edited". */
+  orig?: string
 }
+
+const stepSig = (s: StepDraft) => JSON.stringify([s.at, s.type, s.value, s.type === 'percent' ? s.maxOff : '', s.minBill])
 
 interface LoyaltyDraft {
   on: boolean
@@ -354,21 +420,25 @@ function loyaltyDraftFrom(rule: LoyaltyRule | null): LoyaltyDraft {
       on: false,
       repeat: true,
       steps: [
-        { key: stepKey(), at: '3', type: 'flat', value: '20', maxOff: '' },
-        { key: stepKey(), at: '5', type: 'flat', value: '50', maxOff: '' },
+        { key: stepKey(), at: '3', type: 'flat', value: '20', maxOff: '', minBill: '' },
+        { key: stepKey(), at: '5', type: 'flat', value: '50', maxOff: '', minBill: '' },
       ],
     }
   }
   return {
     on: true,
     repeat: rule.repeat,
-    steps: rule.steps.map((s) => ({
-      key: stepKey(),
-      at: String(s.at),
-      type: s.type,
-      value: String(s.value),
-      maxOff: s.max_off != null ? String(s.max_off) : '',
-    })),
+    steps: rule.steps.map((s) => {
+      const step: StepDraft = {
+        key: stepKey(),
+        at: String(s.at),
+        type: s.type,
+        value: String(s.value),
+        maxOff: s.max_off != null ? String(s.max_off) : '',
+        minBill: s.min_bill != null ? String(s.min_bill) : '',
+      }
+      return { ...step, orig: stepSig(step) }
+    }),
   }
 }
 
@@ -411,7 +481,10 @@ function LoyaltyStepsCard({ draft, onChange }: { draft: LoyaltyDraft; onChange: 
     const last = Math.max(0, ...steps.map((s) => Number(s.at) || 0))
     onChange({
       ...draft,
-      steps: [...steps, { key: stepKey(), at: String(Math.min(MAX_STEP_AT, last + 2)), type: 'flat', value: '', maxOff: '' }],
+      steps: [
+        ...steps,
+        { key: stepKey(), at: String(Math.min(MAX_STEP_AT, last + 2)), type: 'flat', value: '', maxOff: '', minBill: '', isNew: true },
+      ],
     })
   }
 
@@ -452,6 +525,7 @@ function LoyaltyStepsCard({ draft, onChange }: { draft: LoyaltyDraft; onChange: 
                   {steps.map((s) => {
                     const at = Number(s.at)
                     const clash = s.at !== '' && (atCounts[s.at] ?? 0) > 1
+                    const edited = !s.isNew && s.orig !== undefined && s.orig !== stepSig(s)
                     return (
                       <motion.li
                         key={s.key}
@@ -459,7 +533,16 @@ function LoyaltyStepsCard({ draft, onChange }: { draft: LoyaltyDraft; onChange: 
                         initial={reduce ? false : { opacity: 0, y: -8, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, x: -24, transition: { duration: 0.18 } }}
-                        className={cn('rounded-2xl border bg-surface p-3', clash ? 'border-danger' : 'border-border')}
+                        className={cn(
+                          'rounded-2xl border bg-surface p-3 transition-colors',
+                          clash
+                            ? 'border-danger'
+                            : s.isNew
+                              ? 'border-2 border-dashed border-primary bg-primary-soft/40'
+                              : edited
+                                ? 'border-2 border-warning'
+                                : 'border-border',
+                        )}
                       >
                         <div className="flex items-center gap-2">
                           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-300 to-yellow-400 text-amber-900">
@@ -476,6 +559,11 @@ function LoyaltyStepsCard({ draft, onChange }: { draft: LoyaltyDraft; onChange: 
                             />
                             <span className="text-text-muted">{at > 0 ? ordinal(at).replace(String(at), '') : ''}</span>
                           </div>
+                          {s.isNew ? (
+                            <Badge tone="primary" size="sm">New</Badge>
+                          ) : edited ? (
+                            <Badge tone="warning" size="sm">Edited</Badge>
+                          ) : null}
                           <button
                             type="button"
                             aria-label={`Remove the ${at > 0 ? ordinal(at) : ''} order step`}
@@ -489,6 +577,13 @@ function LoyaltyStepsCard({ draft, onChange }: { draft: LoyaltyDraft; onChange: 
                           <DiscountFields
                             draft={{ ...s, on: true, minBill: '', days: '', every: '' }}
                             onChange={(d) => update(s.key, { type: d.type, value: d.value, maxOff: d.maxOff })}
+                          />
+                        </div>
+                        <div className="mt-2.5">
+                          <MoneyField
+                            label={s.type === 'flat' ? 'On a bill of at least (optional)' : 'Bill at least (optional)'}
+                            value={s.minBill}
+                            onChange={(v) => update(s.key, { minBill: v })}
                           />
                         </div>
                         {clash && <p className="mt-1.5 text-small text-danger">Another step is on this order too.</p>}
@@ -561,6 +656,7 @@ function StepsPreview({ steps, cycle }: { steps: StepDraft[]; cycle: number }) {
             <span className="block text-[10px] font-bold uppercase text-white/70">{ordinal(Number(s.at))}</span>
             <span className="block text-small font-extrabold">
               {ruleLabel({ type: s.type, value: Number(s.value), max_off: s.type === 'percent' ? num(s.maxOff) : null })}
+              {Number(s.minBill) > 0 && <span className="font-semibold text-white/75"> on ₹{s.minBill}+</span>}
             </span>
           </span>
         ))}

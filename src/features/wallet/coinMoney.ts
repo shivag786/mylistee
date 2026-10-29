@@ -14,7 +14,7 @@ export function useCoinValue(): number {
 /** Coins a new account starts with, from /config. */
 export function useWelcomeCoins(): number {
   const { data } = useAppConfig()
-  return data?.coins?.welcome ?? 0
+  return data?.coins?.enabled === false ? 0 : (data?.coins?.welcome ?? 0)
 }
 
 export function coinsToRupees(coins: number, coinValue: number): number {

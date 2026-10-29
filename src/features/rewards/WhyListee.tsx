@@ -19,7 +19,8 @@ const BENEFITS = [
 export function WhyListee() {
   const reduce = useReducedMotion()
   const { data: config } = useAppConfig()
-  const welcome = config?.coins?.welcome ?? 0
+  // No welcome coins to promise while the admin has coins switched off.
+  const welcome = config?.coins?.enabled === false ? 0 : (config?.coins?.welcome ?? 0)
   const coinValue = config?.coins?.value ?? 1
 
   return (

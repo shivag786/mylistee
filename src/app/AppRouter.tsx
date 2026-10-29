@@ -34,6 +34,7 @@ const TablesPage = lazyPage(() => import('@/pages/owner/TablesPage'), 'TablesPag
 const CombosPage = lazyPage(() => import('@/pages/owner/CombosPage'), 'CombosPage')
 const GrowSalesPage = lazyPage(() => import('@/pages/owner/GrowSalesPage'), 'GrowSalesPage')
 const OrdersPage = lazyPage(() => import('@/pages/owner/OrdersPage'), 'OrdersPage')
+const PosPage = lazyPage(() => import('@/pages/owner/PosPage'), 'PosPage')
 const OffersPage = lazyPage(() => import('@/pages/owner/OffersPage'), 'OffersPage')
 const LoyaltyPage = lazyPage(() => import('@/pages/owner/LoyaltyPage'), 'LoyaltyPage')
 const RewardsPage = lazyPage(() => import('@/pages/owner/RewardsPage'), 'RewardsPage')
@@ -202,13 +203,14 @@ export function AppRouter() {
           <Route element={<OwnerLayout />}>
             <Route path={ROUTES.owner.dashboard} element={<OwnerDashboardPage />} />
             <Route path={ROUTES.owner.orders} element={<OwnerModuleGuard module="orders"><OrdersPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.pos} element={<OwnerModuleGuard module="orders"><PosPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.products} element={<OwnerModuleGuard module="products"><ProductsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.tables} element={<OwnerModuleGuard module="tables"><TablesPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.combos} element={<OwnerModuleGuard module="combos"><CombosPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.growSales} element={<OwnerModuleGuard module="grow_sales"><GrowSalesPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.offers} element={<OwnerModuleGuard module="spin_rewards"><OffersPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.loyalty} element={<OwnerModuleGuard module="loyalty"><LoyaltyPage /></OwnerModuleGuard>} />
-            <Route path={ROUTES.owner.rewards} element={<OwnerModuleGuard module="loyalty"><RewardsPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.rewards} element={<OwnerModuleGuard module="rewards"><RewardsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.analytics} element={<OwnerModuleGuard module="analytics"><AnalyticsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.reviews} element={<OwnerModuleGuard module="reviews"><OwnerReviewsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.customers} element={<OwnerModuleGuard module="customers"><OwnerCustomersPage /></OwnerModuleGuard>} />

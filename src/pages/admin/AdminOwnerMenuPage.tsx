@@ -3,7 +3,7 @@ import { Switch } from '@/components/ui/switch'
 import { Spinner } from '@/components/feedback/Spinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { EmptyState } from '@/components/feedback/EmptyState'
-import { PanelLeft } from 'lucide-react'
+import { Coins, Gift, PanelLeft, Ticket } from 'lucide-react'
 import { toast } from '@/utils/toast'
 import { useFeatureFlags, useSetFeatureFlag } from '@/features/admin/hooks/useAdmin'
 
@@ -31,6 +31,8 @@ export function AdminOwnerMenuPage() {
   if (isError || !data) return <ErrorState onRetry={() => void refetch()} />
 
   const modules = data.filter((f) => f.key.startsWith('owner_'))
+  const rewards = data.find((f) => f.key === 'owner_rewards')
+  const coins = data.find((f) => f.key === 'owner_loyalty')
 
   function toggle(key: string, enabled: boolean) {
     setFlag
@@ -48,6 +50,44 @@ export function AdminOwnerMenuPage() {
           profile and Plan &amp; billing are always available.
         </p>
       </header>
+
+      {(rewards || coins) && (
+        <Card elevation="soft" padding="md" className="space-y-1">
+          <p className="flex items-center gap-2 text-body font-bold text-foreground">
+            <Gift className="size-5 text-primary" aria-hidden /> Rewards &amp; loyalty
+          </p>
+          <p className="text-caption text-text-secondary">
+            Two separate systems. Each switch turns the feature off for shops <em>and</em> customers.
+          </p>
+          <ul className="divide-y divide-border pt-2">
+            {[
+              {
+                flag: rewards,
+                icon: <Ticket className="size-5" aria-hidden />,
+                title: 'Rewards & coupons',
+                text: 'Bill discount, come-back coupon, loyalty-step scratch cards and coupon codes. Off: nothing applies at checkout or shows on shop pages.',
+              },
+              {
+                flag: coins,
+                icon: <Coins className="size-5" aria-hidden />,
+                title: 'Loyalty coins',
+                text: 'Listee coins customers earn on orders and spend at shops. Off: no new coins are earned or advertised; customers can still use coins they already have.',
+              },
+            ].map(({ flag, icon, title, text }) =>
+              flag ? (
+                <li key={flag.key} className="flex items-center gap-3 py-3">
+                  <span className={flag.enabled ? 'text-primary' : 'text-text-muted'}>{icon}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-foreground">{title}</p>
+                    <p className="text-caption text-text-secondary">{text}</p>
+                  </div>
+                  <Switch checked={flag.enabled} onCheckedChange={(v) => toggle(flag.key, v)} aria-label={`Toggle ${title}`} />
+                </li>
+              ) : null,
+            )}
+          </ul>
+        </Card>
+      )}
 
       {modules.length === 0 ? (
         <EmptyState

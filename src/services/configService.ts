@@ -37,7 +37,9 @@ export interface AppConfig {
    */
   auth?: { google: boolean; mobile: boolean; /** "Forgot PIN?" by a WhatsApp code is available. */ whatsappOtp?: boolean }
   /** ₹ per coin, and the coins a new account starts with. */
-  coins?: { value: number; welcome: number }
+  coins?: { enabled?: boolean; value: number; welcome: number }
+  /** The admin's Rewards & coupons switch (shop rewards for customers). */
+  rewardsEnabled?: boolean
   /** Admin-set colours/fonts and the menu-card colour switch. Absent on an older API. */
   theme?: BrandTheme
   /** Admin-arranged home sections; null/absent = the built-in order. */

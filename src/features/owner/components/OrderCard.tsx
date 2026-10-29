@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { ORDER_STATUS_TONE, type Order, type OrderStatusKey, type PaymentMethodKey } from '../orderTypes'
 import { SERVICE_META, SERVICE_TONE } from '@/features/orders/serviceTypes'
 import { PaymentBreakdown } from '@/features/orders/PaymentBreakdown'
+import { PrintOrderButton } from '@/features/pos/PrintOrderButton'
 
 interface OrderCardProps {
   order: Order
@@ -167,6 +168,7 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
             Complete
           </Button>
         )}
+        {order.status !== 'cancelled' && <PrintOrderButton order={order} />}
       </div>
     </Card>
   )

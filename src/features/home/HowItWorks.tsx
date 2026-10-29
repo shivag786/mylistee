@@ -29,6 +29,7 @@ export function HowItWorks({ isAuthenticated }: { isAuthenticated: boolean }) {
 
   const coinValue = config?.coins?.value ?? 1
   const welcome = config?.coins?.welcome ?? 0
+  const coinsOn = config?.coins?.enabled !== false
 
   function dismiss() {
     setHidden(true)
@@ -42,7 +43,9 @@ export function HowItWorks({ isAuthenticated }: { isAuthenticated: boolean }) {
   const steps = [
     { icon: MapPin, title: 'Find a shop near you', text: 'See menus, combos and today’s offers.' },
     { icon: QrCode, title: 'Order at the shop', text: 'Scan the table QR or order here — eat in or pick up.' },
-    { icon: Coins, title: 'Earn coins every visit', text: `1 coin = ₹${coinValue} off your next order.` },
+    coinsOn
+      ? { icon: Coins, title: 'Earn coins every visit', text: `1 coin = ₹${coinValue} off your next order.` }
+      : { icon: Gift, title: 'Get shop rewards', text: 'Discounts and coupons apply on their own at checkout.' },
   ]
 
   return (
@@ -98,7 +101,7 @@ export function HowItWorks({ isAuthenticated }: { isAuthenticated: boolean }) {
             <Store className="size-3.5" aria-hidden /> No home delivery — dine in or pick up
           </p>
 
-          {!isAuthenticated && welcome > 0 && (
+          {!isAuthenticated && coinsOn && welcome > 0 && (
             <Link
               to={ROUTES.login}
               className={cn(

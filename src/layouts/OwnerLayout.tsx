@@ -13,7 +13,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useOwnerBusiness } from '@/features/owner/hooks/useOwner'
 import { OwnerNav } from '@/features/owner/components/OwnerNav'
 import { FloatingOrderButton } from '@/features/owner/components/FloatingOrderButton'
-import { OWNER_NAV, visibleOwnerNav, type OwnerNavItem } from '@/features/owner/ownerNav'
+import { groupOwnerNav, OWNER_NAV, visibleOwnerNav, type OwnerNavItem } from '@/features/owner/ownerNav'
 import { useAppConfig } from '@/hooks/useAppConfig'
 import { usePlanAccess } from '@/features/owner/hooks/usePlanAccess'
 import { SuspenseOutlet } from '@/app/PageLoader'
@@ -187,8 +187,14 @@ function OwnerSidebar({
         </span>
       </div>
 
-      <nav className="flex-1 space-y-0.5 overflow-y-auto p-3" aria-label="Business">
-        {nav.map(({ to, label, icon: Icon, module }) => {
+      <nav className="flex-1 overflow-y-auto p-3" aria-label="Business">
+        {groupOwnerNav(nav).map(({ group, items }) => (
+          <div key={group} className="mb-2">
+            {group !== 'Home' && (
+              <p className={cn('px-3 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wider', PANEL_MUTED)}>{group}</p>
+            )}
+            <div className="space-y-0.5">
+        {items.map(({ to, label, icon: Icon, module }) => {
           const active = location.pathname === to || location.pathname.startsWith(`${to}/`)
           return (
             <NavLink
@@ -209,6 +215,9 @@ function OwnerSidebar({
             </NavLink>
           )
         })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       <div className="border-t border-[inherit] p-3">

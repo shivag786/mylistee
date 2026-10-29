@@ -22,6 +22,8 @@ export interface ComebackRule extends RewardRuleBase {
 /** One step on the loyalty card: a reward on the `at`-th paid order. */
 export interface LoyaltyStep extends RewardRuleBase {
   at: number
+  /** The earned coupon needs a bill of at least this much. */
+  min_bill?: number | null
 }
 
 export interface LoyaltyRule {

@@ -39,6 +39,7 @@ export const ROUTES = {
     register: '/business/register',
     dashboard: '/business/dashboard',
     orders: '/business/orders',
+    pos: '/business/pos',
     products: '/business/products',
     tables: '/business/tables',
     combos: '/business/combos',

@@ -11,6 +11,7 @@ import { ChangePinCard } from '@/features/auth/components/ChangePinCard'
 import { ROUTES } from '@/constants/routes'
 import { PushToggle } from '@/features/notifications/components/PushToggle'
 import { toast } from '@/utils/toast'
+import { CustomerDetails } from '@/features/profile/CustomerDetails'
 
 const ROLE_LABELS: Record<string, string> = {
   customer: 'Customer',
@@ -52,6 +53,9 @@ export function ProfilePage() {
           )}
         </div>
       </Card>
+
+      {/* Mobile, birthday, gender, anniversary — and the people they celebrate. */}
+      <CustomerDetails />
 
       {/* Push on/off for this phone — reward wins, order updates, shop offers. */}
       <Card padding="none">
