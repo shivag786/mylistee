@@ -112,11 +112,13 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
           <span>Total</span>
           <span>₹{order.total}</span>
         </div>
-        {/* What the shop keeps once Listee's fee is out — never shown to customers. */}
+        {/* What the shop keeps once fees are out — never shown to customers. Only the
+            gateway's fee on new orders (subscription); older ones may carry a Listee fee. */}
         {order.vendorEarning != null && (
           <p className="flex items-center justify-between text-small text-text-muted">
             <span>
-              Listee fee ₹{Math.round(((order.platformFee ?? 0) + (order.gatewayFee ?? 0)) * 100) / 100}
+              {(order.platformFee ?? 0) > 0 && `Listee fee ₹${order.platformFee} · `}
+              {(order.gatewayFee ?? 0) > 0 ? `Payment fee ₹${order.gatewayFee}` : 'No fee'}
             </span>
             <span className="font-semibold text-success">You get ₹{order.vendorEarning}</span>
           </p>

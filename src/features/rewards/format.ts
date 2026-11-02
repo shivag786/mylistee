@@ -11,8 +11,8 @@ export function ruleLabel(rule: RewardRuleBase): string {
 }
 
 /**
- * What a shop keeps from one unit at `price` once Listee's fee is out:
- * platform share always, the gateway's share only when paid online.
+ * What a shop keeps from one unit at `price` once fees are out: the platform
+ * share always (0 on the subscription), the gateway's share only when paid online.
  */
 export function shopEarning(price: number, fees: { platformPercent: number; gatewayPercent: number }) {
   const round = (n: number) => Math.round(n * 100) / 100

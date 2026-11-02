@@ -40,15 +40,13 @@ export function ProductCard({
 }: ProductCardProps) {
   const hasOffer = Boolean(product.activeOffer)
   const effective = product.effectivePrice ?? product.sellingPrice
-  // What the shop keeps per unit after Listee's fee (known once /config loads).
+  // What the shop keeps per unit when paid online (known once /config loads);
+  // cash keeps the full price — no commission on the subscription.
   const { data: config } = useAppConfig()
-  const fees = config?.payments
+  const gatewayPercent = config?.payments?.gatewayFeePercent
   const earning =
-    fees?.platformFeePercent != null
-      ? shopEarning(hasOffer ? effective : product.sellingPrice, {
-          platformPercent: fees.platformFeePercent,
-          gatewayPercent: fees.gatewayFeePercent ?? 0,
-        })
+    gatewayPercent != null
+      ? shopEarning(hasOffer ? effective : product.sellingPrice, { platformPercent: 0, gatewayPercent })
       : null
   return (
     <Card className="flex h-full flex-col gap-2 p-0 overflow-hidden" padding="none">
@@ -121,10 +119,14 @@ export function ProductCard({
         </div>
 
         {earning && (
-          <p className="flex items-center gap-1 text-[11px] text-text-muted" title="After Listee's fee">
+          <p
+            className="flex items-center gap-1 text-[11px] text-text-muted"
+            title={`Cash: full price. Online: after the ${gatewayPercent}% payment gateway fee.`}
+          >
             <Wallet className="size-3 shrink-0" aria-hidden />
             <span className="truncate">
-              You get <span className="font-semibold text-success">₹{earning.cash}</span>
+              Cash <span className="font-semibold text-success">₹{earning.cash}</span> · Online{' '}
+              <span className="font-semibold text-success">₹{earning.online}</span>
             </span>
           </p>
         )}
