@@ -5,6 +5,10 @@
 export const ROUTES = {
   // Public / customer
   home: '/',
+  /** The shop feed. Always here, whether `/` is the feed or the landing page. */
+  explore: '/explore',
+  /** The landing page, always — for previews and marketing links, whatever `/` shows. */
+  landing: '/join',
   nearby: '/nearby',
   deals: '/deals',
   orders: '/orders',
@@ -81,6 +85,8 @@ export const ROUTES = {
     broadcast: '/admin/broadcast',
     banners: '/admin/banners',
     homeLayout: '/admin/home-layout',
+    landingPage: '/admin/landing-page',
+    seo: '/admin/seo',
     featureFlags: '/admin/feature-flags',
     ownerMenu: '/admin/owner-menu',
     settings: '/admin/settings',

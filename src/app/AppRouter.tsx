@@ -14,6 +14,7 @@ import { OwnerLayout } from '@/layouts/OwnerLayout'
 import { OwnerEntry } from '@/pages/owner/OwnerEntry'
 import { OwnerModuleGuard } from '@/features/owner/components/OwnerModuleGuard'
 import { AdminLayout } from '@/layouts/AdminLayout'
+import { HomeGate } from '@/features/landing/HomeGate'
 
 // Code-split (Milestone 15): everything past the customer landing loads on demand,
 // so the owner and admin apps never ship in the customer's first bundle.
@@ -69,7 +70,9 @@ const AdminOrdersPage = lazyPage(() => import('@/pages/admin/AdminOrdersPage'), 
 const AdminBroadcastPage = lazyPage(() => import('@/pages/admin/AdminBroadcastPage'), 'AdminBroadcastPage')
 const AdminBannersPage = lazyPage(() => import('@/pages/admin/AdminBannersPage'), 'AdminBannersPage')
 const AdminHomeLayoutPage = lazyPage(() => import('@/pages/admin/AdminHomeLayoutPage'), 'AdminHomeLayoutPage')
-const AdminFeatureFlagsPage = lazyPage(() => import('@/pages/admin/AdminFeatureFlagsPage'), 'AdminFeatureFlagsPage')
+const AdminLandingPage = lazyPage(() => import('@/pages/admin/AdminLandingPage'), 'AdminLandingPage')
+const AdminSeoPage = lazyPage(() => import('@/pages/admin/AdminSeoPage'), 'AdminSeoPage')
+const AdminFeatureFlagsPage =lazyPage(() => import('@/pages/admin/AdminFeatureFlagsPage'), 'AdminFeatureFlagsPage')
 const AdminOwnerMenuPage = lazyPage(() => import('@/pages/admin/AdminOwnerMenuPage'), 'AdminOwnerMenuPage')
 const AdminCmsPage = lazyPage(() => import('@/pages/admin/AdminCmsPage'), 'AdminCmsPage')
 const AdminFraudPage = lazyPage(() => import('@/pages/admin/AdminFraudPage'), 'AdminFraudPage')
@@ -84,6 +87,7 @@ const TermsPage = lazyPage(() => import('@/pages/legal/TermsPage'), 'TermsPage')
 const PrivacyPolicyPage = lazyPage(() => import('@/pages/legal/PrivacyPolicyPage'), 'PrivacyPolicyPage')
 const RefundPolicyPage = lazyPage(() => import('@/pages/legal/RefundPolicyPage'), 'RefundPolicyPage')
 
+const LandingPage = lazyPage(() => import('@/pages/LandingPage'), 'LandingPage')
 const OwnerSignupPage = lazyPage(() => import('@/pages/auth/OwnerSignupPage'), 'OwnerSignupPage')
 const OwnerLoginPage = lazyPage(() => import('@/pages/auth/OwnerLoginPage'), 'OwnerLoginPage')
 const UiShowcasePage = lazyPage(() => import('@/pages/dev/UiShowcasePage'), 'UiShowcasePage')
@@ -167,19 +171,36 @@ export function AppRouter() {
 
       {import.meta.env.DEV && <Route path="/dev/ui" element={<UiShowcasePage />} />}
 
-      {/* Customer app shell */}
-      <Route element={<CustomerLayout />}>
-        {/* Public browsing (no sign-in required) */}
+      {/* `/`: the landing page for signed-out visitors when the admin has
+          chosen it, otherwise the customer shell with the shop feed. */}
+      <Route path={ROUTES.home} element={<HomeGate />}>
         {/* Staff who open the app land in their own panel rather than on the
             customer home — see AppEntryRedirect for why entry only. */}
         <Route
-          path={ROUTES.home}
+          index
           element={
             <AppEntryRedirect>
               <HomePage />
             </AppEntryRedirect>
           }
         />
+      </Route>
+
+      {/* The landing page whatever `/` shows: admin preview and marketing links. */}
+      <Route
+        path={ROUTES.landing}
+        element={
+          <SuspenseOutlet>
+            <LandingPage />
+          </SuspenseOutlet>
+        }
+      />
+
+      {/* Customer app shell */}
+      <Route element={<CustomerLayout />}>
+        {/* Public browsing (no sign-in required) */}
+        {/* The shop feed, always reachable — the landing page links here. */}
+        <Route path={ROUTES.explore} element={<HomePage />} />
         <Route path={ROUTES.nearby} element={<NearbyPage />} />
         <Route path={ROUTES.deals} element={<DealsPage />} />
         <Route path={ROUTES.search} element={<SearchPage />} />
@@ -250,6 +271,8 @@ export function AppRouter() {
             <Route path={ROUTES.admin.broadcast} element={<AdminBroadcastPage />} />
             <Route path={ROUTES.admin.banners} element={<AdminBannersPage />} />
             <Route path={ROUTES.admin.homeLayout} element={<AdminHomeLayoutPage />} />
+            <Route path={ROUTES.admin.landingPage} element={<AdminLandingPage />} />
+            <Route path={ROUTES.admin.seo} element={<AdminSeoPage />} />
             <Route path={ROUTES.admin.featureFlags} element={<AdminFeatureFlagsPage />} />
             <Route path={ROUTES.admin.ownerMenu} element={<AdminOwnerMenuPage />} />
             <Route path={ROUTES.admin.cms} element={<AdminCmsPage />} />

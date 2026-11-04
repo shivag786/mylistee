@@ -23,6 +23,8 @@ import {
   PanelLeft,
   Link2,
   MessageCircle,
+  PanelTop,
+  Globe,
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
@@ -50,11 +52,13 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { to: ROUTES.admin.personalLinks, label: 'Personal links', icon: Link2 },
   { to: ROUTES.admin.broadcast, label: 'Broadcast', icon: Megaphone },
   { to: ROUTES.admin.whatsapp, label: 'WhatsApp', icon: MessageCircle },
+  { to: ROUTES.admin.landingPage, label: 'Landing page', icon: PanelTop },
   { to: ROUTES.admin.homeLayout, label: 'Home layout', icon: LayoutList },
   { to: ROUTES.admin.banners, label: 'Home banners', icon: GalleryHorizontalEnd },
   { to: ROUTES.admin.featureFlags, label: 'Feature flags', icon: Flag },
   { to: ROUTES.admin.ownerMenu, label: 'Owner menu', icon: PanelLeft },
   { to: ROUTES.admin.cms, label: 'CMS pages', icon: FileText },
+  { to: ROUTES.admin.seo, label: 'SEO', icon: Globe },
   { to: ROUTES.admin.fraud, label: 'Fraud', icon: ShieldAlert },
   { to: ROUTES.admin.auditLogs, label: 'Audit logs', icon: ScrollText },
   { to: ROUTES.admin.reports, label: 'Reports', icon: Download },

@@ -8,6 +8,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useUnreadCount } from '@/features/notifications/hooks/useNotifications'
 import { CoinsPill } from '@/features/wallet/components/CoinsPill'
 import { LocationChip } from '@/features/location/LocationChip'
+import { useCustomerHomePath } from '@/features/landing/homeEntry'
 import { cn } from '@/utils/cn'
 import { CUSTOMER_DESKTOP_TABS } from './customerTabs'
 
@@ -18,6 +19,9 @@ import { CUSTOMER_DESKTOP_TABS } from './customerTabs'
 export function AppBar() {
   const { user } = useAuth()
   const { data: unread = 0 } = useUnreadCount()
+  // While `/` is the landing page, the "Home" link means the shop feed at /explore.
+  const homePath = useCustomerHomePath()
+  const tabs = CUSTOMER_DESKTOP_TABS.map((t) => (t.to === ROUTES.home ? { ...t, to: homePath } : t))
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-header/90 backdrop-blur-xl">
@@ -32,7 +36,7 @@ export function AppBar() {
         </div>
 
         <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex">
-          {CUSTOMER_DESKTOP_TABS.map(({ to, label, icon: Icon, end }) => (
+          {tabs.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}

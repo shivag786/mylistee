@@ -2,6 +2,8 @@
 import { apiClient } from '@/services/apiClient'
 import type { BrandTheme } from '@/features/brandTheme/brandTheme'
 import type { HomeSectionSetting } from '@/features/home/homeSections'
+import type { LandingContent } from '@/features/landing/landingContent'
+import type { SeoSettings } from '@/features/seo/seoTypes'
 
 export interface AppConfig {
   flags: {
@@ -44,6 +46,14 @@ export interface AppConfig {
   theme?: BrandTheme
   /** Admin-arranged home sections; null/absent = the built-in order. */
   homeLayout?: HomeSectionSetting[] | null
+  /** What `/` shows signed-out visitors. Absent on an older API = the shop feed. */
+  homePage?: 'shops' | 'landing'
+  /** Admin-edited landing page content; null = the built-in content. */
+  landingPage?: LandingContent | null
+  /** Admin-set search and social tags; null = the built-in ones. */
+  seo?: SeoSettings | null
+  /** Personal link trial and pack prices (₹), for the landing page. */
+  personalLink?: { trialDays: number; price30: number; price90: number; price365: number }
 }
 
 export const configService = {

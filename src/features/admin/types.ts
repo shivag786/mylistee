@@ -1,4 +1,6 @@
 import type { HomeSectionSetting } from '@/features/home/homeSections'
+import type { LandingContent } from '@/features/landing/landingContent'
+import type { SeoSettings } from '@/features/seo/seoTypes'
 import type { Plan } from '@/features/owner/types'
 import type { PaginationMeta } from '@/types/api'
 
@@ -213,6 +215,12 @@ export interface PlatformSettings {
   menuCardColors: boolean
   /** Customer home sections in order; null = the built-in order. */
   homeLayout: HomeSectionSetting[] | null
+  /** What `/` shows signed-out visitors: the shop feed or the landing page. */
+  homePage: 'shops' | 'landing'
+  /** Landing page content; null = the built-in content. */
+  landingPage: LandingContent | null
+  /** Search and social tags; null = the built-in ones. */
+  seo: SeoSettings | null
 
   /** Optional theme colours; '' or null = follow the main palette. */
   themeHeader: string | null

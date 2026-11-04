@@ -10,6 +10,7 @@ import { PwaController } from '@/features/pwa/PwaController'
 import { PwaDisabledGate } from '@/features/pwa/PwaDisabledGate'
 import { PushRegistrar } from '@/features/notifications/components/PushRegistrar'
 import { Toaster } from '@/components/ui/sonner'
+import { SeoManager } from '@/features/seo/SeoManager'
 
 export default function App() {
   return (
@@ -22,6 +23,8 @@ export default function App() {
             <SkipToContent />
             <OfflineBanner />
             <AppRouter />
+            {/* After the router so its head tags win over the page's own title. */}
+            <SeoManager />
             <InstallBanner />
             <PushRegistrar />
           </PwaDisabledGate>
