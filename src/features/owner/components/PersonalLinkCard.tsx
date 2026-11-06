@@ -6,21 +6,14 @@ import { ROUTES } from '@/constants/routes'
 import { cn } from '@/utils/cn'
 import { usePersonalLink } from '../personalLink'
 
-/** Dashboard tile: personal link status at a glance, days left, one tap to manage. */
+/** Dashboard tile: personal link on or off at a glance, one tap to manage. */
 export function PersonalLinkCard() {
   const { data: s } = usePersonalLink()
   if (!s) return null
 
-  const soon = s.active && s.daysLeft <= 2
   const [badge, tone, line] = s.active
-    ? ([
-        `${s.daysLeft} ${s.daysLeft === 1 ? 'day' : 'days'} left`,
-        soon ? 'warning' : 'success',
-        soon ? 'Expiring soon — renew now' : s.onTrial ? 'Free trial running' : 'Customers see only your shop',
-      ] as const)
-    : s.trialAvailable
-      ? ([`${s.trialDays} days free`, 'primary', 'Customers see only your shop — try it free'] as const)
-      : (['Off', 'neutral', `From ₹${s.packs[0]?.price ?? 150} / ${s.packs[0]?.days ?? 30} days`] as const)
+    ? (['On', 'success', 'Customers see only your shop'] as const)
+    : (['Free', 'primary', 'Customers see only your shop — free, never expires'] as const)
 
   return (
     <Link
@@ -30,10 +23,7 @@ export function PersonalLinkCard() {
       <Card
         elevation="soft"
         interactive
-        className={cn(
-          'flex items-center gap-3',
-          soon ? 'border-warning/50 bg-warning-soft/50' : !s.active && 'bg-gradient-to-br from-gold-soft to-primary-soft',
-        )}
+        className={cn('flex items-center gap-3', !s.active && 'bg-gradient-to-br from-gold-soft to-primary-soft')}
       >
         <span
           className={cn(

@@ -197,6 +197,15 @@ export interface PlatformSettings {
   /** Customer sign-in methods. The server keeps at least one on. */
   loginGoogle: boolean
   loginMobile: boolean
+  spinShowCounts: boolean
+  customerSoundsEnabled?: boolean
+  customerSoundPlacedUrl?: string | null
+  customerSoundAcceptedUrl?: string | null
+  aiEnabled?: boolean
+  openaiApiKey?: string
+  openaiApiKeySet?: boolean
+  openaiModel?: string
+  aiMonthlyLimit?: number
 
   /** App theme — "#rrggbb" colours and Google Font names (see brandTheme.ts). */
   themePrimary: string

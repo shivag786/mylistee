@@ -53,7 +53,6 @@ export interface AppConfig {
   /** Admin-set search and social tags; null = the built-in ones. */
   seo?: SeoSettings | null
   /** Personal link trial and pack prices (₹), for the landing page. */
-  personalLink?: { trialDays: number; price30: number; price90: number; price365: number }
 }
 
 export const configService = {

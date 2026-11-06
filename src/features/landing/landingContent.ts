@@ -129,7 +129,7 @@ export const LANDING_SECTIONS: LandingSectionMeta[] = [
   {
     id: 'personalLink',
     label: 'Personal link',
-    description: 'Your own shop link and QR, with the trial and pack prices from Settings.',
+    description: 'Your own shop link and QR — free for every shop, never expires.',
     defaultTitle: 'Your own shop link — only your shop',
     defaultSubtitle:
       'Customers who open your link or scan your QR see only your shop. No other shops, no competitors.',

@@ -28,6 +28,8 @@ import {
   formatPrice,
   planPeriod,
   durationLabel,
+  billingLabel,
+  intervalDays,
   timeLeft,
 } from '@/features/owner/planDisplay'
 import { ROUTES } from '@/constants/routes'
@@ -198,6 +200,7 @@ function CurrentPlanCard({ state, onCancel }: { state: SubscriptionState; onCanc
             <p className="text-caption text-text-secondary">Current plan</p>
             <div className="flex items-center gap-2">
               <h2 className="text-subtitle font-bold text-foreground">{plan?.name ?? 'Free'}</h2>
+              {plan && plan.price > 0 && <Badge tone="neutral">{billingLabel(plan.interval)}</Badge>}
               {plan?.badge && <Badge tone="premium">{plan.badge}</Badge>}
             </div>
             {plan && (
@@ -340,6 +343,7 @@ function PlanCard({
             <Icon className="size-4" aria-hidden />
           </span>
           <span className="text-body-lg font-semibold text-foreground">{plan.name}</span>
+          {plan.price > 0 && <Badge tone="neutral" size="sm">{billingLabel(plan.interval)}</Badge>}
         </div>
         {intro ? (
           <Badge tone="success" size="sm">{intro.label || 'First-time offer'}</Badge>
@@ -428,8 +432,8 @@ function IntroPrice({ plan, intro }: { plan: Plan; intro: NonNullable<Plan['intr
     ? plan.price / (plan.durationMonths * 30)
     : plan.durationDays
       ? plan.price / plan.durationDays
-      : plan.interval === 'month'
-        ? plan.price / 30
+      : intervalDays(plan.interval)
+        ? plan.price / intervalDays(plan.interval)!
         : null
   const normal = perDay ? Math.round(perDay * intro.days) : null
   const left = timeLeft(intro.endsAt, now)

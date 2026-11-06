@@ -13,7 +13,7 @@ import { ErrorState } from '@/components/feedback/ErrorState'
 import { toast } from '@/utils/toast'
 import { useAdminPlans, useUpdatePlan } from '@/features/admin/hooks/useAdmin'
 import { FEATURE_LABELS, PLAN_MODULES, daysLabel, formatPrice, planPeriod } from '@/features/owner/planDisplay'
-import { DurationInput } from '@/features/admin/components/PlanDurationInput'
+import { BillingSelect, DurationInput } from '@/features/admin/components/PlanDurationInput'
 import { durationPayload, type DurationUnit } from '@/features/admin/planDuration'
 import { PlanCreateSheet } from '@/features/admin/components/PlanCreateSheet'
 import type { Plan } from '@/features/admin/types'
@@ -66,6 +66,8 @@ function PlanEditor({ plan }: { plan: Plan }) {
   const [price, setPrice] = useState(String(plan.price))
   const [duration, setDuration] = useState(numStr(plan.durationMonths ?? plan.durationDays ?? null))
   const [durationUnit, setDurationUnit] = useState<DurationUnit>(plan.durationMonths ? 'months' : 'days')
+  // Older plans may say "lifetime"; editing one moves it to Monthly.
+  const [billing, setBilling] = useState(['month', 'quarter', 'year'].includes(plan.interval) ? plan.interval : 'month')
   const [isActive, setIsActive] = useState(plan.isActive ?? true)
   const [customerDetails, setCustomerDetails] = useState<'full' | 'masked'>(plan.customerDetails ?? 'masked')
   const [limits, setLimits] = useState({
@@ -128,7 +130,9 @@ function PlanEditor({ plan }: { plan: Plan }) {
     const payload = {
       name,
       price: Number(price),
-      ...durationPayload(duration, durationUnit),
+      // A paid plan lasts its billing period; only the free plan has its own length.
+      interval: billing,
+      ...(Number(price) > 0 ? { durationDays: null, durationMonths: null } : durationPayload(duration, durationUnit)),
       ...limits,
       pushPerCustomerPerMonth: limits.pushPerCustomerPerMonth === null ? null : Math.max(1, limits.pushPerCustomerPerMonth),
       customerDetails,
@@ -182,18 +186,22 @@ function PlanEditor({ plan }: { plan: Plan }) {
         <LabeledInput label="Name" value={name} onChange={setName} />
         <LabeledInput label={`Price (${plan.currency})`} value={price} onChange={setPrice} type="number" />
         <div className="col-span-2">
-          <DurationInput
-            label={free ? 'Free for how long' : 'Plan lasts'}
-            value={duration}
-            unit={durationUnit}
-            onChange={setDuration}
-            onUnitChange={setDurationUnit}
-            placeholder={free ? 'Empty = free forever' : `Empty = by interval (${plan.interval})`}
-          />
+          {free ? (
+            <DurationInput
+              label="Free for how long"
+              value={duration}
+              unit={durationUnit}
+              onChange={setDuration}
+              onUnitChange={setDurationUnit}
+              placeholder="Empty = free forever"
+            />
+          ) : (
+            <BillingSelect id={`billing-${plan.key}`} value={billing} onChange={setBilling} />
+          )}
           <p className="mt-1 text-small text-text-muted">
             {free
               ? 'After this the shop stays visible (menu, QR, link) but every module below locks until they buy a plan. For shops already signed up, it counts from today.'
-              : 'How long one payment lasts. Renewing early adds on to the time left. Shops that already bought keep the end date they paid for.'}
+              : 'One payment lasts a month, 3 months or a year. Renewing early adds on to the time left. Shops that already bought keep the end date they paid for.'}
           </p>
         </div>
       </div>
@@ -219,7 +227,7 @@ function PlanEditor({ plan }: { plan: Plan }) {
                 <p className="col-span-2 rounded-lg bg-success-soft px-3 py-2 text-small text-foreground">
                   Shops see <b>₹{intro.price}</b> for {daysLabel(Number(intro.days))}, then{' '}
                   {formatPrice(Number(price), plan.currency)}
-                  {planPeriod({ ...durationPayload(duration, durationUnit), interval: plan.interval })}.
+                  {planPeriod({ interval: billing })}.
                   {intro.endsAt
                     ? ` Offer ends ${new Date(intro.endsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}.`
                     : ' No end date.'}

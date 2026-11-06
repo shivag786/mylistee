@@ -2,6 +2,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { DurationUnit } from '@/features/admin/planDuration'
+import { BILLING_OPTIONS } from '@/features/owner/planDisplay'
 
 /** How long a plan lasts: a number with a Days / Months picker. */
 export function DurationInput({
@@ -41,6 +42,29 @@ export function DurationInput({
           </SelectContent>
         </Select>
       </div>
+    </div>
+  )
+}
+
+/** A paid plan's billing: Monthly, Quarterly or Yearly — one payment lasts that long. */
+export function BillingSelect({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-1">
+      <Label htmlFor={id} className="text-small">
+        Billing
+      </Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id={id} className="h-11 w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {BILLING_OPTIONS.map((b) => (
+            <SelectItem key={b.value} value={b.value}>
+              {b.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   )
 }

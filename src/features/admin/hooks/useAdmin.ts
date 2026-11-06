@@ -275,6 +275,22 @@ export function useRemoveOrderSound() {
   })
 }
 
+/** Customer app tones ("order placed", "order accepted"): upload / remove. */
+export function useCustomerSound() {
+  const qc = useQueryClient()
+  const onSuccess = (data: PlatformSettings) => qc.setQueryData(adminKeys.settings, data)
+  return {
+    upload: useMutation({
+      mutationFn: ({ kind, file }: { kind: 'placed' | 'accepted'; file: File }) => adminService.uploadCustomerSound(kind, file),
+      onSuccess,
+    }),
+    remove: useMutation({
+      mutationFn: (kind: 'placed' | 'accepted') => adminService.removeCustomerSound(kind),
+      onSuccess,
+    }),
+  }
+}
+
 /** Upload / remove the app icon; both change what /config serves. */
 export function useAppIconActions() {
   const qc = useQueryClient()

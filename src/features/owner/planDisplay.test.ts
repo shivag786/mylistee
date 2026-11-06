@@ -15,6 +15,7 @@ describe('planDisplay', () => {
 
   it('renders the interval suffix', () => {
     expect(intervalSuffix('month')).toBe('/mo')
+    expect(intervalSuffix('quarter')).toBe('/qtr')
     expect(intervalSuffix('year')).toBe('/yr')
     expect(intervalSuffix('lifetime')).toBe('')
   })

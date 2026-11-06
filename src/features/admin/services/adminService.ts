@@ -248,6 +248,13 @@ export const adminService = {
     return apiClient.post<PlatformSettings>('admin/settings/order-sound', body)
   },
   removeOrderSound: () => apiClient.delete<PlatformSettings>('admin/settings/order-sound'),
+  uploadCustomerSound: (kind: 'placed' | 'accepted', file: File) => {
+    const body = new FormData()
+    body.append('sound', file)
+    return apiClient.post<PlatformSettings>(`admin/settings/customer-sound/${kind}`, body)
+  },
+  removeCustomerSound: (kind: 'placed' | 'accepted') =>
+    apiClient.delete<PlatformSettings>(`admin/settings/customer-sound/${kind}`),
   testEmail: (to: string) => apiClient.post<null>('admin/settings/test-email', { to }),
   uploadAppIcon: (file: File) => {
     const body = new FormData()

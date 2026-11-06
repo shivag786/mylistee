@@ -42,7 +42,6 @@ import { useDeals } from '@/features/deals/useDeals'
 import { useAppLocation } from '@/features/location/useAppLocation'
 import { usePlans } from '@/features/owner/hooks/useOwner'
 import { featureLabel, formatPrice, planPeriod } from '@/features/owner/planDisplay'
-import { useAppConfig } from '@/hooks/useAppConfig'
 import { fadeInUp } from '@/animations'
 import { cn } from '@/utils/cn'
 import type { LandingFaq, LandingItem, ResolvedLanding } from './landingContent'
@@ -445,16 +444,6 @@ function StepsCard({
 // ---------------------------------------------------------------- Personal link
 
 export function PersonalLinkSection({ title, subtitle }: { title: string; subtitle: string | null }) {
-  const { data: config } = useAppConfig()
-  const pl = config?.personalLink
-  const packs = pl
-    ? [
-        { label: '30 days', price: pl.price30, days: 30 },
-        { label: '90 days', price: pl.price90, days: 90 },
-        { label: '1 year', price: pl.price365, days: 365 },
-      ]
-    : []
-
   return (
     <LandingSection id="personal-link">
       <div className="grid overflow-hidden rounded-[2rem] bg-gradient-to-br from-gradient-from to-gradient-to text-secondary-foreground lg:grid-cols-[1.2fr_1fr]">
@@ -485,19 +474,14 @@ export function PersonalLinkSection({ title, subtitle }: { title: string; subtit
         </div>
 
         <div className="flex flex-col justify-center gap-3 bg-black/15 p-7 sm:p-10">
-          {pl && pl.trialDays > 0 && (
-            <div className="rounded-2xl bg-accent px-4 py-3 text-accent-foreground">
-              <p className="text-body font-bold">Free for {pl.trialDays} days</p>
-              <p className="text-small">Try your personal link before you pay anything.</p>
-            </div>
-          )}
-          {packs.map((p) => (
-            <div key={p.days} className="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/15">
-              <span className="text-body font-semibold">{p.label}</span>
-              <span className="text-right">
-                <span className="text-subtitle font-bold">₹{p.price.toLocaleString('en-IN')}</span>
-                <span className="block text-small text-white/70">₹{(p.price / p.days).toFixed(1)} a day</span>
-              </span>
+          {[
+            ['Free', 'No trial, no pack — every shop gets it'],
+            ['Never expires', 'It stays on until you switch it off'],
+            ['One tap', 'Switch it on from your business app'],
+          ].map(([head, line]) => (
+            <div key={head} className="rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/15">
+              <p className="text-body font-bold">{head}</p>
+              <p className="text-small text-white/70">{line}</p>
             </div>
           ))}
         </div>

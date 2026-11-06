@@ -23,7 +23,7 @@ import {
 import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import { useCreatePlan } from '@/features/admin/hooks/useAdmin'
-import { FEATURE_LABELS } from '@/features/owner/planDisplay'
+import { BILLING_OPTIONS, FEATURE_LABELS } from '@/features/owner/planDisplay'
 import { DurationInput } from '@/features/admin/components/PlanDurationInput'
 import { durationPayload, type DurationUnit } from '@/features/admin/planDuration'
 
@@ -92,6 +92,8 @@ export function PlanCreateSheet({ open, onOpenChange, existingKeys }: PlanCreate
     setFeatures((f) => (on ? [...new Set([...f, key])] : f.filter((x) => x !== key)))
   }
 
+  const free = (Number(form.price) || 0) === 0
+
   async function handleSave() {
     const key = form.key.trim().toLowerCase()
     if (!/^[a-z0-9_-]+$/.test(key)) {
@@ -122,7 +124,8 @@ export function PlanCreateSheet({ open, onOpenChange, existingKeys }: PlanCreate
         price: Number(form.price) || 0,
         interval: form.interval,
         badge: form.badge.trim() || null,
-        ...durationPayload(duration, durationUnit),
+        // A paid plan lasts its billing period; only a free plan has its own length.
+        ...(free ? durationPayload(duration, durationUnit) : { durationDays: null, durationMonths: null }),
         isActive,
         customerDetails,
         features,
@@ -172,10 +175,11 @@ export function PlanCreateSheet({ open, onOpenChange, existingKeys }: PlanCreate
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="month">Monthly</SelectItem>
-                  <SelectItem value="quarter">Quarterly</SelectItem>
-                  <SelectItem value="year">Yearly</SelectItem>
-                  <SelectItem value="lifetime">Lifetime</SelectItem>
+                  {BILLING_OPTIONS.map((b) => (
+                    <SelectItem key={b.value} value={b.value}>
+                      {b.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -185,17 +189,23 @@ export function PlanCreateSheet({ open, onOpenChange, existingKeys }: PlanCreate
             </div>
           </div>
 
-          <div className="space-y-1">
-            <DurationInput
-              label="Plan lasts"
-              value={duration}
-              unit={durationUnit}
-              onChange={setDuration}
-              onUnitChange={setDurationUnit}
-              placeholder="Empty = by billing"
-            />
-            <p className="text-small text-text-muted">How long one payment lasts, e.g. 15 days or 6 months.</p>
-          </div>
+          {free ? (
+            <div className="space-y-1">
+              <DurationInput
+                label="Free for how long"
+                value={duration}
+                unit={durationUnit}
+                onChange={setDuration}
+                onUnitChange={setDurationUnit}
+                placeholder="Empty = free forever"
+              />
+              <p className="text-small text-text-muted">After this, the shop&rsquo;s modules lock until they buy a plan.</p>
+            </div>
+          ) : (
+            <p className="text-small text-text-muted">
+              One payment lasts {form.interval === 'quarter' ? '3 months' : form.interval === 'year' ? 'a year' : 'a month'}.
+            </p>
+          )}
 
           <label className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
             <span>

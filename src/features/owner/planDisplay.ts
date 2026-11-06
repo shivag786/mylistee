@@ -31,10 +31,28 @@ export function formatPrice(amount: number, currency = 'INR'): string {
   return `${symbol}${amount.toLocaleString('en-IN')}`
 }
 
+/** The three billing types a paid plan can have. */
+export const BILLING_OPTIONS = [
+  { value: 'month', label: 'Monthly' },
+  { value: 'quarter', label: 'Quarterly' },
+  { value: 'year', label: 'Yearly' },
+] as const
+
+/** "Monthly" / "Quarterly" / "Yearly" (older plans may still say "lifetime"). */
+export function billingLabel(interval: string): string {
+  return BILLING_OPTIONS.find((b) => b.value === interval)?.label ?? (interval === 'lifetime' ? 'One-time' : interval)
+}
+
 export function intervalSuffix(interval: string): string {
   if (interval === 'year') return '/yr'
+  if (interval === 'quarter') return '/qtr'
   if (interval === 'lifetime') return ''
   return '/mo'
+}
+
+/** About how many days one billing period covers — for per-day prices. */
+export function intervalDays(interval: string): number | null {
+  return { month: 30, quarter: 90, year: 365 }[interval] ?? null
 }
 
 /** e.g. formatLimit(null, 'offers') → "Unlimited offers"; formatLimit(3, 'offers') → "3 offers". */
@@ -57,6 +75,7 @@ export const PLAN_MODULES: PlanModuleMeta[] = [
   { id: 'pay_online', label: 'Pay online', description: 'UPI / card through Razorpay', group: 'Orders & payments' },
   { id: 'tables', label: 'Tables & dine-in', description: 'Dining tables with table QR', group: 'Orders & payments' },
   { id: 'combos', label: 'Combos', description: 'Combo deals', group: 'Sell more' },
+  { id: 'ai_assistant', label: 'AI assistant', description: 'Dish text, offer ideas, notifications and replies written by AI (vendor app)', group: 'Sell more' },
   { id: 'grow_sales', label: 'Grow sales', description: 'Promotions and timed discounts', group: 'Sell more' },
   { id: 'rewards', label: 'Rewards & coupons', description: 'Bill discount, come-back and loyalty-step coupons, codes', group: 'Bring customers back' },
   { id: 'loyalty', label: 'Loyalty coins', description: 'Coins customers earn and spend at the shop', group: 'Bring customers back' },

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, Play, Trash2, Upload, CreditCard, KeyRound, LogIn, CheckCircle2 } from 'lucide-react'
+import { Bell, Play, Trash2, Upload, CreditCard, KeyRound, LogIn, CheckCircle2, Dices, Volume2, Sparkles } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,10 +15,10 @@ import {
   useUpdateSettings,
   useUploadOrderSound,
   useRemoveOrderSound,
+  useCustomerSound,
 } from '@/features/admin/hooks/useAdmin'
 import type { PlatformSettings } from '@/features/admin/types'
 import { AppIconCard, MenuCardColorsCard, ThemeCard } from '@/features/admin/components/AppearanceSettings'
-import { PersonalLinkPricingCard, PersonalLinkRemindersCard } from '@/features/admin/components/PersonalLinkSettings'
 import { VendorAppThemeCard } from '@/features/admin/components/VendorAppThemeCard'
 
 export function AdminSettingsPage() {
@@ -127,13 +127,12 @@ export function AdminSettingsPage() {
 
       <PaymentsCard settings={data ?? form} />
 
-      <PersonalLinkPricingCard settings={data ?? form} />
-
-      <PersonalLinkRemindersCard settings={data ?? form} />
-
       <LoginMethodsCard settings={data ?? form} />
+      <SpinCountsCard settings={data ?? form} />
 
       <OrderSoundCard currentUrl={form.orderSoundUrl} />
+      <CustomerSoundsCard settings={data ?? form} />
+      <AiAssistantCard settings={data ?? form} />
     </div>
   )
 }
@@ -368,6 +367,226 @@ function LoginMethodsCard({ settings }: { settings: PlatformSettings }) {
           yet.
         </p>
       )}
+    </Card>
+  )
+}
+
+/**
+ * Spin & win social proof: whether customers see how many people played and
+ * won at each shop ("1,240 played · 860 won") in the app and on the site.
+ */
+function SpinCountsCard({ settings }: { settings: PlatformSettings }) {
+  const update = useUpdateSettings()
+
+  return (
+    <Card elevation="soft" className="max-w-xl space-y-3" padding="lg">
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Dices className="size-5" aria-hidden />
+        </span>
+        <div>
+          <p className="font-semibold text-foreground">Spin &amp; win</p>
+          <p className="text-caption text-text-secondary">
+            Showing how many customers played and won makes the wheel more inviting.
+          </p>
+        </div>
+      </div>
+      <MethodRow
+        title="Show play and win counts"
+        body={'e.g. "1,240 played · 860 won" on each shop’s wheel.'}
+        checked={settings.spinShowCounts ?? true}
+        disabled={update.isPending}
+        onChange={(v) =>
+          update.mutate(
+            { spinShowCounts: v },
+            {
+              onSuccess: () => toast.success(v ? 'Spin counts shown' : 'Spin counts hidden'),
+              onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not update.'),
+            },
+          )
+        }
+      />
+    </Card>
+  )
+}
+
+/**
+ * Sounds in the customer app: one when the customer places an order, one when
+ * the shop accepts it. Empty = the app's built-in tones.
+ */
+function CustomerSoundsCard({ settings }: { settings: PlatformSettings }) {
+  const update = useUpdateSettings()
+  const sound = useCustomerSound()
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  function preview(url: string | null) {
+    if (!url) return
+    audioRef.current ??= new Audio()
+    audioRef.current.src = url
+    audioRef.current.currentTime = 0
+    void audioRef.current.play().catch(() => toast.error('Could not play the sound.'))
+  }
+
+  const rows: { kind: 'placed' | 'accepted'; title: string; body: string; url: string | null }[] = [
+    { kind: 'placed', title: 'Order placed', body: 'Plays when the customer places an order.', url: settings.customerSoundPlacedUrl ?? null },
+    { kind: 'accepted', title: 'Order accepted', body: 'Plays when the shop accepts it (and on that push).', url: settings.customerSoundAcceptedUrl ?? null },
+  ]
+
+  return (
+    <Card elevation="soft" className="max-w-xl space-y-3" padding="lg">
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Volume2 className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-foreground">Customer app sounds</p>
+          <p className="text-caption text-text-secondary">
+            Short tones in the customer app. MP3/WAV/OGG up to 1 MB; leave empty for the built-in tones.
+          </p>
+        </div>
+      </div>
+      <MethodRow
+        title="Play order sounds"
+        body="Switch off to keep the customer app silent."
+        checked={settings.customerSoundsEnabled ?? true}
+        disabled={update.isPending}
+        onChange={(v) =>
+          update.mutate(
+            { customerSoundsEnabled: v },
+            { onSuccess: () => toast.success(v ? 'Order sounds on' : 'Order sounds off') },
+          )
+        }
+      />
+      {rows.map((row) => (
+        <div key={row.kind} className="flex flex-wrap items-center gap-2 rounded-lg border border-border px-3 py-2.5">
+          <div className="min-w-0 flex-1">
+            <p className="text-caption font-semibold text-foreground">{row.title}</p>
+            <p className="text-small text-text-muted">{row.url ? 'Custom sound' : 'Built-in tone'} · {row.body}</p>
+          </div>
+          <label className="cursor-pointer">
+            <input
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                e.target.value = ''
+                if (!file) return
+                sound.upload.mutate(
+                  { kind: row.kind, file },
+                  {
+                    onSuccess: () => toast.success('Sound updated'),
+                    onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not upload that sound.'),
+                  },
+                )
+              }}
+            />
+            <span className="inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-small font-semibold text-primary-foreground">
+              <Upload className="size-4" aria-hidden /> {row.url ? 'Replace' : 'Upload'}
+            </span>
+          </label>
+          {row.url && (
+            <>
+              <Button type="button" size="sm" variant="outline" leftIcon={<Play className="size-4" />} onClick={() => preview(row.url)}>
+                Play
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                leftIcon={<Trash2 className="size-4 text-destructive" />}
+                onClick={() => sound.remove.mutate(row.kind, { onSuccess: () => toast.success('Back to the built-in tone') })}
+              >
+                Remove
+              </Button>
+            </>
+          )}
+        </div>
+      ))}
+    </Card>
+  )
+}
+
+/**
+ * The vendor app's AI assistant (OpenAI): on/off, the API key (never shown
+ * again once saved), the model and a monthly cap per shop. Which plans get it
+ * is set per plan under Plans → "AI assistant".
+ */
+function AiAssistantCard({ settings }: { settings: PlatformSettings }) {
+  const update = useUpdateSettings()
+  const [key, setKey] = useState('')
+  const [model, setModel] = useState(settings.openaiModel ?? 'gpt-4o-mini')
+  const [limit, setLimit] = useState(String(settings.aiMonthlyLimit ?? 100))
+
+  useEffect(() => {
+    setModel(settings.openaiModel ?? 'gpt-4o-mini')
+    setLimit(String(settings.aiMonthlyLimit ?? 100))
+  }, [settings.openaiModel, settings.aiMonthlyLimit])
+
+  function save() {
+    update.mutate(
+      {
+        ...(key.trim() ? { openaiApiKey: key.trim() } : {}),
+        openaiModel: model.trim() || 'gpt-4o-mini',
+        aiMonthlyLimit: Math.max(0, Number.parseInt(limit, 10) || 0),
+      },
+      {
+        onSuccess: () => {
+          setKey('')
+          toast.success('AI assistant settings saved')
+        },
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not save.'),
+      },
+    )
+  }
+
+  return (
+    <Card elevation="soft" className="max-w-xl space-y-3" padding="lg">
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Sparkles className="size-5" aria-hidden />
+        </span>
+        <div>
+          <p className="font-semibold text-foreground">AI assistant (vendor app)</p>
+          <p className="text-caption text-text-secondary">
+            Shop owners get dish descriptions, offer and combo ideas, notification messages, sales tips and review
+            replies, and tap one to use it. Choose which plans include it under Plans → “AI assistant”.
+          </p>
+        </div>
+      </div>
+      <MethodRow
+        title="Turn on the AI assistant"
+        body={settings.openaiApiKeySet ? 'An OpenAI key is saved.' : 'Save an OpenAI API key first.'}
+        checked={settings.aiEnabled ?? false}
+        disabled={update.isPending || (!settings.openaiApiKeySet && !settings.aiEnabled)}
+        onChange={(v) => update.mutate({ aiEnabled: v }, { onSuccess: () => toast.success(v ? 'AI assistant on' : 'AI assistant off') })}
+      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="ai-key">OpenAI API key</Label>
+          <Input
+            id="ai-key"
+            type="password"
+            autoComplete="off"
+            value={key}
+            placeholder={settings.openaiApiKeySet ? '•••••••• saved (type to replace)' : 'sk-...'}
+            onChange={(e) => setKey(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="ai-model">Model</Label>
+          <Input id="ai-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="gpt-4o-mini" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="ai-limit">Suggestions per shop / month</Label>
+          <Input id="ai-limit" inputMode="numeric" value={limit} onChange={(e) => setLimit(e.target.value.replace(/\D/g, ''))} />
+        </div>
+      </div>
+      <div className="flex justify-end">
+        <Button type="button" size="sm" isLoading={update.isPending} onClick={save}>
+          Save AI settings
+        </Button>
+      </div>
     </Card>
   )
 }
