@@ -13,6 +13,8 @@ export type OrderStatusKey =
 export type PaymentMethodKey = 'cod' | 'online'
 
 export interface OrderItemLine {
+  /** The line's id, for changing it (shop side). */
+  id?: number
   name: string
   itemType: 'product' | 'combo'
   unitPrice: number
@@ -25,6 +27,8 @@ export interface OrderItemLine {
 export interface Order {
   id: string
   token: string
+  /** The order's number of the day at the shop (1, 2, 3...). */
+  serial?: number | null
   status: OrderStatusKey
   serviceType: ServiceType
   serviceLabel: string
@@ -72,6 +76,15 @@ export interface Order {
   paidAt: string | null
   completedAt: string | null
   createdAt: string | null
+}
+
+/** POS changes to an order still in play. */
+export interface OrderEditInput {
+  /** Table uuid, or null to clear. */
+  table?: string | null
+  /** Order line id -> new quantity (0 removes). */
+  quantities?: Record<string, number>
+  add?: { type: 'product' | 'combo'; id: string; quantity: number; variant?: string }[]
 }
 
 export const ORDER_STATUS_TONE: Record<OrderStatusKey, 'info' | 'warning' | 'success' | 'neutral' | 'danger'> = {

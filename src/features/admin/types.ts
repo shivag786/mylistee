@@ -57,6 +57,8 @@ export interface AdminBusiness {
   status: BusinessStatus
   verified: boolean
   featured: boolean
+  /** The admin hid "Pay online" for this shop: pay at the counter only. */
+  onlinePayHidden?: boolean
   averageRating: number
   totalReviews: number
   totalVisits: number

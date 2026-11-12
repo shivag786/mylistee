@@ -5,7 +5,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ownerOrderService } from '../services/orderService'
-import type { Order, OrderStatusKey, PaymentMethodKey } from '../orderTypes'
+import type { Order, OrderEditInput, OrderStatusKey, PaymentMethodKey } from '../orderTypes'
 
 export const orderKeys = {
   list: (status: string) => ['owner', 'orders', status] as const,
@@ -17,6 +17,16 @@ export function useOwnerOrders(status = 'active') {
     queryFn: () => ownerOrderService.list(status === 'active' ? undefined : { status }),
     refetchInterval: status === 'active' ? 5000 : false,
     refetchIntervalInBackground: true,
+  })
+}
+
+export function useEditOrder() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: { id: string; input: OrderEditInput }) => ownerOrderService.edit(v.id, v.input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['owner', 'orders'] })
+    },
   })
 }
 

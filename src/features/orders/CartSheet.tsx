@@ -98,10 +98,11 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   const tables = service?.tables ?? []
   const deliveryFee = service?.deliveryFee ?? 0
   const preboundTableId = current?.tableId ?? null
-  const preboundTable = preboundTableId ? tables.find((t) => t.id === preboundTableId) ?? null : null
 
   const [serviceType, setServiceType] = useState<ServiceType>('pickup')
   const [tableId, setTableId] = useState<string | null>(null)
+  const [changingTable, setChangingTable] = useState(false)
+  const pickedTable = tableId ? tables.find((t) => t.id === tableId) ?? null : null
   const [delivery, setDelivery] = useState<DeliveryDraft>(() => readSavedDelivery())
 
   // "Order at shop" covers every counter / table mode; "Home delivery" is its own.
@@ -143,6 +144,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
       setServiceType(start)
       setLastShopMode(start !== 'delivery' ? start : shopModes[0] ?? 'pickup')
       setTableId(preboundTableId)
+      setChangingTable(false)
       // Last address used on this device; the account's number if none saved.
       setDelivery(readSavedDelivery(user?.phone))
       setPaymentChoice(defaultChoice(payment))
@@ -448,17 +450,34 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
 
                   {/* Dine-in table (Phase 7.6). Pre-bound from a table QR, else pickable. */}
                   {serviceType === 'dine_in' && (
-                    preboundTable ? (
-                      <div className="flex items-center gap-2 rounded-xl bg-info-soft p-3 text-caption text-info">
-                        <Utensils className="size-4" aria-hidden />
-                        <span className="font-medium">You’re at {preboundTable.label}</span>
+                    pickedTable && !changingTable ? (
+                      <div className="flex items-center gap-3 rounded-2xl border-2 border-primary bg-primary/10 p-3">
+                        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
+                          <Utensils className="size-5" aria-hidden />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-small font-semibold uppercase tracking-wide text-text-muted">Your table</span>
+                          <span className="block truncate text-subtitle font-extrabold text-foreground">{pickedTable.label}</span>
+                        </span>
+                        {tables.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => setChangingTable(true)}
+                            className="rounded-full border border-border bg-surface px-3 py-1.5 text-caption font-semibold text-primary"
+                          >
+                            Change
+                          </button>
+                        )}
                       </div>
                     ) : tables.length > 0 ? (
                       <label className="block space-y-1">
                         <span className="text-caption font-medium text-foreground">Table</span>
                         <select
                           value={tableId ?? ''}
-                          onChange={(e) => setTableId(e.target.value || null)}
+                          onChange={(e) => {
+                            setTableId(e.target.value || null)
+                            setChangingTable(false)
+                          }}
                           className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-body text-foreground focus:border-primary focus:outline-none"
                         >
                           <option value="">No specific table (tell the waiter)</option>

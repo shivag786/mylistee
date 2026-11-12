@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "org.listee.app",
+      "sha256_cert_fingerprints": ["7C:FB:56:09:84:E8:11:B5:E8:60:19:9C:2B:4E:F0:E9:E3:C7:61:63:9C:FF:F2:F4:33:A8:35:8E:F1:5E:40:6A"]
+    }
+  }
+]

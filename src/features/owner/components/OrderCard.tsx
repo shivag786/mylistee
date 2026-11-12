@@ -1,4 +1,6 @@
-import { Coins, Check, X, CheckCheck, Utensils, MapPin, Banknote, Smartphone, Phone, Navigation } from 'lucide-react'
+import { useState } from 'react'
+import { Coins, Check, X, CheckCheck, Utensils, MapPin, Banknote, Smartphone, Phone, Navigation, Pencil, Armchair } from 'lucide-react'
+import { EditOrderDialog } from './EditOrderDialog'
 import { directionsUrl } from '@/features/orders/delivery/addressLookup'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,13 +23,22 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
   const hasOnlineShare = (order.onlineAmount ?? 0) > 0
   const due = hasOnlineShare ? (order.amountDue ?? null) : null
   const fullyPrepaid = hasOnlineShare && Boolean(order.paidOnline) && (order.amountDue ?? 1) <= 0
+  const [editing, setEditing] = useState(false)
+  const editable = order.status === 'placed' || order.status === 'confirmed'
 
   return (
     <Card className="flex h-full flex-col gap-3" padding="md">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-caption text-text-muted">Token</p>
-          <p className="font-mono text-2xl font-bold tracking-widest text-foreground">{order.token}</p>
+          <p className="flex items-baseline gap-2">
+            <span className="font-mono text-2xl font-bold tracking-widest text-foreground">{order.token}</span>
+            {order.serial ? (
+              <span className="rounded-md bg-secondary px-1.5 py-0.5 text-small font-bold text-secondary-foreground" title="Order number today">
+                No. {order.serial}
+              </span>
+            ) : null}
+          </p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <Badge tone={ORDER_STATUS_TONE[order.status]}>{order.status}</Badge>
@@ -48,6 +59,14 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
           <p className="text-caption text-text-secondary">{order.customerName ?? 'Customer'}</p>
         </div>
       </div>
+
+      {order.tableLabel && (
+        <div className="flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 text-primary">
+          <Armchair className="size-5" aria-hidden />
+          <span className="text-body font-extrabold">Table {order.tableLabel}</span>
+          <span className="ml-auto truncate text-caption text-text-secondary">{order.customerName ?? ''}</span>
+        </div>
+      )}
 
       {order.serviceAddress && (
         <div className="space-y-2 rounded-lg bg-surface-muted p-2">
@@ -136,14 +155,28 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
 
       <div className="mt-auto flex flex-wrap gap-2 pt-1">
         {order.status === 'placed' && (
-          <>
-            <Button size="sm" leftIcon={<Check className="size-4" />} onClick={() => onAction(order.id, 'confirmed')} disabled={busy}>
-              Confirm
+          <div className="flex w-full gap-2">
+            <Button
+              size="md"
+              variant="success"
+              className="flex-[2] text-body font-extrabold"
+              leftIcon={<Check className="size-5" />}
+              onClick={() => onAction(order.id, 'confirmed')}
+              disabled={busy}
+            >
+              Accept
             </Button>
-            <Button size="sm" variant="outline" leftIcon={<X className="size-4" />} onClick={() => onAction(order.id, 'cancelled')} disabled={busy}>
-              Cancel
+            <Button
+              size="md"
+              variant="danger"
+              className="flex-1"
+              leftIcon={<X className="size-4" />}
+              onClick={() => onAction(order.id, 'cancelled')}
+              disabled={busy}
+            >
+              Reject
             </Button>
-          </>
+          </div>
         )}
         {order.status === 'confirmed' && fullyPrepaid && (
           // Nothing to collect: the money already landed online. Asking "cash or
@@ -170,8 +203,14 @@ export function OrderCard({ order, onAction, busy }: OrderCardProps) {
             Complete
           </Button>
         )}
+        {editable && (
+          <Button size="sm" variant="outline" leftIcon={<Pencil className="size-4" />} onClick={() => setEditing(true)} disabled={busy}>
+            Edit order
+          </Button>
+        )}
         {order.status !== 'cancelled' && <PrintOrderButton order={order} />}
       </div>
+      {editing && <EditOrderDialog order={order} onClose={() => setEditing(false)} />}
     </Card>
   )
 }

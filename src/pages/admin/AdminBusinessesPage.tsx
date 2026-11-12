@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MoreHorizontal, Check, Ban, RotateCcw, X, BadgeCheck, Star, Pencil } from 'lucide-react'
+import { MoreHorizontal, Check, Ban, RotateCcw, X, BadgeCheck, Star, Pencil, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { IconButton } from '@/components/ui/icon-button'
 import { Badge } from '@/components/ui/badge'
@@ -44,7 +44,7 @@ export function AdminBusinessesPage() {
   const [filters, setFilters] = useState<ListFilters>({ page: 1 })
   const [editing, setEditing] = useState<AdminBusiness | null>(null)
   const { data, isLoading, isFetching } = useAdminBusinesses(filters)
-  const { setStatus, verify, feature, uploadImage } = useBusinessActions()
+  const { setStatus, verify, feature, onlinePay, uploadImage } = useBusinessActions()
 
   function handleUpload(id: string, type: 'logo' | 'cover', file: File) {
     act(uploadImage.mutateAsync({ id, type, image: file }), `${type === 'logo' ? 'Logo' : 'Banner'} updated`)
@@ -141,6 +141,7 @@ export function AdminBusinessesPage() {
           <StatusPill status={b.status} />
           {b.verified && <Badge tone="info" size="sm">Verified</Badge>}
           {b.featured && <Badge tone="premium" size="sm">Featured</Badge>}
+          {b.onlinePayHidden && <Badge tone="warning" size="sm">Counter pay only</Badge>}
         </div>
       ),
     },
@@ -198,6 +199,16 @@ export function AdminBusinessesPage() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => act(feature.mutateAsync(b.id), b.featured ? 'Unfeatured' : 'Featured')}>
               <Star className="size-4" /> {b.featured ? 'Unfeature' : 'Feature'}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                act(
+                  onlinePay.mutateAsync(b.id),
+                  b.onlinePayHidden ? 'Pay online is shown again' : 'Pay online hidden: counter pay only',
+                )
+              }
+            >
+              <CreditCard className="size-4" /> {b.onlinePayHidden ? 'Show Pay online' : 'Hide Pay online'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -217,9 +217,15 @@ export function BusinessProfilePage() {
 
       {/* Table QR binding — the customer scanned a specific table's code. */}
       {boundTable && (
-        <div className="flex items-center gap-2 rounded-xl border border-info/30 bg-info-soft px-3 py-2 text-caption font-medium text-info">
-          <Utensils className="size-4 shrink-0" aria-hidden />
-          <span>You’re at {boundTable.label} — your order will be served here.</span>
+        <div className="flex items-center gap-3 rounded-2xl border-2 border-primary bg-primary/10 px-4 py-3">
+          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
+            <Utensils className="size-6" aria-hidden />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-small font-semibold uppercase tracking-wide text-text-muted">You are at</span>
+            <span className="block text-title font-extrabold leading-tight text-foreground">{boundTable.label}</span>
+            <span className="block text-caption text-text-secondary">Your order will be served here. You can change it in the cart.</span>
+          </span>
         </div>
       )}
 
