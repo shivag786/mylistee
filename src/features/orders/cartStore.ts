@@ -45,7 +45,7 @@ export interface CartService {
   modes: ServiceType[]
   defaultMode: ServiceType
   deliveryFee: number
-  tables: { id: string; label: string }[]
+  tables: { id: string; label: string; capacity?: number | null }[]
   /** How this shop takes payment. Absent ⇒ cash only, as before. */
   payment?: PublicPaymentOptions
 }

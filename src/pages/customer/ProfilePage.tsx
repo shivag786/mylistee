@@ -12,6 +12,7 @@ import { ROUTES } from '@/constants/routes'
 import { PushToggle } from '@/features/notifications/components/PushToggle'
 import { toast } from '@/utils/toast'
 import { CustomerDetails } from '@/features/profile/CustomerDetails'
+import { DeleteAccountCard } from '@/features/auth/components/DeleteAccountCard'
 
 const ROLE_LABELS: Record<string, string> = {
   customer: 'Customer',
@@ -108,6 +109,8 @@ export function ProfilePage() {
       >
         Sign out
       </Button>
+
+      {user.role === 'customer' && <DeleteAccountCard />}
 
       <ConfirmationDialog
         open={confirmOpen}

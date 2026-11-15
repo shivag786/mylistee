@@ -30,6 +30,15 @@ export function LegalFooter({ className }: { className?: string }) {
         <Link to={ROUTES.refund} className="text-text-muted hover:text-foreground hover:underline">
           Refund Policy
         </Link>
+        <Link to={ROUTES.page('about')} className="text-text-muted hover:text-foreground hover:underline">
+          About
+        </Link>
+        <Link to={ROUTES.page('contact')} className="text-text-muted hover:text-foreground hover:underline">
+          Contact
+        </Link>
+        <Link to={ROUTES.deleteAccount} className="text-text-muted hover:text-foreground hover:underline">
+          Delete account
+        </Link>
         <span className="text-text-disabled">
           © {new Date().getFullYear()} {LEGAL.brand}
         </span>

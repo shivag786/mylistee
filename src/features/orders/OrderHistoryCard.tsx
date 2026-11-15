@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Store, Coins, Clock, Star } from 'lucide-react'
+import { Store, Coins, Clock, Star, ReceiptText } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import { ReviewPromptDialog } from '@/features/businesses/components/ReviewPromp
 import { ORDER_STATUS_TONE, type Order, type OrderStatusKey } from '@/features/owner/orderTypes'
 import { SERVICE_META, SERVICE_TONE } from './serviceTypes'
 import { PaymentBreakdown } from './PaymentBreakdown'
+import { OrderInvoiceDialog } from './OrderInvoiceDialog'
 
 const STATUS_LABEL: Record<OrderStatusKey, string> = {
   awaiting_payment: 'Awaiting payment',
@@ -34,6 +35,8 @@ function formatWhen(iso: string | null): string {
 export function OrderHistoryCard({ order }: { order: Order }) {
   const qc = useQueryClient()
   const [reviewOpen, setReviewOpen] = useState(false)
+  const [billOpen, setBillOpen] = useState(false)
+  const tax = order.tax ?? null
   const when = formatWhen(order.createdAt ?? order.placedAt)
   const paid = order.status === 'paid' || order.status === 'completed'
   // Offer a review once the order is paid/completed and the shop isn't reviewed yet.
@@ -97,6 +100,24 @@ export function OrderHistoryCard({ order }: { order: Order }) {
             <span>−₹{order.coinDiscount}</span>
           </div>
         )}
+        {tax && tax.serviceCharge > 0 && (
+          <div className="flex justify-between text-text-muted">
+            <span>Service charge ({tax.serviceChargePercent}%)</span>
+            <span>₹{tax.serviceCharge}</span>
+          </div>
+        )}
+        {tax && tax.cgst + tax.sgst > 0 && (
+          <div className="flex justify-between text-text-muted">
+            <span>GST{tax.mode === 'inclusive' ? ' (included)' : ''} · CGST ₹{tax.cgst} + SGST ₹{tax.sgst}</span>
+            <span>₹{tax.total}</span>
+          </div>
+        )}
+        {tax && tax.roundOff !== 0 && (
+          <div className="flex justify-between text-text-muted">
+            <span>Round off</span>
+            <span>{tax.roundOff < 0 ? '−' : ''}₹{Math.abs(tax.roundOff)}</span>
+          </div>
+        )}
         <div className="flex justify-between text-body font-semibold text-foreground">
           {/* "Total", not "Total paid": with an advance, part of it is still owed. */}
           <span>Total</span>
@@ -115,6 +136,11 @@ export function OrderHistoryCard({ order }: { order: Order }) {
           </Badge>
         </div>
       )}
+
+      <Button size="sm" variant="ghost" fullWidth leftIcon={<ReceiptText className="size-4" />} onClick={() => setBillOpen(true)}>
+        {order.invoiceNo ? `View tax invoice · ${order.invoiceNo}` : tax ? 'View GST bill' : 'View bill'}
+      </Button>
+      {billOpen && <OrderInvoiceDialog order={order} open={billOpen} onOpenChange={setBillOpen} />}
 
       {canReview && (
         <Button

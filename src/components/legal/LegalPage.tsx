@@ -16,11 +16,14 @@ import { LEGAL } from '@/config/legal'
 export function LegalPage({
   title,
   summary,
+  lastUpdated,
   children,
 }: {
   title: string
   /** One-line plain-English gist, above the formal text. */
   summary: string
+  /** When the admin last edited a CMS page; else the built-in date. */
+  lastUpdated?: string
   children: ReactNode
 }) {
   const navigate = useNavigate()
@@ -60,8 +63,8 @@ export function LegalPage({
         <article className="mx-auto max-w-2xl space-y-5">
           <header className="space-y-2">
             <h1 className="text-title font-bold text-foreground">{title}</h1>
-            <p className="text-body text-text-secondary">{summary}</p>
-            <p className="text-small text-text-muted">Last updated {LEGAL.lastUpdated}</p>
+            {summary && <p className="text-body text-text-secondary">{summary}</p>}
+            <p className="text-small text-text-muted">Last updated {lastUpdated ?? LEGAL.lastUpdated}</p>
           </header>
 
           {children}
@@ -79,6 +82,12 @@ export function LegalPage({
               </LegalLink>
               <LegalLink to={ROUTES.refund} current={title}>
                 Refund &amp; Cancellation Policy
+              </LegalLink>
+              <LegalLink to={ROUTES.deleteAccount} current={title}>
+                Delete account
+              </LegalLink>
+              <LegalLink to={ROUTES.page('contact')} current={title}>
+                Contact us
               </LegalLink>
             </nav>
           </footer>

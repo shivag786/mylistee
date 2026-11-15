@@ -10,6 +10,9 @@ import {
   CreditCard,
   Clock,
   ShieldAlert,
+  UserPlus,
+  Store as StoreIcon,
+  ShoppingBag,
   type LucideIcon,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
@@ -23,6 +26,8 @@ import { Reveal } from '@/components/motion/Reveal'
 import { ROUTES } from '@/constants/routes'
 import { useAdminDashboard } from '@/features/admin/hooks/useAdmin'
 import { formatPrice } from '@/features/owner/planDisplay'
+import { RecentOnboarding } from '@/features/admin/components/RecentOnboarding'
+import type { DashboardOnboarding } from '@/features/admin/onboardingTypes'
 
 interface StatDef {
   key: string
@@ -33,6 +38,21 @@ interface StatDef {
 }
 
 const STATS: StatDef[] = [
+  {
+    key: 'newCustomers',
+    label: 'New customers today',
+    icon: UserPlus,
+    value: (s) => s.newCustomersToday ?? 0,
+    hint: (s) => `${s.newCustomersWeek ?? 0} this week`,
+  },
+  {
+    key: 'newBusinesses',
+    label: 'New shops today',
+    icon: StoreIcon,
+    value: (s) => s.newBusinessesToday ?? 0,
+    hint: (s) => `${s.newBusinessesWeek ?? 0} this week`,
+  },
+  { key: 'ordersToday', label: 'Orders today', icon: ShoppingBag, value: (s) => s.ordersToday ?? 0 },
   { key: 'businesses', label: 'Businesses', icon: Store, value: (s) => s.totalBusinesses, hint: (s) => `${s.verifiedBusinesses} verified` },
   { key: 'customers', label: 'Customers', icon: Users, value: (s) => s.totalCustomers, hint: (s) => `${s.activeCustomers} active` },
   { key: 'activeOffers', label: 'Active offers', icon: Tag, value: (s) => s.activeOffers },
@@ -56,6 +76,7 @@ export function AdminDashboardPage() {
   if (isError || !data) return <ErrorState onRetry={() => void refetch()} />
 
   const { stats, growth, health } = data
+  const onboarding = data as unknown as DashboardOnboarding
   const trend: TrendPoint[] = growth.map((g) => ({
     label: new Date(`${g.date}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     value: g[series],
@@ -109,6 +130,11 @@ export function AdminDashboardPage() {
           />
         ))}
       </section>
+
+      {/* Who joined lately */}
+      <Reveal>
+        <RecentOnboarding customers={onboarding.recentCustomers ?? []} businesses={onboarding.recentBusinesses ?? []} />
+      </Reveal>
 
       {/* Growth */}
       <Reveal>

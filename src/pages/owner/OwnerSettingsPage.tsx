@@ -4,6 +4,7 @@ import { BellRing, Bike, ChevronRight, Clock, Link2, PauseCircle, Store, Volume2
 import { apiClient } from '@/services/apiClient'
 import { ApiError } from '@/types/api'
 import { Card } from '@/components/ui/card'
+import { DeleteAccountCard } from '@/features/auth/components/DeleteAccountCard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -121,6 +122,8 @@ export function OwnerSettingsPage() {
         <LinkRow to={ROUTES.owner.personalLink} icon={<Link2 className="size-5" />} title="Personal link" />
         <LinkRow to={ROUTES.owner.profile} icon={<Clock className="size-5" />} title="Shop hours & details" />
       </Section>
+
+      <DeleteAccountCard owner />
 
       <CloseShopDialog open={closing} onClose={() => setClosing(false)} />
     </div>

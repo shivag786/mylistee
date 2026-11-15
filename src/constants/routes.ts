@@ -36,6 +36,10 @@ export const ROUTES = {
   terms: '/terms',
   privacy: '/privacy',
   refund: '/refund',
+  /** Account deletion — the URL Google Play asks for. */
+  deleteAccount: '/delete-account',
+  /** Any page written in admin CMS pages (About, Contact, FAQs…). */
+  page: (slug = ':slug') => `/p/${slug}`,
 
   // Business owner
   owner: {

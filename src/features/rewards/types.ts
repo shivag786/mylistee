@@ -151,6 +151,16 @@ export interface ShopPerks {
   coupons: PublicCoupon[]
 }
 
+export interface QuoteTax {
+  mode: 'exclusive' | 'inclusive'
+  taxable?: number | null
+  cgst: number
+  sgst: number
+  serviceCharge: number
+  serviceChargePercent: number
+  roundOff: number
+}
+
 /** The server's price for a cart (POST /orders/quote). Coins come off `total`. */
 export interface CartQuote {
   subtotal: number
@@ -167,6 +177,10 @@ export interface CartQuote {
   /** False while the shop is closed or has paused orders (absent on older servers). */
   acceptingOrders?: boolean
   total: number
+  /** Coins taken off `total` (when coinsToUse was sent). */
+  coinDiscount?: number
+  /** GST / service charge on this cart, when the shop bills with them. */
+  tax?: QuoteTax | null
   coupons: (PublicCoupon & { minBillMet: boolean; saves: number })[]
   /** What this order earns for next time. */
   next?: { comeback: ShopPerks['comeback']; loyalty: ShopPerks['loyalty'] }

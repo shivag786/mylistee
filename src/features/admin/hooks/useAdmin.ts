@@ -319,6 +319,14 @@ export function useUpdateCms() {
   })
 }
 
+export function useDeleteCms() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (slug: string) => adminService.deleteCms(slug),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: adminKeys.cms }),
+  })
+}
+
 // ---- Audit logs ----
 export const useAuditLogs = (filters: ListFilters) =>
   useQuery({

@@ -1,3 +1,4 @@
+import { lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { ROUTES } from '@/constants/routes'
 import { lazyPage } from '@/app/lazyPage'
@@ -86,6 +87,9 @@ const AdminWhatsAppPage = lazyPage(() => import('@/pages/admin/AdminWhatsAppPage
 const TermsPage = lazyPage(() => import('@/pages/legal/TermsPage'), 'TermsPage')
 const PrivacyPolicyPage = lazyPage(() => import('@/pages/legal/PrivacyPolicyPage'), 'PrivacyPolicyPage')
 const RefundPolicyPage = lazyPage(() => import('@/pages/legal/RefundPolicyPage'), 'RefundPolicyPage')
+// The admin's CMS copy of a page; the built-in policy is its fallback.
+// (React.lazy directly: lazyPage() components take no props.)
+const CmsPageView = lazy(() => import('@/pages/legal/CmsPageView').then((m) => ({ default: m.CmsPageView })))
 
 const LandingPage = lazyPage(() => import('@/pages/LandingPage'), 'LandingPage')
 const OwnerSignupPage = lazyPage(() => import('@/pages/auth/OwnerSignupPage'), 'OwnerSignupPage')
@@ -137,7 +141,7 @@ export function AppRouter() {
         path={ROUTES.terms}
         element={
           <SuspenseOutlet>
-            <TermsPage />
+            <CmsPageView slug="terms" fallback={<TermsPage />} />
           </SuspenseOutlet>
         }
       />
@@ -145,7 +149,7 @@ export function AppRouter() {
         path={ROUTES.privacy}
         element={
           <SuspenseOutlet>
-            <PrivacyPolicyPage />
+            <CmsPageView slug="privacy" fallback={<PrivacyPolicyPage />} />
           </SuspenseOutlet>
         }
       />
@@ -153,7 +157,23 @@ export function AppRouter() {
         path={ROUTES.refund}
         element={
           <SuspenseOutlet>
-            <RefundPolicyPage />
+            <CmsPageView slug="refund" fallback={<RefundPolicyPage />} />
+          </SuspenseOutlet>
+        }
+      />
+      <Route
+        path={ROUTES.deleteAccount}
+        element={
+          <SuspenseOutlet>
+            <CmsPageView slug="delete-account" />
+          </SuspenseOutlet>
+        }
+      />
+      <Route
+        path={ROUTES.page()}
+        element={
+          <SuspenseOutlet>
+            <CmsPageView />
           </SuspenseOutlet>
         }
       />

@@ -1,3 +1,4 @@
+import { TableArt } from './TableArt'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -172,7 +173,14 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   // the order will be; the local sums only fill in until the first quote lands.
   const { data: quote } = useCartQuote(
     open && current
-      ? { business: current.businessSlug, items: orderLines(current), serviceType, couponCode: couponCode ?? undefined }
+      ? {
+          business: current.businessSlug,
+          items: orderLines(current),
+          serviceType,
+          couponCode: couponCode ?? undefined,
+          // The server caps these as the order will; GST is worked out after them.
+          coinsToUse: useCoins && balance > 0 ? balance : undefined,
+        }
       : null,
   )
   const subtotal = quote?.subtotal ?? cartSubtotal(current)
@@ -188,7 +196,11 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
     ? Math.min(balance, comboCoinCap, Math.floor(discounted / COIN_VALUE))
     : 0
   const coinDiscount = coinsToApply * COIN_VALUE
-  const payable = Math.round((Math.max(0, discounted - coinDiscount) + fee) * 100) / 100
+  // A GST shop's bill is the server's: tax, service charge and round-off on top.
+  const tax = quote?.tax ?? null
+  const payable = tax
+    ? quote!.total
+    : Math.round((Math.max(0, discounted - coinDiscount) + fee) * 100) / 100
   const totalSaved = Math.round((savings + coinDiscount) * 100) / 100
   const couponHolds = Boolean(couponCode && quote?.coupon && !quote.couponError)
   // The shop paused orders (or closed) — the menu stays browsable, checkout does not.
@@ -452,12 +464,15 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                   {serviceType === 'dine_in' && (
                     pickedTable && !changingTable ? (
                       <div className="flex items-center gap-3 rounded-2xl border-2 border-primary bg-primary/10 p-3">
-                        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
-                          <Utensils className="size-5" aria-hidden />
+                        <span className="grid size-14 shrink-0 place-items-center rounded-xl bg-primary p-1 text-primary-foreground">
+                          <TableArt seats={pickedTable.capacity} label={pickedTable.label} />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block text-small font-semibold uppercase tracking-wide text-text-muted">Your table</span>
                           <span className="block truncate text-subtitle font-extrabold text-foreground">{pickedTable.label}</span>
+                          {pickedTable.capacity ? (
+                            <span className="block text-small text-text-secondary">{pickedTable.capacity} seats</span>
+                          ) : null}
                         </span>
                         {tables.length > 1 && (
                           <button
@@ -569,6 +584,18 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                     {couponHolds && <BillRow label={`Coupon (${quote!.coupon!.code})`} value={`−₹${quote!.couponDiscount}`} saving />}
                     {coinsToApply > 0 && <BillRow label={`Coins (${coinsToApply})`} value={`−₹${coinDiscount}`} saving />}
                     {isDelivery && <BillRow label="Delivery fee" value={fee > 0 ? `₹${fee}` : 'FREE'} saving={fee === 0} />}
+                    {tax && tax.serviceCharge > 0 && (
+                      <BillRow label={`Service charge (${tax.serviceChargePercent}%)`} value={`₹${tax.serviceCharge}`} />
+                    )}
+                    {tax && tax.cgst + tax.sgst > 0 && (
+                      <>
+                        <BillRow label={tax.mode === 'inclusive' ? 'CGST (included)' : 'CGST'} value={`₹${tax.cgst}`} />
+                        <BillRow label={tax.mode === 'inclusive' ? 'SGST (included)' : 'SGST'} value={`₹${tax.sgst}`} />
+                      </>
+                    )}
+                    {tax && tax.roundOff !== 0 && (
+                      <BillRow label="Round off" value={`${tax.roundOff < 0 ? '−' : ''}₹${Math.abs(tax.roundOff)}`} />
+                    )}
                     {split.fee > 0 && (
                       <BillRow
                         label={

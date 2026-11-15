@@ -8,7 +8,6 @@ import {
   MessageCircle,
   Navigation,
   Gift,
-  Utensils,
   Clock,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
@@ -40,6 +39,7 @@ import { toast } from '@/utils/toast'
 import { ApiError } from '@/types/api'
 import type { WonReward } from '@/features/businesses/publicTypes'
 import { storeScope } from '@/features/store/storeScope'
+import { TableArt } from '@/features/orders/TableArt'
 
 export function BusinessProfilePage() {
   const { slug = '' } = useParams<{ slug: string }>()
@@ -131,7 +131,7 @@ export function BusinessProfilePage() {
         modes: business!.service.modes,
         defaultMode: business!.service.defaultMode,
         deliveryFee: business!.service.deliveryFee,
-        tables: business!.tables.map((t) => ({ id: t.id, label: t.label })),
+        tables: business!.tables.map((t) => ({ id: t.id, label: t.label, capacity: t.capacity })),
         payment: business!.service.payment,
       },
       tableId: boundTable?.id ?? null,
@@ -218,13 +218,15 @@ export function BusinessProfilePage() {
       {/* Table QR binding — the customer scanned a specific table's code. */}
       {boundTable && (
         <div className="flex items-center gap-3 rounded-2xl border-2 border-primary bg-primary/10 px-4 py-3">
-          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <Utensils className="size-6" aria-hidden />
+          <span className="grid size-16 shrink-0 place-items-center rounded-xl bg-primary p-1 text-primary-foreground">
+            <TableArt seats={boundTable.capacity} label={boundTable.label} />
           </span>
           <span className="min-w-0">
             <span className="block text-small font-semibold uppercase tracking-wide text-text-muted">You are at</span>
             <span className="block text-title font-extrabold leading-tight text-foreground">{boundTable.label}</span>
-            <span className="block text-caption text-text-secondary">Your order will be served here. You can change it in the cart.</span>
+            <span className="block text-caption text-text-secondary">
+              {boundTable.capacity ? `${boundTable.capacity} seats · ` : ''}Your order will be served here. You can change it in the cart.
+            </span>
           </span>
         </div>
       )}

@@ -265,6 +265,7 @@ export const adminService = {
   removeAppIcon: () => apiClient.delete<PlatformSettings>('admin/settings/app-icon'),
 
   cmsPages: () => apiClient.get<CmsPage[]>('admin/cms'),
+  deleteCms: (slug: string) => apiClient.delete<null>(`admin/cms/${slug}`),
   updateCms: (slug: string, payload: { title: string; body?: string; status?: string }) =>
     apiClient.put<CmsPage>(`admin/cms/${slug}`, payload),
 

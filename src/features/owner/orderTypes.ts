@@ -22,6 +22,36 @@ export interface OrderItemLine {
   lineTotal: number
   /** Add-ons picked with it; the size is already in `name`. */
   addons?: string[]
+  /** GST rate on this line (%), when the shop bills GST. */
+  taxRate?: number | null
+}
+
+/** The GST part of a bill. */
+export interface OrderTax {
+  mode: 'exclusive' | 'inclusive'
+  taxable: number
+  cgst: number
+  sgst: number
+  total: number
+  serviceCharge: number
+  serviceChargePercent: number
+  roundOff: number
+  /** Per GST rate: taxable value and tax, for the summary on the invoice. */
+  rates?: { rate: number; taxable: number; tax: number }[]
+}
+
+/** Who issued the bill (single-order view only). */
+export interface OrderSeller {
+  name: string
+  legalName: string
+  gstin: string | null
+  fssai: string | null
+  address: string | null
+  phone: string | null
+  placeOfSupply: string | null
+  sac: string
+  footer: string | null
+  isTaxInvoice: boolean
 }
 
 export interface Order {
@@ -48,6 +78,12 @@ export interface Order {
   couponDiscount?: number
   couponCode?: string | null
   deliveryFee: number
+  /** Discount given at the counter. */
+  manualDiscount?: number
+  tax?: OrderTax | null
+  /** Set once the bill is paid, on a shop with GST billing. */
+  invoiceNo?: string | null
+  seller?: OrderSeller
   total: number
   /** Shop-only: Listee's platform fee, the gateway's share, and what the shop keeps. */
   platformFee?: number

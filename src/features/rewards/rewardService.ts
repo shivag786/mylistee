@@ -37,6 +37,6 @@ export const rewardService = {
   reveal: (id: string): Promise<ScratchCard> => apiClient.post<ScratchCard>(`rewards/cards/${id}/reveal`),
 
   /** Price a cart exactly as the order will be — works for guests too. */
-  quote: (payload: Pick<PlaceOrderPayload, 'business' | 'items' | 'serviceType'> & { couponCode?: string }): Promise<CartQuote> =>
+  quote: (payload: Pick<PlaceOrderPayload, 'business' | 'items' | 'serviceType'> & { couponCode?: string; coinsToUse?: number }): Promise<CartQuote> =>
     apiClient.post<CartQuote>('orders/quote', payload),
 }

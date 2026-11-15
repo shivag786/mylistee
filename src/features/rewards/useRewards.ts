@@ -56,7 +56,7 @@ export function useRewardActions() {
  * change. Keeps the last bill on screen while the next one loads.
  */
 export function useCartQuote(
-  payload: (Pick<PlaceOrderPayload, 'business' | 'items' | 'serviceType'> & { couponCode?: string }) | null,
+  payload: (Pick<PlaceOrderPayload, 'business' | 'items' | 'serviceType'> & { couponCode?: string; coinsToUse?: number }) | null,
 ) {
   return useQuery({
     queryKey: rewardKeys.quote(payload),

@@ -50,6 +50,8 @@ export interface VerifyOrderPaymentPayload {
 export const customerOrderService = {
   place: (payload: PlaceOrderPayload): Promise<Order> => apiClient.post<Order>('orders', payload),
   list: (): Promise<Order[]> => apiClient.get<Order[]>('orders'),
+  /** One order, with the shop's GSTIN and address for the tax invoice. */
+  get: (id: string): Promise<Order> => apiClient.get<Order>(`orders/${id}`),
 
   /** Open Checkout for an order's online share. */
   startPayment: (orderId: string): Promise<OrderCheckoutSession> =>
