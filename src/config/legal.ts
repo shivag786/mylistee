@@ -16,7 +16,7 @@ export const LEGAL = {
   brand: 'Listee',
 
   /** The one contact route the policies point at, for refunds and data rights. */
-  supportEmail: 'support@listee.app',
+  supportEmail: 'info@listee.org',
 
   /** Courts with exclusive jurisdiction, quoted in the Terms. */
   jurisdiction: 'Ahmedabad, Gujarat',

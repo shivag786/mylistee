@@ -19,7 +19,7 @@ export const appConfig = {
   /** Reward celebration should stay under this (document-00B §14). */
   celebrationMaxMs: 3000,
   support: {
-    email: 'support@listee.app',
+    email: 'info@listee.org',
   },
 } as const
 
