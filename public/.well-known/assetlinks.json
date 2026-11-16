@@ -4,7 +4,11 @@
     "target": {
       "namespace": "android_app",
       "package_name": "org.listee.app",
-      "sha256_cert_fingerprints": ["7C:FB:56:09:84:E8:11:B5:E8:60:19:9C:2B:4E:F0:E9:E3:C7:61:63:9C:FF:F2:F4:33:A8:35:8E:F1:5E:40:6A"]
+      "sha256_cert_fingerprints": [
+        "8B:AC:8C:0B:83:A3:A5:75:4A:8E:6D:2A:0F:D2:91:F1:6F:15:70:AF:41:76:07:F1:8D:A6:EB:B6:4D:0F:FE:F2",
+        "18:02:B9:64:D2:BC:E6:C7:81:70:E3:BF:43:40:6A:D5:50:6D:F8:EE:CD:0B:DB:AC:6B:97:5E:32:4F:3E:DE:5C",
+        "7C:FB:56:09:84:E8:11:B5:E8:60:19:9C:2B:4E:F0:E9:E3:C7:61:63:9C:FF:F2:F4:33:A8:35:8E:F1:5E:40:6A"
+      ]
     }
   }
 ]
