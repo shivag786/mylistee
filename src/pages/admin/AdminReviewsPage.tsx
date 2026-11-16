@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { EyeOff, Eye, Star } from 'lucide-react'
+import { EyeOff, Eye, Flag, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/utils/toast'
 import { AdminTable, type Column } from '@/features/admin/components/AdminTable'
@@ -10,9 +10,18 @@ import { useAdminReviews, useSetReviewStatus } from '@/features/admin/hooks/useA
 import type { AdminReview, ListFilters } from '@/features/admin/types'
 
 const STATUS_OPTIONS = [
+  { value: 'reported', label: 'Reported' },
   { value: 'published', label: 'Published' },
   { value: 'hidden', label: 'Hidden' },
 ]
+
+const REASON_LABELS: Record<string, string> = {
+  spam: 'Spam',
+  offensive: 'Offensive',
+  fake: 'Fake',
+  personal_info: 'Personal details',
+  other: 'Other',
+}
 
 export function AdminReviewsPage() {
   const [filters, setFilters] = useState<ListFilters>({ page: 1 })
@@ -42,6 +51,18 @@ export function AdminReviewsPage() {
             <p className="text-small text-text-muted">No star rating</p>
           )}
           <p className="mt-0.5 line-clamp-2 text-foreground">{r.comment || <span className="text-text-muted">No comment</span>}</p>
+          {(r.reportsCount ?? 0) > 0 && (
+            <p className="mt-1 flex items-center gap-1 text-small font-semibold text-danger">
+              <Flag className="size-3.5" aria-hidden />
+              Reported {r.reportsCount}×
+              <span className="font-normal text-text-muted">
+                ·{' '}
+                {Object.entries(r.reportReasons ?? {})
+                  .map(([reason, n]) => `${REASON_LABELS[reason] ?? reason}${n > 1 ? ` (${n})` : ''}`)
+                  .join(', ')}
+              </span>
+            </p>
+          )}
         </div>
       ),
     },

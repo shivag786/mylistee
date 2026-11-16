@@ -123,6 +123,10 @@ export interface AdminReview {
   customerName: string | null
   businessName: string | null
   businessSlug: string | null
+  /** How many customers reported it from the app. */
+  reportsCount?: number
+  /** Report reasons with their counts, e.g. { spam: 2, offensive: 1 }. */
+  reportReasons?: Record<string, number>
   createdAt: string | null
 }
 
