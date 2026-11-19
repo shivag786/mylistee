@@ -208,6 +208,10 @@ export interface PlatformSettings {
   customerSoundPlacedUrl?: string | null
   customerSoundAcceptedUrl?: string | null
   aiEnabled?: boolean
+  aiProvider?: 'gemini' | 'openai'
+  geminiApiKey?: string
+  geminiApiKeySet?: boolean
+  geminiModel?: string
   openaiApiKey?: string
   openaiApiKeySet?: boolean
   openaiModel?: string

@@ -507,27 +507,43 @@ function CustomerSoundsCard({ settings }: { settings: PlatformSettings }) {
   )
 }
 
+const AI_DEFAULT_MODEL = { gemini: 'gemini-3.1-flash-lite', openai: 'gpt-4o-mini' } as const
+
 /**
- * The vendor app's AI assistant (OpenAI): on/off, the API key (never shown
- * again once saved), the model and a monthly cap per shop. Which plans get it
- * is set per plan under Plans → "AI assistant".
+ * The vendor app's AI assistant: on/off, the provider (Google Gemini — free
+ * tier — or OpenAI), its API key (never shown again once saved), the model and
+ * a monthly cap per shop. Which plans get it is set per plan under Plans →
+ * "AI assistant".
  */
 function AiAssistantCard({ settings }: { settings: PlatformSettings }) {
   const update = useUpdateSettings()
+  const [provider, setProvider] = useState<'gemini' | 'openai'>(settings.aiProvider ?? 'gemini')
   const [key, setKey] = useState('')
-  const [model, setModel] = useState(settings.openaiModel ?? 'gpt-4o-mini')
+  const savedModel = provider === 'gemini' ? settings.geminiModel : settings.openaiModel
+  const [model, setModel] = useState(savedModel ?? AI_DEFAULT_MODEL[provider])
   const [limit, setLimit] = useState(String(settings.aiMonthlyLimit ?? 100))
+  const keySet = provider === 'gemini' ? settings.geminiApiKeySet : settings.openaiApiKeySet
+  const savedProvider = settings.aiProvider ?? 'gemini'
+  const savedKeySet = savedProvider === 'gemini' ? settings.geminiApiKeySet : settings.openaiApiKeySet
 
   useEffect(() => {
-    setModel(settings.openaiModel ?? 'gpt-4o-mini')
+    setProvider(settings.aiProvider ?? 'gemini')
     setLimit(String(settings.aiMonthlyLimit ?? 100))
-  }, [settings.openaiModel, settings.aiMonthlyLimit])
+  }, [settings.aiProvider, settings.aiMonthlyLimit])
+
+  useEffect(() => {
+    setModel(savedModel ?? AI_DEFAULT_MODEL[provider])
+    setKey('')
+  }, [provider, savedModel])
 
   function save() {
+    const trimmedKey = key.trim()
     update.mutate(
       {
-        ...(key.trim() ? { openaiApiKey: key.trim() } : {}),
-        openaiModel: model.trim() || 'gpt-4o-mini',
+        aiProvider: provider,
+        ...(provider === 'gemini'
+          ? { ...(trimmedKey ? { geminiApiKey: trimmedKey } : {}), geminiModel: model.trim() || AI_DEFAULT_MODEL.gemini }
+          : { ...(trimmedKey ? { openaiApiKey: trimmedKey } : {}), openaiModel: model.trim() || AI_DEFAULT_MODEL.openai }),
         aiMonthlyLimit: Math.max(0, Number.parseInt(limit, 10) || 0),
       },
       {
@@ -556,26 +572,42 @@ function AiAssistantCard({ settings }: { settings: PlatformSettings }) {
       </div>
       <MethodRow
         title="Turn on the AI assistant"
-        body={settings.openaiApiKeySet ? 'An OpenAI key is saved.' : 'Save an OpenAI API key first.'}
+        body={
+          savedKeySet
+            ? `Using ${savedProvider === 'gemini' ? 'Google Gemini' : 'OpenAI'} — a key is saved.`
+            : `Save a ${savedProvider === 'gemini' ? 'Gemini' : 'OpenAI'} API key first.`
+        }
         checked={settings.aiEnabled ?? false}
-        disabled={update.isPending || (!settings.openaiApiKeySet && !settings.aiEnabled)}
+        disabled={update.isPending || (!savedKeySet && !settings.aiEnabled)}
         onChange={(v) => update.mutate({ aiEnabled: v }, { onSuccess: () => toast.success(v ? 'AI assistant on' : 'AI assistant off') })}
       />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="ai-key">OpenAI API key</Label>
+          <Label htmlFor="ai-provider">Provider</Label>
+          <select
+            id="ai-provider"
+            className="h-[52px] w-full rounded-input border border-border bg-surface px-3 text-body text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            value={provider}
+            onChange={(e) => setProvider(e.target.value === 'openai' ? 'openai' : 'gemini')}
+          >
+            <option value="gemini">Google Gemini (free tier — key from aistudio.google.com)</option>
+            <option value="openai">OpenAI (paid)</option>
+          </select>
+        </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="ai-key">{provider === 'gemini' ? 'Gemini API key' : 'OpenAI API key'}</Label>
           <Input
             id="ai-key"
             type="password"
             autoComplete="off"
             value={key}
-            placeholder={settings.openaiApiKeySet ? '•••••••• saved (type to replace)' : 'sk-...'}
+            placeholder={keySet ? '•••••••• saved (type to replace)' : provider === 'gemini' ? 'Paste key from AI Studio' : 'sk-...'}
             onChange={(e) => setKey(e.target.value)}
           />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="ai-model">Model</Label>
-          <Input id="ai-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="gpt-4o-mini" />
+          <Input id="ai-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder={AI_DEFAULT_MODEL[provider]} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="ai-limit">Suggestions per shop / month</Label>
