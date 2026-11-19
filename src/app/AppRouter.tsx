@@ -35,6 +35,7 @@ const ProductsPage = lazyPage(() => import('@/pages/owner/ProductsPage'), 'Produ
 const TablesPage = lazyPage(() => import('@/pages/owner/TablesPage'), 'TablesPage')
 const CombosPage = lazyPage(() => import('@/pages/owner/CombosPage'), 'CombosPage')
 const GrowSalesPage = lazyPage(() => import('@/pages/owner/GrowSalesPage'), 'GrowSalesPage')
+const AiAdvisorPage = lazyPage(() => import('@/pages/owner/AiAdvisorPage'), 'AiAdvisorPage')
 const OrdersPage = lazyPage(() => import('@/pages/owner/OrdersPage'), 'OrdersPage')
 const PosPage = lazyPage(() => import('@/pages/owner/PosPage'), 'PosPage')
 const OffersPage = lazyPage(() => import('@/pages/owner/OffersPage'), 'OffersPage')
@@ -249,6 +250,7 @@ export function AppRouter() {
             <Route path={ROUTES.owner.tables} element={<OwnerModuleGuard module="tables"><TablesPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.combos} element={<OwnerModuleGuard module="combos"><CombosPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.growSales} element={<OwnerModuleGuard module="grow_sales"><GrowSalesPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.aiAdvisor} element={<AiAdvisorPage />} />
             <Route path={ROUTES.owner.offers} element={<OwnerModuleGuard module="spin_rewards"><OffersPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.loyalty} element={<OwnerModuleGuard module="loyalty"><LoyaltyPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.rewards} element={<OwnerModuleGuard module="rewards"><RewardsPage /></OwnerModuleGuard>} />

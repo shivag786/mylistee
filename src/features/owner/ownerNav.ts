@@ -19,6 +19,7 @@ import {
   BellRing,
   MessageCircle,
   Gift,
+  Sparkles,
   Link2,
   Settings,
   Printer,
@@ -85,6 +86,7 @@ export const OWNER_NAV: OwnerNavItem[] = [
   { to: ROUTES.owner.products, label: 'Products', shortLabel: 'Product', icon: Package, bottomNav: true, module: 'products', group: 'Menu' },
   { to: ROUTES.owner.combos, label: 'Combos', shortLabel: 'Combo', icon: Layers, bottomNav: true, module: 'combos', group: 'Menu' },
 
+  { to: ROUTES.owner.aiAdvisor, label: 'AI growth advisor', shortLabel: 'AI ideas', icon: Sparkles, group: 'Grow' },
   { to: ROUTES.owner.rewards, label: 'Rewards & coupons', shortLabel: 'Rewards', icon: Gift, module: 'rewards', group: 'Grow' },
   { to: ROUTES.owner.loyalty, label: 'Loyalty coins', shortLabel: 'Coins', icon: Coins, module: 'loyalty', group: 'Grow' },
   { to: ROUTES.owner.offers, label: 'Spin rewards', shortLabel: 'Spin', icon: Tag, module: 'spin_rewards', group: 'Grow' },

@@ -52,6 +52,7 @@ export const ROUTES = {
     tables: '/business/tables',
     combos: '/business/combos',
     growSales: '/business/grow-sales',
+    aiAdvisor: '/business/ai-advisor',
     offers: '/business/offers',
     analytics: '/business/analytics',
     reviews: '/business/reviews',
