@@ -21,6 +21,8 @@ interface RequestOptions {
   signal?: AbortSignal
   /** Skip attaching the auth token (e.g. public endpoints). */
   auth?: boolean
+  /** Override the default timeout (slow calls such as AI menu scans). */
+  timeoutMs?: number
 }
 
 function buildUrl(path: string, query?: Query): string {
@@ -64,10 +66,10 @@ async function rawRequest<T>(
   body?: unknown,
   options: RequestOptions = {},
 ): Promise<ApiResponse<T>> {
-  const { query, signal, auth = true } = options
+  const { query, signal, auth = true, timeoutMs = apiConfig.timeoutMs } = options
 
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), apiConfig.timeoutMs)
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
   if (signal) signal.addEventListener('abort', () => controller.abort(), { once: true })
 
   // FormData (file uploads) must be sent raw so the browser sets the multipart

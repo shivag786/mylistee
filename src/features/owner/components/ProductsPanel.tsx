@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Plus, Package } from 'lucide-react'
+import { Plus, Package, ScanLine } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/feedback/Spinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
@@ -9,6 +9,7 @@ import { ProductCard } from './ProductCard'
 import { ProductForm } from './ProductForm'
 import { PromotionForm } from './PromotionForm'
 import { QuickOfferSheet } from './QuickOfferSheet'
+import { MenuScanSheet } from './MenuScanSheet'
 import { useProgressiveReveal } from '@/hooks/useProgressiveReveal'
 import { useProducts, useProductActions } from '../hooks/useProducts'
 import { usePromotions } from '../hooks/usePromotions'
@@ -30,6 +31,7 @@ export function ProductsPanel() {
   // "Add offer" opens the 3-tap sheet; its Advanced link opens the full form.
   const [quickFor, setQuickFor] = useState<Product | null>(null)
   const [editingPromo, setEditingPromo] = useState<Promotion | null>(null)
+  const [scanOpen, setScanOpen] = useState(false)
 
   const products = data ?? []
   const { visible, hasMore, sentinelRef } = useProgressiveReveal(products, 12)
@@ -93,7 +95,10 @@ export function ProductsPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" leftIcon={<ScanLine className="size-5" />} onClick={() => setScanOpen(true)}>
+          Scan menu with AI
+        </Button>
         <Button leftIcon={<Plus className="size-5" />} onClick={openCreate}>
           Add product
         </Button>
@@ -103,9 +108,9 @@ export function ProductsPanel() {
         <EmptyState
           icon={<Package className="size-7" />}
           title="No products yet"
-          description="Add your first product so customers can browse your menu."
-          actionLabel="Add product"
-          onAction={openCreate}
+          description="Snap a photo of your printed menu and the AI fills it in for you — or add products one by one."
+          actionLabel="Scan menu with AI"
+          onAction={() => setScanOpen(true)}
         />
       ) : (
         <>
@@ -134,6 +139,8 @@ export function ProductsPanel() {
       )}
 
       <ProductForm open={formOpen} onOpenChange={setFormOpen} product={editing} />
+
+      <MenuScanSheet open={scanOpen} onOpenChange={setScanOpen} />
 
       <QuickOfferSheet
         product={quickFor}

@@ -28,11 +28,20 @@ import {
   PersonalLinkSection,
   PricingSection,
 } from '@/features/landing/LandingSections'
+import {
+  AiAssistantSection,
+  CitiesSection,
+  MobileRegisterBar,
+  StatsSection,
+  VendorToolsSection,
+  WhyListeeSection,
+} from '@/features/landing/LandingVendorSections'
 
 /** Header links, shown only for sections that are switched on. */
 const NAV: { id: LandingSectionId; anchor: string; label: string }[] = [
-  { id: 'offers', anchor: 'offers', label: 'Offers' },
-  { id: 'vendorBenefits', anchor: 'for-shops', label: 'For shops' },
+  { id: 'vendorTools', anchor: 'for-shops', label: 'For shops' },
+  { id: 'aiAssistant', anchor: 'ai-assistant', label: 'AI assistant' },
+  { id: 'cities', anchor: 'cities', label: 'Shops' },
   { id: 'pricing', anchor: 'pricing', label: 'Pricing' },
   { id: 'faqs', anchor: 'faqs', label: 'FAQs' },
 ]
@@ -59,7 +68,7 @@ export function LandingPage() {
             <Link to={ROUTES.home} aria-label="Listee home" className="shrink-0">
               <Logo size={32} showWordmark />
             </Link>
-            <nav aria-label="Page sections" className="hidden items-center gap-1 md:flex">
+            <nav aria-label="Page sections" className="hidden items-center gap-1 whitespace-nowrap lg:flex">
               {NAV.filter((n) => on.has(n.id)).map((n) => (
                 <a
                   key={n.id}
@@ -97,6 +106,9 @@ export function LandingPage() {
 
         <SiteFooter />
         <LegalFooter />
+        {/* Room for the phone register bar so it never covers the footer. */}
+        <div className="h-20 md:hidden" aria-hidden />
+        <MobileRegisterBar />
       </div>
     </LocationProvider>
   )
@@ -107,8 +119,18 @@ function renderSection(section: LandingSectionSetting, landing: ResolvedLanding)
   switch (section.id) {
     case 'hero':
       return <HeroSection hero={landing.hero} />
+    case 'stats':
+      return <StatsSection />
     case 'banners':
       return <BannersSection />
+    case 'vendorTools':
+      return <VendorToolsSection title={title} subtitle={subtitle} />
+    case 'aiAssistant':
+      return <AiAssistantSection title={title} subtitle={subtitle} />
+    case 'whyListee':
+      return <WhyListeeSection title={title} subtitle={subtitle} />
+    case 'cities':
+      return <CitiesSection title={title} subtitle={subtitle} />
     case 'categories':
       return <CategoriesSection title={title} subtitle={subtitle} />
     case 'offers':
@@ -122,7 +144,7 @@ function renderSection(section: LandingSectionSetting, landing: ResolvedLanding)
     case 'howItWorks':
       return <HowItWorksSection title={title} subtitle={subtitle} />
     case 'vendorBenefits':
-      return <BenefitsSection id="for-shops" audience="vendor" title={title} subtitle={subtitle} items={landing.vendorBenefits} />
+      return <BenefitsSection id="shop-benefits" audience="vendor" title={title} subtitle={subtitle} items={landing.vendorBenefits} />
     case 'personalLink':
       return <PersonalLinkSection title={title} subtitle={subtitle} />
     case 'pricing':

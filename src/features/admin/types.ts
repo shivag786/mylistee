@@ -216,6 +216,8 @@ export interface PlatformSettings {
   openaiApiKeySet?: boolean
   openaiModel?: string
   aiMonthlyLimit?: number
+  /** AI menu scans (photo/PDF → dishes) per shop per month; every plan. */
+  aiMenuScanLimit?: number
 
   /** App theme — "#rrggbb" colours and Google Font names (see brandTheme.ts). */
   themePrimary: string

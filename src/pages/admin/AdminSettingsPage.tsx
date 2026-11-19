@@ -522,6 +522,7 @@ function AiAssistantCard({ settings }: { settings: PlatformSettings }) {
   const savedModel = provider === 'gemini' ? settings.geminiModel : settings.openaiModel
   const [model, setModel] = useState(savedModel ?? AI_DEFAULT_MODEL[provider])
   const [limit, setLimit] = useState(String(settings.aiMonthlyLimit ?? 100))
+  const [scanLimit, setScanLimit] = useState(String(settings.aiMenuScanLimit ?? 30))
   const keySet = provider === 'gemini' ? settings.geminiApiKeySet : settings.openaiApiKeySet
   const savedProvider = settings.aiProvider ?? 'gemini'
   const savedKeySet = savedProvider === 'gemini' ? settings.geminiApiKeySet : settings.openaiApiKeySet
@@ -529,7 +530,8 @@ function AiAssistantCard({ settings }: { settings: PlatformSettings }) {
   useEffect(() => {
     setProvider(settings.aiProvider ?? 'gemini')
     setLimit(String(settings.aiMonthlyLimit ?? 100))
-  }, [settings.aiProvider, settings.aiMonthlyLimit])
+    setScanLimit(String(settings.aiMenuScanLimit ?? 30))
+  }, [settings.aiProvider, settings.aiMonthlyLimit, settings.aiMenuScanLimit])
 
   useEffect(() => {
     setModel(savedModel ?? AI_DEFAULT_MODEL[provider])
@@ -545,6 +547,7 @@ function AiAssistantCard({ settings }: { settings: PlatformSettings }) {
           ? { ...(trimmedKey ? { geminiApiKey: trimmedKey } : {}), geminiModel: model.trim() || AI_DEFAULT_MODEL.gemini }
           : { ...(trimmedKey ? { openaiApiKey: trimmedKey } : {}), openaiModel: model.trim() || AI_DEFAULT_MODEL.openai }),
         aiMonthlyLimit: Math.max(0, Number.parseInt(limit, 10) || 0),
+        aiMenuScanLimit: Math.max(0, Number.parseInt(scanLimit, 10) || 0),
       },
       {
         onSuccess: () => {
@@ -612,6 +615,15 @@ function AiAssistantCard({ settings }: { settings: PlatformSettings }) {
         <div className="space-y-1.5">
           <Label htmlFor="ai-limit">Suggestions per shop / month</Label>
           <Input id="ai-limit" inputMode="numeric" value={limit} onChange={(e) => setLimit(e.target.value.replace(/\D/g, ''))} />
+        </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="ai-scan-limit">Menu scans per shop / month (every plan, needs Gemini)</Label>
+          <Input
+            id="ai-scan-limit"
+            inputMode="numeric"
+            value={scanLimit}
+            onChange={(e) => setScanLimit(e.target.value.replace(/\D/g, ''))}
+          />
         </div>
       </div>
       <div className="flex justify-end">

@@ -105,7 +105,7 @@ export function HeroSection({ hero }: { hero: ResolvedLanding['hero'] }) {
       <div aria-hidden className="pointer-events-none absolute -left-24 -top-24 size-72 rounded-full bg-accent/25 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -bottom-32 right-0 size-96 rounded-full bg-primary/40 blur-3xl" />
 
-      <div className="app-container relative grid gap-10 py-14 sm:py-20 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:py-24">
+      <div className="app-container relative grid gap-10 pb-20 pt-14 sm:pb-28 sm:pt-20 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pb-32 lg:pt-24">
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -134,7 +134,7 @@ export function HeroSection({ hero }: { hero: ResolvedLanding['hero'] }) {
           </div>
 
           <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-small text-white/75">
-            {['Sign up with your mobile number', 'Set up from your phone', 'Your own shop link and QR'].map((t) => (
+            {['0% commission on orders', 'Free shop link & QR', 'Menu online with AI in minutes'].map((t) => (
               <li key={t} className="inline-flex items-center gap-1.5">
                 <Check className="size-4 text-accent" aria-hidden /> {t}
               </li>
@@ -153,8 +153,13 @@ export function HeroSection({ hero }: { hero: ResolvedLanding['hero'] }) {
             icon={Store}
             eyebrow="For shop owners"
             title="Put your shop online and get more customers"
-            points={['Online shop and menu', 'Offers, combos and rewards', 'Orders, billing and reviews']}
-            cta="Register your shop"
+            points={[
+              'Online menu, own link & QR',
+              'Table QR orders, POS & GST bills',
+              'Loyalty coins, spin & win, offers',
+              'AI assistant — menu from a photo',
+            ]}
+            cta="Register your shop free"
             to={ROUTES.ownerSignup}
             highlight
           />

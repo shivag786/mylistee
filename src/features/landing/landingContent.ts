@@ -12,7 +12,12 @@
 
 export type LandingSectionId =
   | 'hero'
+  | 'stats'
   | 'banners'
+  | 'vendorTools'
+  | 'aiAssistant'
+  | 'whyListee'
+  | 'cities'
   | 'categories'
   | 'offers'
   | 'nearby'
@@ -78,11 +83,46 @@ export const LANDING_SECTIONS: LandingSectionMeta[] = [
     defaultSubtitle: null,
   },
   {
+    id: 'stats',
+    label: 'Live numbers',
+    description: 'Shops, cities, customers and orders on Listee — live, shown once they are big enough.',
+    defaultTitle: null,
+    defaultSubtitle: null,
+  },
+  {
     id: 'banners',
     label: 'Banners',
     description: 'The "Home banners" carousel (top slot).',
     defaultTitle: null,
     defaultSubtitle: null,
+  },
+  {
+    id: 'vendorTools',
+    label: 'Tools for shops',
+    description: 'Everything a shop gets, in tabs: get online, sell & bill, bring customers back, run your team, AI.',
+    defaultTitle: 'One app to run and grow your shop',
+    defaultSubtitle: 'Listee is not just a listing. It is your online shop, billing counter, loyalty program and marketing team — on your phone.',
+  },
+  {
+    id: 'aiAssistant',
+    label: 'AI assistant',
+    description: 'The AI menu scan and the AI that writes offers, notifications and review replies.',
+    defaultTitle: 'Your shop’s own AI assistant',
+    defaultSubtitle: 'Snap your menu and it is online in minutes. Ask for offer ideas, posts and replies — in seconds.',
+  },
+  {
+    id: 'whyListee',
+    label: 'Why Listee',
+    description: 'Listee next to the big delivery apps: no commission, your own customers, your own link.',
+    defaultTitle: 'Your customers. Your brand. No commission.',
+    defaultSubtitle: 'Delivery apps take a cut of every order and keep your customers. Listee works for you.',
+  },
+  {
+    id: 'cities',
+    label: 'Cities & shops',
+    description: 'The cities Listee is live in, with the shops of the chosen city.',
+    defaultTitle: 'Live in your city',
+    defaultSubtitle: 'Real shops, already taking orders and rewarding customers on Listee.',
   },
   {
     id: 'categories',
@@ -170,12 +210,12 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionSetting[] = LANDING_SECTION
 }))
 
 export const DEFAULT_HERO: Required<{ [K in keyof LandingHero]: string }> = {
-  badge: 'Local shops · Offers · Rewards',
-  title: 'Your neighbourhood shops, their best offers and your rewards — in one place',
+  badge: 'Online shop · Billing · Rewards · AI',
+  title: 'Take your shop online and bring customers back — again and again',
   subtitle:
-    'Customers find shops nearby, grab today’s discounts and earn rewards on every visit. Shop owners get an online shop, their own link and QR, and simple tools to bring customers back.',
+    'Listee gives every local shop its own online menu, link and QR, table and counter orders, GST billing, loyalty rewards and an AI assistant. Customers find you, order and earn rewards. No commission on orders.',
   customerCta: 'Explore shops near me',
-  vendorCta: 'Register your shop',
+  vendorCta: 'Register your shop free',
 }
 
 export const DEFAULT_CUSTOMER_BENEFITS: LandingItem[] = [
@@ -188,7 +228,7 @@ export const DEFAULT_CUSTOMER_BENEFITS: LandingItem[] = [
 ]
 
 export const DEFAULT_VENDOR_BENEFITS: LandingItem[] = [
-  { title: 'Your shop online in minutes', text: 'Products, prices, photos, timings and location on a page customers can find.' },
+  { title: 'Your shop online in minutes', text: 'Snap a photo of your menu — the AI fills in dishes, prices and sizes. Add photos, timings and location.' },
   { title: 'Your own link and QR', text: 'Share one link on WhatsApp and Instagram, or print the QR for your counter and tables.' },
   { title: 'Offers, combos and coupons', text: 'Create a discount in seconds and it shows to customers nearby straight away.' },
   { title: 'Bring customers back', text: 'Loyalty rewards, coins and spin-to-win keep your regulars coming.' },
@@ -198,7 +238,104 @@ export const DEFAULT_VENDOR_BENEFITS: LandingItem[] = [
   { title: 'Reviews that build trust', text: 'Collect reviews with your own review link and show them on your page.' },
 ]
 
+/**
+ * The "Tools for shops" tabs. Built-in copy (not edited from the admin):
+ * it describes what the product does, so it changes with the product.
+ */
+export interface ToolGroup {
+  id: string
+  tab: string
+  title: string
+  text: string
+  features: { title: string; text: string }[]
+}
+
+export const VENDOR_TOOL_GROUPS: ToolGroup[] = [
+  {
+    id: 'online',
+    tab: 'Get online',
+    title: 'Your shop on the internet — ready today',
+    text: 'A beautiful shop page with your menu, photos, timings and reviews that customers nearby can find.',
+    features: [
+      { title: 'AI menu scan', text: 'Photo of your menu → every dish, price and size filled in.' },
+      { title: 'Own link and QR', text: 'Free forever. Only your shop — no competitors next to you.' },
+      { title: 'Photos, reels and reviews', text: 'Show your best dishes and build trust with real reviews.' },
+      { title: 'Found nearby', text: 'Customers in your city see you, your offers and how far you are.' },
+    ],
+  },
+  {
+    id: 'sell',
+    tab: 'Sell & bill',
+    title: 'Take orders and bill in seconds',
+    text: 'Orders from the table QR, the counter and online — all in one place, with printed bills.',
+    features: [
+      { title: 'Table QR ordering', text: 'Customers scan, order and pay from their table.' },
+      { title: 'Counter billing (POS)', text: 'Fast billing on your phone with a Bluetooth printer.' },
+      { title: 'GST tax invoices', text: 'Proper GST bills for customers, and your day’s report.' },
+      { title: 'Online or cash', text: 'UPI and card payments online, or cash at the counter.' },
+    ],
+  },
+  {
+    id: 'grow',
+    tab: 'Bring customers back',
+    title: 'Turn first-time visitors into regulars',
+    text: 'Rewards that customers love and that make them choose your shop again.',
+    features: [
+      { title: 'Loyalty coins', text: 'Customers earn on every order and spend at your shop.' },
+      { title: 'Spin & win', text: 'A lucky spin with prizes you choose — fun at every visit.' },
+      { title: 'Offers, combos, happy hours', text: 'Create a deal in seconds; it shows to customers nearby.' },
+      { title: 'Notifications & WhatsApp', text: 'Tell your followers about new dishes and offers.' },
+    ],
+  },
+  {
+    id: 'team',
+    tab: 'Run your team',
+    title: 'Manage the shop even when you are away',
+    text: 'Give each staff member their own login and see everything from your phone.',
+    features: [
+      { title: 'Staff roles', text: 'Waiter, cashier, kitchen — each sees only what they need.' },
+      { title: 'Attendance with selfie', text: 'Staff punch in and out from the app.' },
+      { title: 'Kitchen display', text: 'New orders go straight to the kitchen screen.' },
+      { title: 'Day close & alerts', text: 'Cash count, sales report and order alerts every day.' },
+    ],
+  },
+  {
+    id: 'ai',
+    tab: 'AI assistant',
+    title: 'An assistant that writes and thinks for you',
+    text: 'Built into the Listee Business app — no extra app, no extra cost to try.',
+    features: [
+      { title: 'Menu from a photo', text: 'Printed menu, PDF or screenshots → your online menu.' },
+      { title: 'Dish descriptions', text: 'Tasty, short descriptions for every item.' },
+      { title: 'Offer & combo ideas', text: 'Ideas made from your own best sellers.' },
+      { title: 'Posts & review replies', text: 'Notification text and polite replies in one tap.' },
+    ],
+  },
+]
+
+/** Listee next to a typical food-delivery app (the "Why Listee" table). */
+export const WHY_ROWS: { label: string; listee: string; others: string }[] = [
+  { label: 'Commission on each order', listee: '0%', others: 'Often 15–30%' },
+  { label: 'Customer details', listee: 'Yours — follow, notify, reward', others: 'Kept by the app' },
+  { label: 'Your own link & QR', listee: 'Free, only your shop', others: 'Shown next to competitors' },
+  { label: 'Dine-in & counter billing', listee: 'Built in (POS, GST bills)', others: 'Not included' },
+  { label: 'Loyalty & spin rewards', listee: 'Built in', others: 'Paid ads instead' },
+  { label: 'Getting started', listee: 'Minutes — snap your menu', others: 'Days of paperwork' },
+]
+
 export const DEFAULT_FAQS: LandingFaq[] = [
+  {
+    q: 'Does Listee take a commission on my orders?',
+    a: 'No. Listee does not take a commission on your orders. You pay a simple plan, and online payments carry only the payment gateway’s small fee.',
+  },
+  {
+    q: 'How does the AI menu scan work?',
+    a: 'In the Listee Business app, tap Add → Scan menu with AI and take a photo of your printed menu (or upload photos, screenshots or a PDF). The AI reads the dishes, sections, prices and sizes. You check and edit the list, then tap Add — your menu is online.',
+  },
+  {
+    q: 'What else can the AI assistant do?',
+    a: 'It writes dish descriptions, offer and combo ideas from your best sellers, notification messages for your followers, sales tips and polite replies to reviews. You pick what you like — nothing is posted on its own.',
+  },
   {
     q: 'What is Listee?',
     a: 'Listee puts your neighbourhood shops online with their offers and rewards. Customers find shops near them and save money; shop owners get more visits and repeat customers.',
