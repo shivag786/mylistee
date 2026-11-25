@@ -33,6 +33,8 @@ export interface AdminBusiness {
   id: string
   name: string
   slug: string
+  /** What the shop's permanent QR opens. */
+  qrUrl?: string
   ownerName: string | null
   ownerEmail: string | null
   ownerMobile: string | null
@@ -163,6 +165,15 @@ export interface PlatformSettings {
   brandName: string
   supportEmail: string
   supportPhone: string
+  /** Play Store page of the customer app (Listee). '' = not set. */
+  playStoreCustomerUrl: string
+  /** Play Store page of the vendor app (Listee Business). '' = not set. */
+  playStoreVendorUrl: string
+  customerAppMinVersion: string
+  customerAppLatestVersion: string
+  vendorAppMinVersion: string
+  vendorAppLatestVersion: string
+  appUpdateMessage: string
   currency: string
   timezone: string
   defaultLanguage: string
@@ -237,7 +248,7 @@ export interface PlatformSettings {
   /** Customer home sections in order; null = the built-in order. */
   homeLayout: HomeSectionSetting[] | null
   /** What `/` shows signed-out visitors: the shop feed or the landing page. */
-  homePage: 'shops' | 'landing'
+  homePage: 'shops' | 'landing' | 'join'
   /** Landing page content; null = the built-in content. */
   landingPage: LandingContent | null
   /** Search and social tags; null = the built-in ones. */
@@ -588,4 +599,44 @@ export interface CategoryRequestItem {
   businessName: string | null
   reviewedAt: string | null
   createdAt: string | null
+}
+
+// ---- Broadcast (push notifications) ----
+export type BroadcastTarget = 'all' | 'customers' | 'owners' | 'shop_customers' | 'test'
+
+export interface BroadcastInput {
+  title: string
+  body?: string
+  link?: string
+  target: BroadcastTarget
+  /** shop_customers: the shop. */
+  businessId?: string
+  /** shop_customers: which of its customers. */
+  audience?: string
+  /** owners: only shops in this category. */
+  categoryId?: string
+}
+
+export interface BroadcastItem {
+  id: string
+  title: string
+  body: string | null
+  link: string | null
+  target: BroadcastTarget
+  audienceLabel: string
+  recipients: number
+  /** Of the recipients, how many have the app with notifications on. */
+  reachable: number
+  /** Pushes Firebase accepted (null until sent). */
+  pushed: number | null
+  failed: number | null
+  status: 'queued' | 'sending' | 'sent' | 'failed'
+  createdAt: string | null
+  sentAt: string | null
+}
+
+export interface BroadcastOverview {
+  pushConfigured: boolean
+  shopAudiences: { key: string; label: string }[]
+  items: BroadcastItem[]
 }

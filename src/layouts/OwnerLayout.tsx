@@ -13,6 +13,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useOwnerBusiness } from '@/features/owner/hooks/useOwner'
 import { OwnerNav } from '@/features/owner/components/OwnerNav'
 import { FloatingOrderButton } from '@/features/owner/components/FloatingOrderButton'
+import { AiCoach } from '@/features/owner/components/AiCoach'
 import { groupOwnerNav, OWNER_NAV, visibleOwnerNav, type OwnerNavItem } from '@/features/owner/ownerNav'
 import { useAppConfig } from '@/hooks/useAppConfig'
 import { usePlanAccess } from '@/features/owner/hooks/usePlanAccess'
@@ -136,6 +137,7 @@ export function OwnerLayout() {
       <LegalFooter />
 
       <FloatingOrderButton />
+      <AiCoach />
 
       <OwnerNav />
     </div>

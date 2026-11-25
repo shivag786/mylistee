@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { MoreHorizontal, Check, Ban, RotateCcw, X, BadgeCheck, Star, Pencil, CreditCard } from 'lucide-react'
+import { MoreHorizontal, Check, Ban, RotateCcw, X, BadgeCheck, Star, Pencil, CreditCard, Printer } from 'lucide-react'
+import { ROUTES } from '@/constants/routes'
 import { Button } from '@/components/ui/button'
 import { IconButton } from '@/components/ui/icon-button'
 import { Badge } from '@/components/ui/badge'
@@ -178,6 +179,10 @@ export function AdminBusinessesPage() {
             </IconButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => window.open(ROUTES.admin.businessPoster(b.id), '_blank', 'noopener')}>
+              <Printer className="size-4" /> Print QR poster (A4)
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             {b.status !== 'active' && (
               <DropdownMenuItem onClick={() => act(setStatus.mutateAsync({ id: b.id, status: 'active' }), 'Business approved')}>
                 <Check className="size-4" /> Approve / activate

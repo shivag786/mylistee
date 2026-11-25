@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus, Package, ScanLine } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/feedback/Spinner'
@@ -31,7 +32,16 @@ export function ProductsPanel() {
   // "Add offer" opens the 3-tap sheet; its Advanced link opens the full form.
   const [quickFor, setQuickFor] = useState<Product | null>(null)
   const [editingPromo, setEditingPromo] = useState<Promotion | null>(null)
-  const [scanOpen, setScanOpen] = useState(false)
+  // ?scan=1 (from the AI sales manager) opens the menu scan straight away.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [scanOpen, setScanOpenState] = useState(() => searchParams.get('scan') === '1')
+  const setScanOpen = (open: boolean) => {
+    setScanOpenState(open)
+    if (!open && searchParams.has('scan')) {
+      searchParams.delete('scan')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }
 
   const products = data ?? []
   const { visible, hasMore, sentinelRef } = useProgressiveReveal(products, 12)

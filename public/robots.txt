@@ -9,4 +9,8 @@ Disallow: /profile
 Disallow: /favorites
 Disallow: /login
 
-Sitemap: /sitemap.xml
+# AI assistants and search engines are welcome on the public pages.
+# Plain-text summary for AI assistants: https://listee.org/llms.txt
+
+Sitemap: https://listee.org/sitemap.xml
+Sitemap: https://listee.org/sitemap-pages.xml

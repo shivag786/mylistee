@@ -37,10 +37,18 @@ FileETag None
 # SPA fallback: real files are served as-is, everything else renders index.html
 # so client-side routes survive a direct hit or a refresh.
 # ---------------------------------------------------------------------------
+# Folders of pre-rendered pages must not 301 to a trailing slash.
+DirectorySlash Off
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
   RewriteRule ^index\.html$ - [L]
+  # Pre-rendered marketing pages (/join, /guide/…, /pos-software/…): serve
+  # their own index.html for the clean URL, without a trailing-slash redirect.
+  RewriteCond %{REQUEST_URI} !\.[a-zA-Z0-9]+$
+  RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
+  RewriteRule ^(.+?)/?$ /$1/index.html [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]

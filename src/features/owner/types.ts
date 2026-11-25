@@ -125,6 +125,8 @@ export interface Plan {
     pushPerCustomerPerMonth?: number | null
     /** WhatsApp offer messages a shop can send per month (null = unlimited, 0 = none). */
     whatsappPerMonth?: number | null
+    /** AI answers a shop gets each month (null = unlimited, 0 = none). */
+    aiAnswersPerMonth?: number | null
     maxOfferDays: number | null
     maxQrCodes: number | null
     maxGalleryImages: number | null

@@ -81,6 +81,20 @@ const AdminFraudPage = lazyPage(() => import('@/pages/admin/AdminFraudPage'), 'A
 const AdminAuditLogsPage = lazyPage(() => import('@/pages/admin/AdminAuditLogsPage'), 'AdminAuditLogsPage')
 const AdminReportsPage = lazyPage(() => import('@/pages/admin/AdminReportsPage'), 'AdminReportsPage')
 const AdminSettingsPage = lazyPage(() => import('@/pages/admin/AdminSettingsPage'), 'AdminSettingsPage')
+const AdminAiPage = lazyPage(() => import('@/pages/admin/AdminAiPage'), 'AdminAiPage')
+const AdminSubscriptionsPage = lazyPage(() => import('@/pages/admin/AdminSubscriptionsPage'), 'AdminSubscriptionsPage')
+const AdminVendorHealthPage = lazyPage(() => import('@/pages/admin/AdminVendorHealthPage'), 'AdminVendorHealthPage')
+const AdminQrScansPage = lazyPage(() => import('@/pages/admin/AdminQrScansPage'), 'AdminQrScansPage')
+const JoinPage = lazyPage(() => import('@/pages/marketing/JoinPage'), 'JoinPage')
+const GuideHubPage = lazyPage(() => import('@/pages/marketing/GuidePages'), 'GuideHubPage')
+const GuidePage = lazyPage(() => import('@/pages/marketing/GuidePages'), 'GuidePage')
+const CityHubPage = lazyPage(() => import('@/pages/marketing/LocalPages'), 'CityHubPage')
+const CityPage = lazyPage(() => import('@/pages/marketing/LocalPages'), 'CityPage')
+const TypeHubPage = lazyPage(() => import('@/pages/marketing/LocalPages'), 'TypeHubPage')
+const TypePage = lazyPage(() => import('@/pages/marketing/LocalPages'), 'TypePage')
+const ContactPage = lazyPage(() => import('@/pages/marketing/LocalPages'), 'ContactPage')
+const AdminEnquiriesPage = lazyPage(() => import('@/pages/admin/AdminEnquiriesPage'), 'AdminEnquiriesPage')
+const AdminPosterPage = lazyPage(() => import('@/pages/admin/AdminPosterPage'), 'AdminPosterPage')
 const AdminWhatsAppPage = lazyPage(() => import('@/pages/admin/AdminWhatsAppPage'), 'AdminWhatsAppPage')
 
 // Legal pages. Lazy like everything else, but reachable signed-out: payment
@@ -207,6 +221,23 @@ export function AppRouter() {
         />
       </Route>
 
+      {/* Public marketing site: join page, guides, city and shop-type pages, contact.
+          Pre-rendered to static HTML at build time (scripts/prerender.tsx). */}
+      {(
+        [
+          [ROUTES.join, <JoinPage />],
+          ['/guide', <GuideHubPage />],
+          ['/guide/:slug', <GuidePage />],
+          ['/pos-software', <CityHubPage />],
+          ['/pos-software/:city', <CityPage />],
+          ['/billing-software', <TypeHubPage />],
+          ['/billing-software/:type', <TypePage />],
+          ['/contact', <ContactPage />],
+        ] as const
+      ).map(([path, el]) => (
+        <Route key={path} path={path} element={<SuspenseOutlet>{el}</SuspenseOutlet>} />
+      ))}
+
       {/* The landing page whatever `/` shows: admin preview and marketing links. */}
       <Route
         path={ROUTES.landing}
@@ -275,6 +306,15 @@ export function AppRouter() {
       {/* Super Admin panel (document/phase/14) — role:admin */}
       <Route element={<RequireAuth />}>
         <Route element={<RequireRole allow="admin" />}>
+          {/* Full-page print studio: outside the admin chrome so only the poster prints. */}
+          <Route
+            path="/admin/businesses/:id/poster"
+            element={
+              <SuspenseOutlet>
+                <AdminPosterPage />
+              </SuspenseOutlet>
+            }
+          />
           <Route element={<AdminLayout />}>
             <Route path={ROUTES.admin.root} element={<AdminDashboardPage />} />
             <Route path={ROUTES.admin.dashboard} element={<AdminDashboardPage />} />
@@ -302,7 +342,12 @@ export function AppRouter() {
             <Route path={ROUTES.admin.auditLogs} element={<AdminAuditLogsPage />} />
             <Route path={ROUTES.admin.reports} element={<AdminReportsPage />} />
             <Route path={ROUTES.admin.settings} element={<AdminSettingsPage />} />
+            <Route path={ROUTES.admin.aiUsage} element={<AdminAiPage />} />
             <Route path={ROUTES.admin.whatsapp} element={<AdminWhatsAppPage />} />
+            <Route path={ROUTES.admin.subscriptions} element={<AdminSubscriptionsPage />} />
+            <Route path={ROUTES.admin.vendorHealth} element={<AdminVendorHealthPage />} />
+            <Route path={ROUTES.admin.qrScans} element={<AdminQrScansPage />} />
+            <Route path={ROUTES.admin.enquiries} element={<AdminEnquiriesPage />} />
           </Route>
         </Route>
       </Route>

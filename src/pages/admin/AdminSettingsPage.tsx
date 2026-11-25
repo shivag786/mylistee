@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, Play, Trash2, Upload, CreditCard, KeyRound, LogIn, CheckCircle2, Dices, Volume2, Sparkles } from 'lucide-react'
+import { Bell, ExternalLink, Smartphone, Play, Trash2, Upload, CreditCard, KeyRound, LogIn, CheckCircle2, Dices, Volume2, Sparkles } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -116,6 +116,9 @@ export function AdminSettingsPage() {
           </Button>
         </form>
       </Card>
+
+      <AppLinksCard settings={data ?? form} />
+      <AppVersionsCard settings={data ?? form} />
 
       <ThemeCard settings={data ?? form} />
 
@@ -613,8 +616,11 @@ function AiAssistantCard({ settings }: { settings: PlatformSettings }) {
           <Input id="ai-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder={AI_DEFAULT_MODEL[provider]} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="ai-limit">Suggestions per shop / month</Label>
+          <Label htmlFor="ai-limit">AI answers / month for shops with no plan</Label>
           <Input id="ai-limit" inputMode="numeric" value={limit} onChange={(e) => setLimit(e.target.value.replace(/\D/g, ''))} />
+          <p className="text-small text-text-muted">
+            Each plan sets its own in Plans → AI answers / month. Packs and usage: AI usage &amp; packs.
+          </p>
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="ai-scan-limit">Menu scans per shop / month (every plan, needs Gemini)</Label>
@@ -757,3 +763,123 @@ function Field({ label, id, children }: { label: string; id: string; children: R
     </div>
   )
 }
+
+/** Play Store pages of the customer and vendor apps — used on shop posters, the website and in messages. */
+function AppLinksCard({ settings }: { settings: PlatformSettings }) {
+  const update = useUpdateSettings()
+  const [customer, setCustomer] = useState(settings.playStoreCustomerUrl ?? '')
+  const [vendor, setVendor] = useState(settings.playStoreVendorUrl ?? '')
+
+  useEffect(() => {
+    setCustomer(settings.playStoreCustomerUrl ?? '')
+    setVendor(settings.playStoreVendorUrl ?? '')
+  }, [settings.playStoreCustomerUrl, settings.playStoreVendorUrl])
+
+  const valid = (u: string) => u.trim() === '' || /^https:\/\/\S+$/.test(u.trim())
+
+  function save(e: React.FormEvent) {
+    e.preventDefault()
+    if (!valid(customer) || !valid(vendor)) return toast.error('Links must start with https://')
+    update.mutate(
+      { playStoreCustomerUrl: customer.trim(), playStoreVendorUrl: vendor.trim() },
+      {
+        onSuccess: () => toast.success('App links saved'),
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not save app links.'),
+      },
+    )
+  }
+
+  const row = (id: string, label: string, hint: string, value: string, onChange: (v: string) => void, placeholder: string) => (
+    <Field label={label} id={id}>
+      <div className="flex gap-2">
+        <Input id={id} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-invalid={!valid(value)} />
+        {value.trim() && valid(value) && (
+          <a href={value.trim()} target="_blank" rel="noreferrer" className="grid size-11 shrink-0 place-items-center rounded-input border border-border text-text-secondary hover:bg-surface-muted" aria-label={`Open ${label}`}>
+            <ExternalLink className="size-4" />
+          </a>
+        )}
+      </div>
+      <p className="text-small text-text-muted">{hint}</p>
+    </Field>
+  )
+
+  return (
+    <Card elevation="soft" className="max-w-xl" padding="lg">
+      <form onSubmit={save} className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Smartphone className="size-5 text-primary" aria-hidden />
+          <div>
+            <p className="font-semibold text-foreground">App store links</p>
+            <p className="text-caption text-text-secondary">Play Store pages of both apps — shown on shop posters and the website</p>
+          </div>
+        </div>
+        {row('s-play-customer', 'Customer app (Listee)', 'org.listee.app', customer, setCustomer, 'https://play.google.com/store/apps/details?id=org.listee.app')}
+        {row('s-play-vendor', 'Vendor app (Listee Business)', 'org.listee.business', vendor, setVendor, 'https://play.google.com/store/apps/details?id=org.listee.business')}
+        <Button type="submit" isLoading={update.isPending} fullWidth>Save app links</Button>
+      </form>
+    </Card>
+  )
+}
+
+/**
+ * Version gates for the two phone apps. Below "minimum" an app must update;
+ * below "latest" it may show a "new version" nudge. Blank = no gate. The apps
+ * read these from /config.
+ */
+function AppVersionsCard({ settings }: { settings: PlatformSettings }) {
+  const update = useUpdateSettings()
+  const keys = ['customerAppMinVersion', 'customerAppLatestVersion', 'vendorAppMinVersion', 'vendorAppLatestVersion'] as const
+  const [v, setV] = useState(() => Object.fromEntries(keys.map((k) => [k, settings[k] ?? ''])) as Record<(typeof keys)[number], string>)
+  const [message, setMessage] = useState(settings.appUpdateMessage ?? '')
+
+  useEffect(() => {
+    setV(Object.fromEntries(keys.map((k) => [k, settings[k] ?? ''])) as Record<(typeof keys)[number], string>)
+    setMessage(settings.appUpdateMessage ?? '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.customerAppMinVersion, settings.customerAppLatestVersion, settings.vendorAppMinVersion, settings.vendorAppLatestVersion, settings.appUpdateMessage])
+
+  const ok = (x: string) => x.trim() === '' || /^\d+\.\d+(\.\d+)?$/.test(x.trim())
+  const allOk = keys.every((k) => ok(v[k]))
+
+  function save(e: React.FormEvent) {
+    e.preventDefault()
+    if (!allOk) return toast.error('Versions look like 1.2.1')
+    update.mutate(
+      { ...Object.fromEntries(keys.map((k) => [k, v[k].trim()])), appUpdateMessage: message.trim() },
+      {
+        onSuccess: () => toast.success('App versions saved'),
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not save app versions.'),
+      },
+    )
+  }
+
+  const input = (k: (typeof keys)[number], label: string) => (
+    <Field label={label} id={`s-${k}`}>
+      <Input id={`s-${k}`} value={v[k]} placeholder="e.g. 1.2.1" aria-invalid={!ok(v[k])} onChange={(e) => setV((o) => ({ ...o, [k]: e.target.value }))} />
+    </Field>
+  )
+
+  return (
+    <Card elevation="soft" className="max-w-xl" padding="lg">
+      <form onSubmit={save} className="space-y-4">
+        <div>
+          <p className="font-semibold text-foreground">App versions</p>
+          <p className="text-caption text-text-secondary">
+            Below the minimum, the app asks to update before it can be used. Below the latest, it shows a gentle “update available”. Leave blank for no check.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {input('customerAppMinVersion', 'Customer app · minimum')}
+          {input('customerAppLatestVersion', 'Customer app · latest')}
+          {input('vendorAppMinVersion', 'Vendor app · minimum')}
+          {input('vendorAppLatestVersion', 'Vendor app · latest')}
+        </div>
+        <Field label="Update message" id="s-update-msg">
+          <Textarea id="s-update-msg" rows={2} maxLength={300} value={message} onChange={(e) => setMessage(e.target.value)} />
+        </Field>
+        <Button type="submit" isLoading={update.isPending} disabled={!allOk} fullWidth>Save app versions</Button>
+      </form>
+    </Card>
+  )
+}
+

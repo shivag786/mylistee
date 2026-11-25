@@ -373,6 +373,9 @@ function PlanCard({
           return <PlanLimit key={m.id} text={days ? `${m.label} · ${daysLabel(days)}` : m.label} />
         })}
         <PlanLimit text={formatLimit(plan.limits.maxActiveOffers, 'active offers')} />
+        {plan.modules?.ai_assistant?.on !== false && plan.limits.aiAnswersPerMonth !== 0 && (
+          <PlanLimit text={formatLimit(plan.limits.aiAnswersPerMonth ?? null, 'AI answers a month')} />
+        )}
         {plan.features
           .filter((f) => !['store_mode', 'push_notifications', 'loyalty', 'analytics'].includes(f))
           .map((f) => (

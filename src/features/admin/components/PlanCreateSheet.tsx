@@ -37,6 +37,7 @@ const LIMIT_FIELDS = [
   { key: 'pushReachPerMonth', label: 'Customers reached / month' },
   { key: 'pushPerCustomerPerMonth', label: 'Notifications to one customer / month' },
   { key: 'whatsappPerMonth', label: 'WhatsApp messages / month' },
+  { key: 'aiAnswersPerMonth', label: 'AI answers / month' },
   { key: 'maxOfferDays', label: 'Max offer days' },
   { key: 'maxQrCodes', label: 'Max QR codes' },
   { key: 'maxGalleryImages', label: 'Max gallery images' },

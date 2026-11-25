@@ -84,7 +84,30 @@ if ('caches' in window) {
     })
 }
 
-createRoot(document.getElementById('root')!).render(
+/**
+ * Pre-rendered marketing pages (scripts/prerender.tsx) arrive with their full
+ * HTML inside #root. Rendering would swap that for a loading spinner until the
+ * app is ready, so the static copy is moved aside and kept on screen; the page
+ * removes it once it has mounted (MarketingShell → revealApp), or after 10 s.
+ */
+const rootEl = document.getElementById('root')!
+if (rootEl.dataset.prerendered) {
+  const snapshot = document.createElement('div')
+  snapshot.id = 'prerender-snapshot'
+  snapshot.innerHTML = rootEl.innerHTML
+  rootEl.innerHTML = ''
+  delete rootEl.dataset.prerendered
+  rootEl.before(snapshot)
+  rootEl.style.display = 'none'
+  const reveal = () => {
+    snapshot.remove()
+    rootEl.style.display = ''
+  }
+  ;(window as Window & { __listeeRevealApp?: () => void }).__listeeRevealApp = reveal
+  window.setTimeout(reveal, 10_000)
+}
+
+createRoot(rootEl).render(
   <StrictMode>
     <App />
   </StrictMode>,

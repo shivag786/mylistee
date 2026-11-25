@@ -18,6 +18,10 @@ export interface AppConfig {
   orderSoundUrl: string | null
   /** Which owner-menu modules are enabled (admin-controlled). Missing key ⇒ on. */
   ownerModules: Record<string, boolean>
+  /** Play Store pages of the customer and vendor apps ('' = not set). Absent on an older API. */
+  apps?: { customerPlayStore: string; vendorPlayStore: string }
+  /** How the public reaches the Listee team. */
+  support?: { email: string; phone: string }
   /**
    * Whether a live payment gateway is configured on the server — a boolean only,
    * never a key. False in local development without Razorpay credentials, where
@@ -47,7 +51,7 @@ export interface AppConfig {
   /** Admin-arranged home sections; null/absent = the built-in order. */
   homeLayout?: HomeSectionSetting[] | null
   /** What `/` shows signed-out visitors. Absent on an older API = the shop feed. */
-  homePage?: 'shops' | 'landing'
+  homePage?: 'shops' | 'landing' | 'join'
   /** Admin-edited landing page content; null = the built-in content. */
   landingPage?: LandingContent | null
   /** Admin-set search and social tags; null = the built-in ones. */

@@ -14,6 +14,7 @@ import { useAppConfig } from '@/hooks/useAppConfig'
 import { resolveTitle, seoTitleState } from '@/hooks/usePageTitle'
 import { useShowsLanding } from '@/features/landing/homeEntry'
 import type { SeoPageId, SeoSettings } from './seoTypes'
+import { isMarketingPath } from '@/features/marketing/site'
 
 const PATH_PAGES: Record<string, SeoPageId> = {
   [ROUTES.landing]: 'landing',
@@ -98,7 +99,15 @@ export function SeoManager() {
     location.pathname === ROUTES.home ? (showsLanding ? 'landing' : 'explore') : (PATH_PAGES[location.pathname] ?? null)
   const page = pageId ? seo.pages?.[pageId] : undefined
 
+  const marketing = isMarketingPath(location.pathname) || (location.pathname === ROUTES.home && config?.homePage === 'join' && showsLanding === true)
+
   useEffect(() => {
+    // Marketing pages set their own title, description, canonical and schema.
+    if (marketing) {
+      setMeta('name', 'google-site-verification', seo.googleVerification)
+      setMeta('name', 'msvalidate.01', seo.bingVerification)
+      return
+    }
     const siteTitle = filled(seo.siteTitle) ? seo.siteTitle.trim() : null
     seoTitleState.siteTitle = siteTitle
     seoTitleState.pageTitle = filled(page?.title) ? page.title.trim() : null
@@ -126,7 +135,7 @@ export function SeoManager() {
     setMeta('name', 'msvalidate.01', seo.bingVerification)
     // Query strings (?q=…) would make every search its own page in the index.
     setCanonical(url)
-  }, [location.pathname, pageId, page?.title, page?.description, seo])
+  }, [location.pathname, pageId, page?.title, page?.description, seo, marketing])
 
   // Structured data: who runs the site, and that it has a search box.
   useEffect(() => {

@@ -2,10 +2,11 @@ import { lazyPage } from '@/app/lazyPage'
 import { SuspenseOutlet } from '@/app/PageLoader'
 import { Spinner } from '@/components/feedback/Spinner'
 import { CustomerLayout } from '@/layouts/CustomerLayout'
-import { useShowsLanding } from './homeEntry'
+import { useHomeChoice, useShowsLanding } from './homeEntry'
 
 // Its own chunk: visitors who get the shop feed never download it.
 const LandingPage = lazyPage(() => import('@/pages/LandingPage'), 'LandingPage')
+const JoinPage = lazyPage(() => import('@/pages/marketing/JoinPage'), 'JoinPage')
 
 /**
  * The `/` route: the landing page (standalone, with its own header and footer)
@@ -13,6 +14,7 @@ const LandingPage = lazyPage(() => import('@/pages/LandingPage'), 'LandingPage')
  */
 export function HomeGate() {
   const showsLanding = useShowsLanding()
+  const choice = useHomeChoice()
 
   if (showsLanding === null) {
     return (
@@ -24,9 +26,7 @@ export function HomeGate() {
 
   if (showsLanding) {
     return (
-      <SuspenseOutlet>
-        <LandingPage />
-      </SuspenseOutlet>
+      <SuspenseOutlet>{choice === 'join' ? <JoinPage /> : <LandingPage />}</SuspenseOutlet>
     )
   }
 

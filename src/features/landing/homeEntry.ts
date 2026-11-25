@@ -11,16 +11,18 @@ import { useAppConfig } from '@/hooks/useAppConfig'
 
 const CACHE_KEY = 'listee:home-page'
 
-function cachedChoice(): 'shops' | 'landing' | null {
+type HomeChoice = 'shops' | 'landing' | 'join'
+
+function cachedChoice(): HomeChoice | null {
   try {
     const v = localStorage.getItem(CACHE_KEY)
-    return v === 'landing' || v === 'shops' ? v : null
+    return v === 'landing' || v === 'shops' || v === 'join' ? v : null
   } catch {
     return null
   }
 }
 
-function remember(choice: 'shops' | 'landing') {
+function remember(choice: HomeChoice) {
   try {
     localStorage.setItem(CACHE_KEY, choice)
   } catch {
@@ -29,10 +31,11 @@ function remember(choice: 'shops' | 'landing') {
 }
 
 /** The admin's choice: the live config, else the last one seen, else null (still loading). */
-export function useHomeChoice(): 'shops' | 'landing' | null {
+export function useHomeChoice(): HomeChoice | null {
   const config = useAppConfig()
   if (config.data) {
-    const choice = config.data.homePage === 'landing' ? 'landing' : 'shops'
+    const hp = config.data.homePage
+    const choice: HomeChoice = hp === 'landing' || hp === 'join' ? hp : 'shops'
     remember(choice)
     return choice
   }
@@ -57,5 +60,5 @@ export function useShowsLanding(): boolean | null {
 export function useCustomerHomePath(): string {
   const choice = useHomeChoice()
   const { isAuthenticated } = useAuth()
-  return choice === 'landing' && !isAuthenticated ? ROUTES.explore : ROUTES.home
+  return choice !== 'shops' && !isAuthenticated ? ROUTES.explore : ROUTES.home
 }

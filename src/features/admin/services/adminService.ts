@@ -9,6 +9,8 @@ import type { Paginated } from '@/types/api'
 import type {
   AdminBanner,
   BannerInput,
+  BroadcastInput,
+  BroadcastOverview,
   AdminBusiness,
   BusinessUpdateInput,
   AdminCategory,
@@ -220,8 +222,14 @@ export const adminService = {
   updatePlan: (key: string, payload: Record<string, unknown>) =>
     apiClient.patch<Plan>(`admin/plans/${key}`, payload),
 
-  broadcast: (payload: { title: string; body?: string; target: string; link?: string }) =>
-    apiClient.post<{ sent: number }>('admin/broadcast', payload),
+  broadcast: (payload: BroadcastInput) =>
+    apiClient.post<{ id: string; sent: number; reachable: number }>('admin/broadcast', payload),
+  broadcasts: () => apiClient.get<BroadcastOverview>('admin/broadcast'),
+  broadcastPreview: (payload: Omit<BroadcastInput, 'title'>) =>
+    apiClient.get<{ recipients: number; reachable: number }>('admin/broadcast/preview', {
+      query: Object.fromEntries(Object.entries(payload).filter(([, v]) => v !== undefined && v !== '')) as Record<string, string>,
+    }),
+  business: (id: string) => apiClient.get<AdminBusiness>(`admin/businesses/${id}`),
 
   // ---- Homepage banners ----
   banners: () => apiClient.get<AdminBanner[]>('admin/banners'),

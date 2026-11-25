@@ -59,7 +59,7 @@ export function AdminLandingPage() {
   const isDefault = JSON.stringify(form) === JSON.stringify(DEFAULTS)
   const homePage = data.homePage ?? 'shops'
 
-  function setHomePage(choice: 'shops' | 'landing') {
+  function setHomePage(choice: 'shops' | 'landing' | 'join') {
     update.mutate(
       { homePage: choice },
       {
@@ -122,7 +122,7 @@ export function AdminLandingPage() {
           What visitors who are not signed in see when they open the website. Signed-in customers always get the shop
           feed, and the shop feed is always at <code>/explore</code>.
         </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <ChoiceCard
             active={homePage === 'shops'}
             disabled={update.isPending}
@@ -138,6 +138,14 @@ export function AdminLandingPage() {
             icon={<Store className="size-5" aria-hidden />}
             title="Landing page"
             text="Benefits, plans, FAQs and sign-up for shops and customers — then the shops."
+          />
+          <ChoiceCard
+            active={homePage === 'join'}
+            disabled={update.isPending}
+            onClick={() => setHomePage('join')}
+            icon={<Store className="size-5" aria-hidden />}
+            title="Join page (new)"
+            text="The animated Listee page for shop owners: features, apps, guides, pricing, demo form."
           />
         </div>
         <p className="mt-3 text-small text-text-muted">

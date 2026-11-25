@@ -8,7 +8,9 @@ export const ROUTES = {
   /** The shop feed. Always here, whether `/` is the feed or the landing page. */
   explore: '/explore',
   /** The landing page, always — for previews and marketing links, whatever `/` shows. */
-  landing: '/join',
+  landing: '/landing',
+  /** The Listee join / marketing home (new design) — see features/marketing. */
+  join: '/join',
   nearby: '/nearby',
   deals: '/deals',
   orders: '/orders',
@@ -76,6 +78,8 @@ export const ROUTES = {
     root: '/admin',
     dashboard: '/admin/dashboard',
     businesses: '/admin/businesses',
+    /** A4 QR poster for one shop (no sidebar, prints clean). */
+    businessPoster: (id: string) => `/admin/businesses/${id}/poster`,
     businessImport: '/admin/business-import',
     categories: '/admin/categories',
     categoryRequests: '/admin/category-requests',
@@ -87,6 +91,10 @@ export const ROUTES = {
     orders: '/admin/orders',
     payments: '/admin/payments',
     personalLinks: '/admin/personal-links',
+    subscriptions: '/admin/subscriptions',
+    vendorHealth: '/admin/vendor-health',
+    qrScans: '/admin/qr-scans',
+    enquiries: '/admin/enquiries',
     broadcast: '/admin/broadcast',
     banners: '/admin/banners',
     homeLayout: '/admin/home-layout',
@@ -95,6 +103,7 @@ export const ROUTES = {
     featureFlags: '/admin/feature-flags',
     ownerMenu: '/admin/owner-menu',
     settings: '/admin/settings',
+    aiUsage: '/admin/ai',
     whatsapp: '/admin/whatsapp',
     cms: '/admin/cms',
     fraud: '/admin/fraud',

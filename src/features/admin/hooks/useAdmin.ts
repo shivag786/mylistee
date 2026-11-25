@@ -5,6 +5,7 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { adminService } from '../services/adminService'
 import type {
+  BroadcastInput,
   BusinessUpdateInput,
   CategoryInput,
   ImportApplyInput,
@@ -205,8 +206,35 @@ export function useCreatePlan() {
 }
 
 // ---- Broadcast ----
-export const useBroadcast = () =>
-  useMutation({ mutationFn: adminService.broadcast })
+export function useBroadcast() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminService.broadcast,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'broadcasts'] })
+      // Delivery runs after the response — refresh again once it has had time.
+      setTimeout(() => void qc.invalidateQueries({ queryKey: ['admin', 'broadcasts'] }), 4000)
+    },
+  })
+}
+
+export const useBroadcasts = () =>
+  useQuery({ queryKey: ['admin', 'broadcasts'] as const, queryFn: () => adminService.broadcasts() })
+
+export const useBroadcastPreview = (payload: Omit<BroadcastInput, 'title'>, enabled = true) =>
+  useQuery({
+    queryKey: ['admin', 'broadcast-preview', payload] as const,
+    queryFn: () => adminService.broadcastPreview(payload),
+    enabled,
+    placeholderData: keepPreviousData,
+  })
+
+export const useAdminBusiness = (id: string | undefined) =>
+  useQuery({
+    queryKey: ['admin', 'business', id] as const,
+    queryFn: () => adminService.business(id as string),
+    enabled: !!id,
+  })
 
 // ---- Homepage banners ----
 export const useAdminBanners = () =>
