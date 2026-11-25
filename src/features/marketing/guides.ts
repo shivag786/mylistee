@@ -23,6 +23,8 @@ export interface GuideStep {
   title: string
   text: string
   screen: GuideScreen
+  /** A real app screenshot to show instead of the drawn screen. */
+  shot?: 'shop' | 'menu'
   tip?: string
 }
 
@@ -82,7 +84,7 @@ export const GUIDES: Guide[] = [
       { title: 'Open Combos → New combo', text: 'Tap Combos in the menu, then New combo.', screen: 'combo' },
       { title: 'Pick the items', text: 'Perfect Bakery picks Chocolate Pastry (₹80) + Cold Coffee (₹90).', screen: 'combo' },
       { title: 'Set the combo price', text: 'Set ₹149 instead of ₹170. Listee shows customers “Save ₹21”.', screen: 'combo', tip: 'Combos around a best-seller lift the average bill.' },
-      { title: 'Go live', text: 'Save: the combo appears on your shop page, in POS billing and in your notifications.', screen: 'combo' },
+      { title: 'Go live', text: 'Save: the combo appears on your shop page, in POS billing and in your notifications — like this real combo on The Perfect Cafe & bakery.', screen: 'combo', shot: 'menu' },
     ],
     faqs: [['Can a combo run only on some days?', 'Yes. Set a start and end date, or run it only on weekends.']],
   },
@@ -130,7 +132,7 @@ export const GUIDES: Guide[] = [
       { title: 'Open Notify customers', text: 'You see how many followers and customers you can reach this month.', screen: 'notify' },
       { title: 'Pick who gets it', text: 'Followers, people who ordered, “haven’t ordered in 30 days”, or birthdays & anniversaries this week.', screen: 'notify' },
       { title: 'Write the offer', text: 'Perfect Bakery: “Fresh pastries 20% off till 9 pm 🍰”. Short and clear works best.', screen: 'notify', tip: 'Ask the AI assistant to write it for you in Hindi or English.' },
-      { title: 'Send now', text: 'It arrives on their phone; tapping it opens your shop. You see how many got it.', screen: 'notify' },
+      { title: 'Send now', text: 'It arrives on their phone; tapping it opens your shop page — only your shop, with your menu and offers. You see how many got it.', screen: 'notify', shot: 'shop' },
     ],
     faqs: [['Will customers get spammed?', 'No. Listee limits how many messages a shop can send and pauses them between 10 pm and 8 am.']],
   },
@@ -141,7 +143,7 @@ export const GUIDES: Guide[] = [
     minutes: 3,
     icon: 'QrCode',
     steps: [
-      { title: 'Print your QR poster', text: 'QR code → Print poster. Put it at the counter, door and on tables.', screen: 'qr' },
+      { title: 'Print your QR poster', text: 'QR code → Print poster. Put it at the counter, door and on tables. A scan opens your shop page with your menu.', screen: 'qr' },
       { title: 'Set spin rewards', text: 'Spin rewards: add prizes like ₹10 off, free topping, 5% off — and how often each can win.', screen: 'spin' },
       { title: 'Loyalty coins', text: 'Loyalty coins: customers earn coins on every bill and use them next time.', screen: 'loyalty' },
       { title: 'Redeem at the counter', text: 'When a customer shows a reward, open Redeem and scan or enter the code.', screen: 'spin' },

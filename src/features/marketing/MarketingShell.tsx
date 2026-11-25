@@ -56,7 +56,7 @@ export function MarketingShell({ children }: { children: ReactNode }) {
             <Link to={ROUTES.ownerLogin} className="hidden rounded-full px-3.5 py-2 text-caption font-semibold text-text-secondary hover:text-foreground sm:inline-flex">
               Shop login
             </Link>
-            <Link to={ROUTES.ownerSignup} className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-caption font-semibold text-background transition hover:opacity-90">
+            <Link to={ROUTES.ownerSignup} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 px-4 py-2 text-caption font-semibold text-white shadow-md shadow-rose-500/20 transition hover:shadow-lg">
               <Store className="size-4" aria-hidden /> Register free
             </Link>
             <details className="relative lg:hidden">
@@ -116,7 +116,7 @@ export function MarketingShell({ children }: { children: ReactNode }) {
       {/* Talk to us — always one tap away. */}
       <Link
         to={MKT.contact}
-        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-3 text-caption font-semibold text-background shadow-xl transition hover:-translate-y-0.5"
+        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-caption font-semibold text-white shadow-xl shadow-emerald-500/30 transition hover:-translate-y-0.5"
       >
         <MessageCircle className="size-4" aria-hidden /> Talk to Listee
       </Link>

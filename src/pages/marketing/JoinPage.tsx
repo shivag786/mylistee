@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   ArrowRight,
   BadgeIndianRupee,
@@ -36,7 +35,8 @@ import { usePlans } from '@/features/owner/hooks/useOwner'
 import { useLandingStats } from '@/features/landing/useLandingStats'
 import { MarketingShell } from '@/features/marketing/MarketingShell'
 import { EnquiryForm } from '@/features/marketing/EnquiryForm'
-import { HERO_ORDERS, MockScreen, PhoneFrame } from '@/features/marketing/mocks'
+import { MockScreen, PhoneFrame } from '@/features/marketing/mocks'
+import { accent, Blobs, LiveCombos, LivePill, LiveShops, LiveSpecials, NotifyStory, RealPhone, SHOTS } from '@/features/marketing/showcase'
 import { BUSINESS_TYPES } from '@/features/marketing/businessTypes'
 import { CITIES } from '@/features/marketing/cities'
 import { GENERAL_FAQS, GUIDES } from '@/features/marketing/guides'
@@ -114,35 +114,41 @@ export function JoinPage() {
 
   return (
     <MarketingShell>
+      {/* ---------------- Announcement ---------------- */}
+      <div className="bg-gradient-to-r from-rose-500 via-orange-500 to-amber-400 text-white">
+        <p className="mx-auto max-w-6xl px-4 py-2 text-center text-small font-semibold">
+          🎉 Free to start — no card needed · Live in Jhansi, Indore & growing ·{' '}
+          <Link to={MKT.contact} className="underline underline-offset-2">Book a free demo</Link>
+        </p>
+      </div>
+
       {/* ---------------- Hero ---------------- */}
-      <section className="relative overflow-hidden">
-        <GridBackdrop />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-12 md:pt-20 lg:grid-cols-[1.1fr_1fr]">
+      <section className="relative overflow-hidden bg-gradient-to-b from-amber-50/70 via-white to-white">
+        <Blobs />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-12 md:pt-16 lg:grid-cols-[1.1fr_1fr]">
           <div>
             <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-small font-semibold text-text-secondary">
-                <span className="size-2 animate-pulse rounded-full bg-primary" /> For restaurants, bakeries, cafés, kirana & every local shop
-              </span>
+              <LivePill>For restaurants, bakeries, cafés, kirana & every local shop</LivePill>
             </Reveal>
             <Reveal delay={0.05}>
-              <h1 className="mt-5 font-heading text-[clamp(2.4rem,6vw,4.2rem)] font-extrabold leading-[1.02] tracking-tight">
+              <h1 className="mt-5 font-heading text-[clamp(2.4rem,6vw,4.4rem)] font-extrabold leading-[1.02] tracking-tight">
                 Your whole shop.
                 <br />
-                <span className="text-primary">One app.</span>
+                <span className="bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 bg-clip-text text-transparent">One app.</span>
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mt-5 max-w-xl text-lg text-text-secondary">
                 Listee is the <strong className="text-foreground">billing, ordering and customer-rewards app</strong> for local shops in India.
-                Bill with GST, take table and online orders without commission, and bring customers back with spin & win, coins and offers —
-                all from your phone.
+                Bill with GST, take table and online orders without commission, send offers straight to your customers’ phones — and
+                bring them back with spin & win and coins.
               </p>
             </Reveal>
             <Reveal delay={0.15} className="mt-7 flex flex-wrap gap-3">
-              <Link to={ROUTES.ownerSignup} className="inline-flex h-12 items-center gap-2 rounded-full bg-foreground px-6 font-semibold text-background transition hover:gap-3">
+              <Link to={ROUTES.ownerSignup} className="inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 px-6 font-semibold text-white shadow-lg shadow-rose-500/25 transition hover:gap-3 hover:shadow-xl">
                 Register your shop free <ArrowRight className="size-4" aria-hidden />
               </Link>
-              <Link to={MKT.contact} className="inline-flex h-12 items-center gap-2 rounded-full border border-border bg-surface px-6 font-semibold transition hover:border-foreground">
+              <Link to={MKT.contact} className="inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 font-semibold ring-1 ring-black/10 transition hover:ring-black/30">
                 Book a free demo
               </Link>
             </Reveal>
@@ -151,9 +157,14 @@ export function JoinPage() {
               <PlayBadge href={play.customer} app="Listee" who="App for customers" />
             </Reveal>
             <Reveal delay={0.25}>
-              <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-small text-text-secondary">
-                {['Free to start', 'No commission', 'Hindi & English', 'Any Android phone'].map((t) => (
-                  <li key={t} className="flex items-center gap-1.5"><Check className="size-4 text-primary" aria-hidden />{t}</li>
+              <ul className="mt-6 flex flex-wrap gap-2 text-small font-semibold">
+                {[
+                  ['Free to start', 'bg-emerald-50 text-emerald-700'],
+                  ['0% commission', 'bg-rose-50 text-rose-700'],
+                  ['Hindi & English', 'bg-amber-50 text-amber-700'],
+                  ['Any Android phone', 'bg-sky-50 text-sky-700'],
+                ].map(([t, c]) => (
+                  <li key={t} className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 ${c}`}><Check className="size-4" aria-hidden />{t}</li>
                 ))}
               </ul>
             </Reveal>
@@ -178,14 +189,15 @@ export function JoinPage() {
         <SectionHead eyebrow="What is Listee" title="Sell more. Bring them back. Grow." sub="Three jobs every shop has to do every day. Listee does all three in one app — so you stop juggling a billing machine, a delivery app, a diary and WhatsApp groups." />
         <div className="mt-12 grid gap-4 md:grid-cols-3">
           {[
-            { icon: Receipt, n: '01', t: 'Sell', d: 'POS billing, GST invoices, table QR and online orders, printer and KOT, staff logins.' },
-            { icon: HeartHandshake, n: '02', t: 'Bring them back', d: 'Spin & win on every scan, loyalty coins, birthday offers, notifications and WhatsApp offers.' },
-            { icon: Sparkles, n: '03', t: 'Grow', d: 'AI growth advisor, menu scan, daily reports, reviews and your shop on Google and the Listee app.' },
+            { icon: Receipt, n: '01', t: 'Sell', d: 'POS billing, GST invoices, table QR and online orders, printer and KOT, staff logins.', c: 'from-rose-500 to-orange-400' },
+            { icon: HeartHandshake, n: '02', t: 'Bring them back', d: 'Offer notifications, spin & win on every scan, loyalty coins, birthday offers.', c: 'from-amber-400 to-yellow-300' },
+            { icon: Sparkles, n: '03', t: 'Grow', d: 'AI growth advisor, menu scan, daily reports, reviews and your shop on Google and the Listee app.', c: 'from-emerald-500 to-lime-400' },
           ].map((p, i) => (
             <Reveal key={p.t} delay={i * 0.08}>
-              <div className="group h-full rounded-3xl border border-border bg-surface p-7 transition hover:-translate-y-1 hover:border-foreground">
+              <div className="group relative h-full overflow-hidden rounded-3xl bg-white p-7 shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:shadow-xl">
+                <div className={`absolute -right-10 -top-10 size-32 rounded-full bg-gradient-to-br ${p.c} opacity-15 transition group-hover:opacity-30`} />
                 <div className="flex items-center justify-between">
-                  <p.icon className="size-8 text-primary" aria-hidden />
+                  <span className={`grid size-12 place-items-center rounded-2xl bg-gradient-to-br ${p.c} text-white shadow-lg`}><p.icon className="size-6" aria-hidden /></span>
                   <span className="font-heading text-4xl font-extrabold text-foreground/10">{p.n}</span>
                 </div>
                 <h3 className="mt-6 text-2xl font-extrabold">{p.t}</h3>
@@ -196,21 +208,46 @@ export function JoinPage() {
         </div>
       </section>
 
-      {/* ---------------- Features ---------------- */}
-      <section id="features" className="scroll-mt-20 bg-foreground py-20 text-background">
+      {/* ---------------- Notification story ---------------- */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-rose-50 via-amber-50 to-emerald-50 py-20">
         <div className="mx-auto max-w-6xl px-4">
-          <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="text-small font-semibold uppercase tracking-[0.18em] text-background/60">Features</p>
-            <h2 className="mt-2 font-heading text-[clamp(1.75rem,4vw,2.75rem)] font-extrabold leading-tight">Everything a local shop needs</h2>
-            <p className="mt-3 text-background/70 md:text-lg">No extra machines. No commission. Works on the phone you already have.</p>
-          </Reveal>
-          <div className="mt-12 grid gap-px overflow-hidden rounded-3xl bg-background/10 sm:grid-cols-2 lg:grid-cols-4">
+          <SectionHead
+            eyebrow="The Listee magic"
+            title={<>Send an offer. Their phone buzzes. <span className="text-rose-500">One tap — they’re in your shop.</span></>}
+            sub="This is the feature shop owners love most: your offer lands on your customers’ phones, and the tap opens only YOUR shop page — not a marketplace full of competitors."
+          />
+          <div className="mt-12"><NotifyStory /></div>
+        </div>
+      </section>
+
+      {/* ---------------- Live on Listee ---------------- */}
+      <section id="live" className="scroll-mt-20 bg-white py-20">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="text-center"><LivePill>Live on Listee right now</LivePill></div>
+          <SectionHead title="Real shops. Real menus. Real offers." sub="These are actual Listee shops and what they are selling today — tap any to see their page." />
+          <div className="mt-10"><LiveShops /></div>
+
+          <h3 className="mt-16 flex items-center justify-center gap-2 text-center text-2xl font-extrabold"><Layers className="size-6 text-violet-500" aria-hidden /> Combos running now</h3>
+          <div className="mt-6"><LiveCombos /></div>
+
+          <h3 className="mt-16 flex items-center justify-center gap-2 text-center text-2xl font-extrabold"><Gift className="size-6 text-rose-500" aria-hidden /> Today’s specials & best-sellers</h3>
+          <div className="mt-6"><LiveSpecials /></div>
+        </div>
+      </section>
+
+      {/* ---------------- Features ---------------- */}
+      <section id="features" className="scroll-mt-20 bg-neutral-50 py-20">
+        <div className="mx-auto max-w-6xl px-4">
+          <SectionHead eyebrow="Features" title="Everything a local shop needs" sub="No extra machines. No commission. Works on the phone you already have." />
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {FEATURES.map((f, i) => (
-              <Reveal key={f.title} delay={(i % 4) * 0.05} className="bg-foreground">
-                <div className="group h-full p-6 transition hover:bg-background/5">
-                  <f.icon className="size-6 text-background transition group-hover:scale-110" aria-hidden />
+              <Reveal key={f.title} delay={(i % 4) * 0.05}>
+                <div className={`group h-full rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:shadow-xl hover:ring-2 ${accent(i).ring}`}>
+                  <span className={`grid size-11 place-items-center rounded-2xl text-white shadow-md transition group-hover:scale-110 ${accent(i).icon}`}>
+                    <f.icon className="size-5" aria-hidden />
+                  </span>
                   <h3 className="mt-4 font-bold">{f.title}</h3>
-                  <p className="mt-1.5 text-small text-background/65">{f.text}</p>
+                  <p className="mt-1.5 text-small text-text-secondary">{f.text}</p>
                 </div>
               </Reveal>
             ))}
@@ -225,8 +262,8 @@ export function JoinPage() {
           <FlowLine />
           {FLOW.map((s, i) => (
             <Reveal key={s.title} delay={i * 0.12} className="relative text-center">
-              <div className="mx-auto grid size-16 place-items-center rounded-2xl border border-border bg-surface shadow-sm">
-                <s.icon className="size-7 text-primary" aria-hidden />
+              <div className={`mx-auto grid size-16 place-items-center rounded-2xl text-white shadow-lg ${accent(i).icon}`}>
+                <s.icon className="size-7" aria-hidden />
               </div>
               <p className="mt-4 text-small font-semibold text-text-muted">Step {i + 1}</p>
               <h3 className="mt-1 text-lg font-extrabold">{s.title}</h3>
@@ -382,12 +419,12 @@ export function JoinPage() {
       </section>
 
       {/* ---------------- Contact ---------------- */}
-      <section className="bg-foreground py-20 text-background">
+      <section className="relative overflow-hidden bg-gradient-to-br from-rose-500 via-orange-500 to-amber-400 py-20 text-white">
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 lg:grid-cols-2">
           <Reveal>
-            <p className="text-small font-semibold uppercase tracking-[0.18em] text-background/60">Talk to us</p>
+            <p className="text-small font-semibold uppercase tracking-[0.18em] text-white/80">Talk to us</p>
             <h2 className="mt-2 font-heading text-[clamp(1.75rem,4vw,2.75rem)] font-extrabold leading-tight">Get a free demo for your shop</h2>
-            <p className="mt-3 text-background/70 md:text-lg">
+            <p className="mt-3 text-white/90 md:text-lg">
               Leave your number. Someone from the Listee team calls you, sets up your menu with you and shows you everything — in Hindi or English.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -442,90 +479,32 @@ function Marquee() {
   )
 }
 
-/** Faint dotted grid behind the hero. */
-function GridBackdrop() {
-  return (
-    <div
-      aria-hidden
-      className="absolute inset-0 opacity-[0.5] [mask-image:radial-gradient(ellipse_at_top,#000_20%,transparent_70%)]"
-      style={{ backgroundImage: 'radial-gradient(var(--color-border) 1px, transparent 1px)', backgroundSize: '22px 22px' }}
-    />
-  )
-}
-
-/** Two phones: orders arriving live, and a customer spinning to win. */
+/** Real app screens: the shop page in front, its menu behind, with live-looking cards around. */
 function HeroPhones() {
   const pre = usePrerender()
-  const [tick, setTick] = useState(0)
-  useEffect(() => {
-    if (pre) return
-    const id = setInterval(() => setTick((t) => t + 1), 2600)
-    return () => clearInterval(id)
-  }, [pre])
-  const shown = [0, 1, 2].map((k) => HERO_ORDERS[(tick + k) % HERO_ORDERS.length])
-
+  const float = (d: number, y = 8) => (pre ? {} : { animate: { y: [0, -y, 0] }, transition: { duration: d, repeat: Infinity, ease: 'easeInOut' as const } })
   return (
-    <div className="relative mx-auto h-[560px] w-full max-w-[460px]">
-      <motion.div
-        className="absolute left-0 top-4 z-10"
-        animate={pre ? undefined : { y: [0, -10, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <PhoneFrame>
-          <p className="mb-2 text-[15px] font-extrabold">Orders</p>
-          <div className="mb-2 flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-[11px] font-bold text-white">
-            <BellRing className="size-4 animate-bounce" aria-hidden /> New order ringing…
-          </div>
-          <div className="space-y-2">
-            <AnimatePresence initial={false} mode="popLayout">
-              {shown.map(([id, what, amt], i) => (
-                <motion.div
-                  key={`${id}-${tick}-${i}`}
-                  layout
-                  initial={{ opacity: 0, y: -20, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className={`rounded-xl border p-2.5 ${i === 0 ? 'border-primary bg-primary/5' : 'border-border bg-surface'}`}
-                >
-                  <div className="flex justify-between font-bold"><span>{id}</span><span>{amt}</span></div>
-                  <p className="text-text-muted">{what}</p>
-                  {i === 0 && (
-                    <div className="mt-2 grid grid-cols-2 gap-2 text-center text-[11px] font-bold">
-                      <span className="rounded-lg border border-border py-1.5">Reject</span>
-                      <span className="rounded-lg bg-primary py-1.5 text-white">Accept</span>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-          <div className="mt-3 rounded-xl bg-foreground p-3 text-background">
-            <p className="text-[10px] opacity-70">Today</p>
-            <p className="text-[20px] font-extrabold">₹18,420</p>
-          </div>
-        </PhoneFrame>
+    <div className="relative mx-auto h-[600px] w-full max-w-[480px]">
+      <motion.div className="absolute right-0 top-10 hidden rotate-6 sm:block" {...float(7)}>
+        <RealPhone src={SHOTS.menu} alt="Menu with real cake photos on a Listee shop page" className="scale-90 opacity-95" />
       </motion.div>
-      <motion.div
-        className="absolute right-0 top-24 hidden scale-90 sm:block"
-        animate={pre ? undefined : { y: [0, 12, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <PhoneFrame title="Listee · Customer"><MockScreen screen="spin" /></PhoneFrame>
+      <motion.div className="absolute left-0 top-0 z-10 -rotate-3 sm:left-4" {...float(6, 10)}>
+        <RealPhone src={SHOTS.shop} alt="The Perfect Cafe & bakery shop page on Listee" />
       </motion.div>
-      {[
-        { t: 'GST bill printed', icon: Printer, cls: 'left-[52%] top-0' },
-        { t: '+1 loyal customer', icon: Users, cls: 'bottom-16 left-[46%]' },
-      ].map((c, i) => (
-        <motion.div
-          key={c.t}
-          className={`absolute z-20 hidden items-center gap-2 rounded-full border border-border bg-surface px-3 py-2 text-small font-semibold shadow-lg sm:flex ${c.cls}`}
-          animate={pre ? undefined : { y: [0, -6, 0] }}
-          transition={{ duration: 4, repeat: Infinity, delay: i * 1.2 }}
-        >
-          <c.icon className="size-4 text-primary" aria-hidden />{c.t}
-        </motion.div>
-      ))}
+      <motion.div className="absolute -left-2 top-28 z-20 w-64 rounded-2xl bg-white/95 p-3 shadow-2xl ring-1 ring-black/5 backdrop-blur sm:-left-10" {...float(4.5, 6)}>
+        <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+          <span className="grid size-4 place-items-center rounded bg-amber-400 text-[9px] font-bold text-white">L</span> Listee · now
+        </div>
+        <p className="mt-1 text-[13px] font-bold">The Perfect Cafe & bakery</p>
+        <p className="text-[13px] text-neutral-600">Fresh pastries 22% off till 9 pm 🍰</p>
+      </motion.div>
+      <motion.div className="absolute bottom-20 right-2 z-20 flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-white shadow-xl" {...float(5)}>
+        <BellRing className="size-5" aria-hidden />
+        <span className="text-small font-bold">New order · ₹350</span>
+      </motion.div>
+      <motion.div className="absolute bottom-6 left-10 z-20 rounded-2xl bg-amber-400 px-4 py-2.5 text-small font-extrabold text-neutral-900 shadow-xl" {...float(5.5, 6)}>
+        🎡 You won ₹50 off!
+      </motion.div>
     </div>
   )
 }

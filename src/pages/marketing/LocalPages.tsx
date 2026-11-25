@@ -10,6 +10,7 @@ import { GENERAL_FAQS, GUIDES } from '@/features/marketing/guides'
 import { abs, MKT, SUPPORT_EMAIL } from '@/features/marketing/site'
 import { usePageSeo, type PageMeta } from '@/features/marketing/seo'
 import { breadcrumbJsonLd, Faq, faqJsonLd, IconByName, PlayBadge, Reveal, SectionHead, usePlayLinks } from '@/features/marketing/ui'
+import { accent, Blobs, LivePill, LiveShops } from '@/features/marketing/showcase'
 
 /* ============================ Cities ============================ */
 
@@ -105,7 +106,8 @@ export function CityContent({ city: c }: { city: City }) {
 
   return (
     <MarketingShell>
-      <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 lg:grid-cols-[1.2fr_auto]">
+      <section className="relative overflow-hidden"><Blobs />
+      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 lg:grid-cols-[1.2fr_auto]">
         <div>
           <nav aria-label="Breadcrumb" className="text-small text-text-muted">
             <Link to={MKT.join} className="hover:text-foreground">Listee</Link> / <Link to={MKT.cities} className="hover:text-foreground">Cities</Link> / <span className="text-foreground">{place}</span>
@@ -123,14 +125,20 @@ export function CityContent({ city: c }: { city: City }) {
             <p className="mt-5 text-lg text-text-secondary">{c.local}</p>
           </Reveal>
           <Reveal delay={0.1} className="mt-7 flex flex-wrap gap-3">
-            <Link to={ROUTES.ownerSignup} className="inline-flex h-12 items-center gap-2 rounded-full bg-foreground px-6 font-semibold text-background">
+            <Link to={ROUTES.ownerSignup} className="inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 px-6 font-semibold text-white shadow-lg shadow-rose-500/25">
               Register free <ArrowRight className="size-4" aria-hidden />
             </Link>
             <PlayBadge href={play.vendor} app="Listee Business" who={`For shops in ${village ? 'your town' : c.name}`} />
           </Reveal>
         </div>
         <Reveal className="mx-auto"><PhoneFrame><MockScreen screen="pos" /></PhoneFrame></Reveal>
-      </section>
+      </div></section>
+
+      {!village && (
+        <section className="mx-auto max-w-6xl px-4 pb-6 pt-4">
+          <CityShops city={c.name} />
+        </section>
+      )}
 
       <section className="border-y border-border bg-surface py-16">
         <div className="mx-auto max-w-6xl px-4">
@@ -145,8 +153,8 @@ export function CityContent({ city: c }: { city: City }) {
               ['Found nearby', `Your shop on Google and in the Listee app for customers ${village ? 'around you' : `in ${c.name}`}.`],
             ].map(([t, d], i) => (
               <Reveal key={t} delay={(i % 3) * 0.05}>
-                <div className="h-full rounded-2xl border border-border bg-background p-5">
-                  <Check className="size-5 text-primary" aria-hidden />
+                <div className="h-full rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+                  <span className={`grid size-10 place-items-center rounded-xl text-white ${accent(i).icon}`}><Check className="size-5" aria-hidden /></span>
                   <h3 className="mt-3 font-bold">{t}</h3>
                   <p className="text-small text-text-secondary">{d}</p>
                 </div>
@@ -255,24 +263,25 @@ export function TypeContent({ type: t }: { type: BusinessType }) {
 
   return (
     <MarketingShell>
-      <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 lg:grid-cols-[1.2fr_auto]">
+      <section className="relative overflow-hidden"><Blobs />
+      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 lg:grid-cols-[1.2fr_auto]">
         <div>
           <nav aria-label="Breadcrumb" className="text-small text-text-muted">
             <Link to={MKT.join} className="hover:text-foreground">Listee</Link> / <Link to={MKT.types} className="hover:text-foreground">Billing software</Link> / <span className="text-foreground">{t.name}</span>
           </nav>
           <Reveal>
-            <IconByName name={t.icon} className="mt-6 size-10 text-primary" />
+            <span className="mt-6 grid size-14 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-orange-400 text-white shadow-lg"><IconByName name={t.icon} className="size-7" /></span>
             <h1 className="mt-4 font-heading text-[clamp(2rem,5vw,3.2rem)] font-extrabold leading-[1.05] tracking-tight">{t.headline}</h1>
           </Reveal>
           <Reveal delay={0.05} className="mt-7 flex flex-wrap gap-3">
-            <Link to={ROUTES.ownerSignup} className="inline-flex h-12 items-center gap-2 rounded-full bg-foreground px-6 font-semibold text-background">
+            <Link to={ROUTES.ownerSignup} className="inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 px-6 font-semibold text-white shadow-lg shadow-rose-500/25">
               Register your {t.short.toLowerCase()} free <ArrowRight className="size-4" aria-hidden />
             </Link>
             <PlayBadge href={play.vendor} app="Listee Business" who="Android app" />
           </Reveal>
         </div>
         <Reveal className="mx-auto"><PhoneFrame><MockScreen screen={screen} /></PhoneFrame></Reveal>
-      </section>
+      </div></section>
 
       <section className="border-y border-border bg-surface py-16">
         <div className="mx-auto grid max-w-5xl gap-6 px-4 md:grid-cols-2">
@@ -282,7 +291,7 @@ export function TypeContent({ type: t }: { type: BusinessType }) {
               {t.pains.map((p) => <li key={p} className="flex gap-2 text-text-secondary"><X className="mt-0.5 size-5 shrink-0 text-text-muted" aria-hidden />{p}</li>)}
             </ul>
           </Reveal>
-          <Reveal delay={0.08} className="rounded-3xl bg-foreground p-7 text-background">
+          <Reveal delay={0.08} className="rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 p-7 text-white">
             <h2 className="text-xl font-extrabold">With Listee</h2>
             <ul className="mt-4 space-y-3">
               {t.wins.map((p) => <li key={p} className="flex gap-2"><Check className="mt-0.5 size-5 shrink-0" aria-hidden />{p}</li>)}
@@ -329,7 +338,7 @@ export function ContactPage() {
   usePageSeo(contactMeta)
   return (
     <MarketingShell>
-      <section className="mx-auto grid max-w-6xl gap-12 px-4 py-16 lg:grid-cols-2">
+      <section className="relative overflow-hidden"><Blobs /><div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-16 lg:grid-cols-2">
         <div>
           <SectionHead center={false} eyebrow="Contact" title="Talk to the Listee team" sub="Free demo, help with setup, partner programme or any question — leave your number and we call you back within one working day." />
           <ul className="mt-8 space-y-4">
@@ -347,7 +356,21 @@ export function ContactPage() {
           <p className="mt-8 text-text-secondary">Email: <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-foreground underline">{SUPPORT_EMAIL}</a></p>
         </div>
         <EnquiryForm />
-      </section>
+      </div></section>
     </MarketingShell>
   )
 }
+
+/** The city's real Listee shops, when there are any. */
+function CityShops({ city }: { city: string }) {
+  return (
+    <div className="rounded-3xl bg-gradient-to-br from-amber-50 via-white to-emerald-50 p-6 ring-1 ring-black/5 md:p-8 [&:not(:has(a))]:hidden">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-2xl font-extrabold">Listee shops in {city}</h2>
+        <LivePill>Live now</LivePill>
+      </div>
+      <LiveShops city={city} />
+    </div>
+  )
+}
+

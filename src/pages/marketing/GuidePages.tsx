@@ -7,6 +7,7 @@ import { GUIDES, guideBySlug, type Guide } from '@/features/marketing/guides'
 import { abs, MKT } from '@/features/marketing/site'
 import { usePageSeo, type PageMeta } from '@/features/marketing/seo'
 import { breadcrumbJsonLd, Faq, faqJsonLd, IconByName, PlayBadge, Reveal, SectionHead, usePlayLinks } from '@/features/marketing/ui'
+import { accent, Blobs, RealPhone, SHOTS } from '@/features/marketing/showcase'
 
 export const guidesMeta: PageMeta = {
   title: 'Listee guides — how to use Listee Business for billing, orders and offers',
@@ -40,7 +41,7 @@ export function GuideHubPage() {
   const play = usePlayLinks()
   return (
     <MarketingShell>
-      <section className="mx-auto max-w-6xl px-4 py-16">
+      <section className="relative overflow-hidden"><Blobs /><div className="relative mx-auto max-w-6xl px-4 py-16">
         <SectionHead
           eyebrow="Listee guides"
           title="Learn Listee in minutes"
@@ -50,9 +51,9 @@ export function GuideHubPage() {
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {GUIDES.map((g, i) => (
             <Reveal key={g.slug} delay={(i % 3) * 0.06}>
-              <Link to={MKT.guide(g.slug)} className="group flex h-full flex-col rounded-3xl border border-border bg-surface p-6 transition hover:-translate-y-1 hover:border-foreground">
+              <Link to={MKT.guide(g.slug)} className={`group flex h-full flex-col rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:shadow-xl hover:ring-2 ${accent(i).ring}`}>
                 <div className="flex items-center justify-between">
-                  <IconByName name={g.icon} className="size-7 text-primary" />
+                  <span className={`grid size-12 place-items-center rounded-2xl text-white shadow-md ${accent(i).icon}`}><IconByName name={g.icon} className="size-6" /></span>
                   <span className="text-small text-text-muted">Guide {i + 1}</span>
                 </div>
                 <h2 className="mt-5 text-xl font-extrabold">{g.title}</h2>
@@ -64,7 +65,7 @@ export function GuideHubPage() {
             </Reveal>
           ))}
         </div>
-      </section>
+      </div></section>
     </MarketingShell>
   )
 }
@@ -86,7 +87,8 @@ export function GuideContent({ guide }: { guide: Guide }) {
 
   return (
     <MarketingShell>
-      <article className="mx-auto max-w-5xl px-4 py-12">
+      <div className="relative overflow-hidden"><Blobs className="opacity-70" />
+      <article className="relative mx-auto max-w-5xl px-4 py-12">
         <nav aria-label="Breadcrumb" className="text-small text-text-muted">
           <Link to={MKT.join} className="hover:text-foreground">Listee</Link> / <Link to={MKT.guides} className="hover:text-foreground">Guides</Link> / <span className="text-foreground">{guide.title}</span>
         </nav>
@@ -95,7 +97,7 @@ export function GuideContent({ guide }: { guide: Guide }) {
         </Reveal>
         <Reveal delay={0.05}>
           {/* The short answer first — what search and AI assistants quote. */}
-          <p className="mt-5 rounded-2xl border-l-4 border-primary bg-surface p-5 text-lg text-foreground">
+          <p className="mt-5 rounded-2xl border-l-4 border-amber-400 bg-amber-50 p-5 text-lg text-foreground">
             <strong>Quick answer: </strong>{guide.summary}
           </p>
           <p className="mt-3 flex items-center gap-1.5 text-small text-text-muted"><Clock className="size-4" aria-hidden /> {guide.minutes} minutes · Example shop: Perfect Bakery</p>
@@ -106,7 +108,7 @@ export function GuideContent({ guide }: { guide: Guide }) {
             <li key={s.title} id={`step-${i + 1}`} className="scroll-mt-24">
               <div className={`grid items-center gap-10 md:grid-cols-2 ${i % 2 ? 'md:[&>*:first-child]:order-2' : ''}`}>
                 <Reveal>
-                  <span className="grid size-12 place-items-center rounded-2xl bg-foreground text-lg font-extrabold text-background">{i + 1}</span>
+                  <span className={`grid size-12 place-items-center rounded-2xl text-lg font-extrabold text-white shadow-lg ${accent(i).icon}`}>{i + 1}</span>
                   <h2 className="mt-4 text-2xl font-extrabold md:text-3xl">{s.title}</h2>
                   <p className="mt-3 text-lg text-text-secondary">{s.text}</p>
                   {s.tip && (
@@ -116,7 +118,7 @@ export function GuideContent({ guide }: { guide: Guide }) {
                   )}
                 </Reveal>
                 <Reveal delay={0.1} className="mx-auto">
-                  <PhoneFrame><MockScreen screen={s.screen} /></PhoneFrame>
+                  {s.shot ? <RealPhone src={SHOTS[s.shot]} alt={`${s.title} — real Listee shop page`} /> : <PhoneFrame><MockScreen screen={s.screen} /></PhoneFrame>}
                 </Reveal>
               </div>
             </li>
@@ -139,15 +141,16 @@ export function GuideContent({ guide }: { guide: Guide }) {
           )}
         </div>
 
-        <div className="mt-12 flex flex-col items-center gap-4 rounded-3xl bg-foreground p-8 text-center text-background">
+        <div className="mt-12 flex flex-col items-center gap-4 rounded-3xl bg-gradient-to-br from-rose-500 via-orange-500 to-amber-400 p-8 text-center text-white">
           <h2 className="text-2xl font-extrabold">Try it on your own shop</h2>
-          <p className="text-background/70">Free to start. Need help? The Listee team sets it up with you.</p>
+          <p className="text-white/90">Free to start. Need help? The Listee team sets it up with you.</p>
           <div className="flex flex-wrap justify-center gap-3">
             <PlayBadge href={play.vendor} app="Listee Business" who="For shop owners" dark={false} />
             <Link to={MKT.contact} className="inline-flex h-[58px] items-center rounded-2xl border border-white/30 px-6 font-semibold">Book a free demo</Link>
           </div>
         </div>
       </article>
+      </div>
     </MarketingShell>
   )
 }
