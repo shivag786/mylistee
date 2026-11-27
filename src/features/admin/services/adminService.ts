@@ -99,6 +99,7 @@ export const adminService = {
       latitude: input.latitude ?? null,
       longitude: input.longitude ?? null,
       phone: input.phone ?? null,
+      ...(input.ownerMobile ? { owner_mobile: input.ownerMobile } : {}),
       email: input.email ?? null,
       website: input.website ?? null,
       facebook: input.facebook ?? null,

@@ -42,6 +42,8 @@ interface FormState {
   latitude: string
   longitude: string
   phone: string
+  /** The mobile the owner signs in with. */
+  ownerMobile: string
   email: string
   website: string
   facebook: string
@@ -62,6 +64,7 @@ function initial(b: AdminBusiness | null): FormState {
     latitude: b?.latitude != null ? String(b.latitude) : '',
     longitude: b?.longitude != null ? String(b.longitude) : '',
     phone: b?.phone ?? '',
+    ownerMobile: b?.ownerMobile ?? '',
     email: b?.email ?? '',
     website: b?.website ?? '',
     facebook: b?.facebook ?? '',
@@ -128,6 +131,11 @@ export function BusinessEditSheet({ open, onOpenChange, business }: BusinessEdit
       setError('Business name is required.')
       return
     }
+    const mobile = form.ownerMobile.replace(/\D/g, '')
+    if (mobile && !/^[6-9]\d{9}$/.test(mobile)) {
+      toast.error('Owner login mobile must be a valid 10-digit number.')
+      return
+    }
     try {
       await update.mutateAsync({
         id: business.id,
@@ -141,6 +149,8 @@ export function BusinessEditSheet({ open, onOpenChange, business }: BusinessEdit
           latitude: form.latitude.trim() ? Number(form.latitude) : null,
           longitude: form.longitude.trim() ? Number(form.longitude) : null,
           phone: form.phone.trim() || null,
+          // Only sent when changed, so saving other fields never touches the login.
+          ownerMobile: mobile && mobile !== (business.ownerMobile ?? '') ? mobile : undefined,
           email: form.email.trim() || null,
           website: form.website.trim() || null,
           facebook: form.facebook.trim() || null,
@@ -181,6 +191,22 @@ export function BusinessEditSheet({ open, onOpenChange, business }: BusinessEdit
             <Label htmlFor="b-name">Business name</Label>
             <Input id="b-name" value={form.name} onChange={(e) => set('name', e.target.value)} aria-invalid={Boolean(error)} />
             {error && <p className="text-caption text-destructive">{error}</p>}
+          </div>
+
+          <div className="space-y-1.5 rounded-xl border border-warning/40 bg-warning-soft/40 p-3">
+            <Label htmlFor="b-owner-mobile">Owner login mobile</Label>
+            <Input
+              id="b-owner-mobile"
+              inputMode="numeric"
+              maxLength={10}
+              value={form.ownerMobile}
+              onChange={(e) => set('ownerMobile', e.target.value.replace(/\D/g, '').slice(0, 10))}
+              placeholder="10-digit mobile"
+            />
+            <p className="text-small text-text-secondary">
+              The number the owner signs in with. Changing it moves their login to the new number — their PIN stays the same
+              {business?.ownerPin ? ` (${business.ownerPin})` : ''}. Tell the owner before you change it.
+            </p>
           </div>
 
           <div className="space-y-1.5">

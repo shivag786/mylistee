@@ -75,10 +75,13 @@ export function MenuScanSheet({ open, onOpenChange }: { open: boolean; onOpenCha
         qc.invalidateQueries({ queryKey: productKeys.products }),
         qc.invalidateQueries({ queryKey: productKeys.categories }),
       ])
+      // Name the dishes, so a missing one is never a mystery.
+      const list = (names: string[]) => (names.length > 4 ? `${names.slice(0, 4).join(', ')} +${names.length - 4} more` : names.join(', '))
+      const skippedNames = res.skippedNames ?? []
       const extra = [
-        res.skipped ? `${res.skipped} already on your menu were skipped.` : '',
+        res.skipped ? `${res.skipped} already on your menu (same name and section) were skipped${skippedNames.length ? `: ${list(skippedNames)}` : ''}.` : '',
         res.limitReached ? 'Your plan’s product limit was reached — upgrade to add the rest.' : '',
-        !res.limitReached && res.failed.length ? `${res.failed.length} could not be saved.` : '',
+        res.failed.length ? `${res.failed.length} not saved: ${list(res.failed.map((f) => `${f.name} (${f.reason})`))}.` : '',
       ]
         .filter(Boolean)
         .join(' ')

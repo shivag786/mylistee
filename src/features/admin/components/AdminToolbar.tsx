@@ -50,7 +50,7 @@ export function AdminToolbar({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative min-w-0 flex-1">
+      <div className="relative min-w-0 flex-1 basis-full sm:basis-auto">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-muted" aria-hidden />
         <Input
           value={value}
@@ -81,7 +81,7 @@ export function AdminToolbar({
           value={status ?? ''}
           onChange={(e) => onStatus(e.target.value)}
           aria-label="Filter by status"
-          className="h-[52px] rounded-input border border-border bg-surface px-3 text-caption text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          className="h-[52px] min-w-0 flex-1 rounded-input border border-border bg-surface px-3 text-caption sm:flex-none text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
         >
           <option value="">All statuses</option>
           {statusOptions.map((o) => (

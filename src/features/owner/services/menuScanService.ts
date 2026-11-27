@@ -37,6 +37,8 @@ export interface MenuScanResult {
 export interface MenuImportResult {
   created: number
   skipped: number
+  /** Which dishes were already on the menu (same name in the same section). */
+  skippedNames?: string[]
   failed: { name: string; reason: string }[]
   limitReached: boolean
 }

@@ -1,5 +1,6 @@
 import { Wallet } from 'lucide-react'
 import { useAppConfig } from '@/hooks/useAppConfig'
+import { useOwnerBusiness } from '../hooks/useOwner'
 
 const round = (n: number) => Math.round(n * 100) / 100
 const rupees = (n: number) => `₹${round(n).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
@@ -13,6 +14,9 @@ const rupees = (n: number) => `₹${round(n).toLocaleString('en-IN', { maximumFr
 export function FeeBreakdown({ price, note }: { price: number; note?: string }) {
   const { data: config } = useAppConfig()
   const gatewayPercent = config?.payments?.gatewayFeePercent
+  // Online rows only when this shop can actually be paid online on Listee.
+  const { data: shop } = useOwnerBusiness()
+  const online = shop?.onlinePayAvailable === true
   if (!(price > 0) || gatewayPercent == null) return null
 
   const fee = (price * gatewayPercent) / 100
@@ -25,13 +29,23 @@ export function FeeBreakdown({ price, note }: { price: number; note?: string }) 
       </div>
       <Row label="Customer pays" value={rupees(price)} />
       <Row label="Paid in cash / at counter" value={`${rupees(price)} · no fee`} tone="text-success" />
-      <Row label={`Paid online · ${round(gatewayPercent)}% payment gateway fee`} value={`− ${rupees(fee)}`} tone="text-danger" />
-      <div className="flex items-center justify-between border-t border-border bg-success-soft/60 px-3 py-2 font-bold">
-        <span className="text-foreground">You get online</span>
-        <span className="tabular-nums text-success">{rupees(price - fee)}</span>
-      </div>
+      {online ? (
+        <>
+          <Row label={`Paid online · ${round(gatewayPercent)}% payment gateway fee`} value={`− ${rupees(fee)}`} tone="text-danger" />
+          <div className="flex items-center justify-between gap-2 border-t border-border bg-success-soft/60 px-3 py-2 font-bold">
+            <span className="text-foreground">You get online</span>
+            <span className="shrink-0 tabular-nums text-success">{rupees(price - fee)}</span>
+          </div>
+        </>
+      ) : (
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-success-soft/60 px-3 py-2 font-bold">
+          <span className="text-foreground">You get</span>
+          <span className="shrink-0 tabular-nums text-success">{rupees(price)}</span>
+        </div>
+      )}
       <p className="border-t border-border px-3 py-1.5 text-[11px] text-text-muted">
-        No Listee commission — you're on a subscription. The fee is only what the payment gateway charges.
+        No Listee commission — you're on a subscription.
+        {online ? ' The online fee is only what the payment gateway charges.' : ' Customers pay you at the counter.'}
         {note && ` ${note}`}
       </p>
     </div>
@@ -40,8 +54,8 @@ export function FeeBreakdown({ price, note }: { price: number; note?: string }) 
 
 function Row({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="flex items-center justify-between gap-2 border-t border-border/60 px-3 py-1.5 first:border-t-0">
-      <span className="text-text-secondary">{label}</span>
+    <div className="flex items-start justify-between gap-2 border-t border-border/60 px-3 py-1.5 first:border-t-0">
+      <span className="min-w-0 break-words text-text-secondary">{label}</span>
       <span className={`shrink-0 tabular-nums ${tone ?? 'text-foreground'}`}>{value}</span>
     </div>
   )

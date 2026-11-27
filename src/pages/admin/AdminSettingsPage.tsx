@@ -16,6 +16,8 @@ import {
   useUploadOrderSound,
   useRemoveOrderSound,
   useCustomerSound,
+  useAdminPlans,
+  useUpdatePlan,
 } from '@/features/admin/hooks/useAdmin'
 import type { PlatformSettings } from '@/features/admin/types'
 import { AppIconCard, MenuCardColorsCard, ThemeCard } from '@/features/admin/components/AppearanceSettings'
@@ -616,10 +618,10 @@ function AiAssistantCard({ settings }: { settings: PlatformSettings }) {
           <Input id="ai-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder={AI_DEFAULT_MODEL[provider]} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="ai-limit">AI answers / month for shops with no plan</Label>
+          <Label htmlFor="ai-limit">Fallback: shops with no plan at all</Label>
           <Input id="ai-limit" inputMode="numeric" value={limit} onChange={(e) => setLimit(e.target.value.replace(/\D/g, ''))} />
           <p className="text-small text-text-muted">
-            Each plan sets its own in Plans → AI answers / month. Packs and usage: AI usage &amp; packs.
+            Rarely used — every shop normally has a plan (free included). Set each plan’s quota below.
           </p>
         </div>
         <div className="space-y-1.5 sm:col-span-2">
@@ -637,6 +639,7 @@ function AiAssistantCard({ settings }: { settings: PlatformSettings }) {
           Save AI settings
         </Button>
       </div>
+      <AiPlanQuotas />
     </Card>
   )
 }
@@ -880,6 +883,89 @@ function AppVersionsCard({ settings }: { settings: PlatformSettings }) {
         <Button type="submit" isLoading={update.isPending} disabled={!allOk} fullWidth>Save app versions</Button>
       </form>
     </Card>
+  )
+}
+
+/**
+ * AI answers a month for each plan — the free plan's quota is what free shops
+ * get. Saved straight to the plan (same as Plans → AI answers / month).
+ * Blank = unlimited, 0 = AI off for that plan.
+ */
+function AiPlanQuotas() {
+  const { data: plans } = useAdminPlans()
+  const updatePlan = useUpdatePlan()
+  const list = [...(plans ?? [])].sort((a, b) => Number(b.isDefault) - Number(a.isDefault) || a.price - b.price)
+  const [draft, setDraft] = useState<Record<string, string>>({})
+  useEffect(() => {
+    if (plans) setDraft(Object.fromEntries(plans.map((p) => [p.key, p.limits.aiAnswersPerMonth == null ? '' : String(p.limits.aiAnswersPerMonth)])))
+  }, [plans])
+
+  function save(key: string) {
+    const raw = (draft[key] ?? '').trim()
+    updatePlan.mutate(
+      { key, payload: { aiAnswersPerMonth: raw === '' ? null : Math.max(0, Number.parseInt(raw, 10) || 0) } },
+      {
+        onSuccess: () => toast.success(raw === '' ? 'Unlimited AI answers for this plan' : raw === '0' ? 'AI is off for this plan' : `${raw} AI answers a month saved`),
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not save.'),
+      },
+    )
+  }
+
+  if (!plans || plans.length === 0) return null
+  return (
+    <div className="space-y-3 rounded-xl border border-border p-4">
+      <div>
+        <p className="font-semibold text-foreground">AI answers per month — by plan</p>
+        <p className="text-small text-text-secondary">
+          How many AI answers a shop on each plan gets every month. The free plan’s number is what free shops get. Blank = unlimited, 0 = AI off.
+          Shops can buy extra answers in AI packs.
+        </p>
+      </div>
+      {list.map((p) => {
+        const saved = p.limits.aiAnswersPerMonth == null ? '' : String(p.limits.aiAnswersPerMonth)
+        const value = draft[p.key] ?? saved
+        return (
+          <div key={p.key} className="space-y-2 rounded-lg bg-surface-muted/60 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-medium text-foreground">
+                {p.name} {p.isDefault && <span className="ml-1 rounded-full bg-success-soft px-2 py-0.5 text-small text-success">Free / default</span>}
+              </p>
+              <p className="text-small text-text-muted">Now: {saved === '' ? 'unlimited' : saved === '0' ? 'off' : `${saved} a month`}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                aria-label={`AI answers a month on ${p.name}`}
+                inputMode="numeric"
+                className="w-28"
+                placeholder="∞"
+                value={value}
+                onChange={(e) => setDraft((d) => ({ ...d, [p.key]: e.target.value.replace(/\D/g, '') }))}
+              />
+              {[10, 20, 50, 100, 200, 500].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setDraft((d) => ({ ...d, [p.key]: String(n) }))}
+                  className={`rounded-full border px-2.5 py-1 text-small ${value === String(n) ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-secondary hover:bg-surface'}`}
+                >
+                  {n}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setDraft((d) => ({ ...d, [p.key]: '' }))}
+                className={`rounded-full border px-2.5 py-1 text-small ${value === '' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-secondary hover:bg-surface'}`}
+              >
+                Unlimited
+              </button>
+              <Button type="button" size="sm" variant="outline" disabled={value === saved || updatePlan.isPending} onClick={() => save(p.key)}>
+                Save
+              </Button>
+            </div>
+          </div>
+        )
+      })}
+    </div>
   )
 }
 

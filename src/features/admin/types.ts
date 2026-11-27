@@ -71,6 +71,8 @@ export interface AdminBusiness {
 /** Editable business fields for the admin edit form. */
 export interface BusinessUpdateInput {
   name: string
+  /** New login mobile for the owner (only when it changes). */
+  ownerMobile?: string
   categoryId?: string | null
   description?: string | null
   address?: string | null

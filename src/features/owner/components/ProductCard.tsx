@@ -1,5 +1,6 @@
 import { Pencil, Utensils, Star, Sparkles, EyeOff, Tag, Wallet } from 'lucide-react'
 import { useAppConfig } from '@/hooks/useAppConfig'
+import { useOwnerBusiness } from '../hooks/useOwner'
 import { shopEarning } from '@/features/rewards/format'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -44,6 +45,9 @@ export function ProductCard({
   // cash keeps the full price — no commission on the subscription.
   const { data: config } = useAppConfig()
   const gatewayPercent = config?.payments?.gatewayFeePercent
+  // "Online ₹x" only when this shop can actually be paid online on Listee.
+  const { data: shop } = useOwnerBusiness()
+  const online = shop?.onlinePayAvailable === true
   const earning =
     gatewayPercent != null
       ? shopEarning(hasOffer ? effective : product.sellingPrice, { platformPercent: 0, gatewayPercent })
@@ -95,14 +99,14 @@ export function ProductCard({
             </span>
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-caption font-semibold text-foreground">{product.name}</p>
+            <p className="break-words text-caption font-semibold leading-snug text-foreground">{product.name}</p>
             {product.categoryName && (
-              <p className="truncate text-[11px] text-text-muted">{product.categoryName}</p>
+              <p className="break-words text-[11px] text-text-muted">{product.categoryName}</p>
             )}
           </div>
         </div>
 
-        <div className="flex items-baseline gap-1.5">
+        <div className="flex flex-wrap items-baseline gap-x-1.5">
           {hasOffer ? (
             <>
               <span className="text-caption font-bold text-success">₹{effective}</span>
@@ -120,19 +124,23 @@ export function ProductCard({
 
         {earning && (
           <p
-            className="flex items-center gap-1 text-[11px] text-text-muted"
-            title={`Cash: full price. Online: after the ${gatewayPercent}% payment gateway fee.`}
+            className="flex items-start gap-1 text-[11px] leading-snug text-text-muted"
+            title={online ? `Cash: full price. Online: after the ${gatewayPercent}% payment gateway fee.` : 'You keep the full price.'}
           >
-            <Wallet className="size-3 shrink-0" aria-hidden />
-            <span className="truncate">
-              Cash <span className="font-semibold text-success">₹{earning.cash}</span> · Online{' '}
-              <span className="font-semibold text-success">₹{earning.online}</span>
+            <Wallet className="mt-px size-3 shrink-0" aria-hidden />
+            <span className="break-words">
+              {online ? 'Cash' : 'You get'} <span className="font-semibold text-success">₹{earning.cash}</span>
+              {online && (
+                <>
+                  {' '}· Online <span className="font-semibold text-success">₹{earning.online}</span>
+                </>
+              )}
             </span>
           </p>
         )}
 
         {(product.variants.length > 0 || product.addons.length > 0) && (
-          <p className="truncate text-[11px] font-medium text-text-secondary">
+          <p className="break-words text-[11px] font-medium text-text-secondary">
             {[
               product.variants.length > 0 && `${product.variants.length} sizes`,
               product.addons.length > 0 && `${product.addons.length} add-ons`,
@@ -150,9 +158,9 @@ export function ProductCard({
               aria-label={`Edit offer: ${promotion.name}`}
               className="inline-flex rounded-full transition-opacity hover:opacity-80"
             >
-              <Badge tone={PROMOTION_STATUS_TONE[promotion.status]} className="max-w-[9rem] gap-1">
+              <Badge tone={PROMOTION_STATUS_TONE[promotion.status]} className="h-auto max-w-full gap-1 whitespace-normal py-0.5 text-left">
                 <Tag className="size-3 shrink-0" aria-hidden />
-                <span className="truncate">{promotion.name}</span>
+                <span className="break-words">{promotion.name}</span>
                 <Pencil className="size-3 shrink-0" aria-hidden />
               </Badge>
             </button>

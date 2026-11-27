@@ -47,6 +47,8 @@ export interface OwnerBusiness {
   ordersPaused?: boolean
   /** Premium store mode — the shop's QR/link shows only this shop. */
   storeMode?: boolean
+  /** Customers can pay this shop online (plan + gateway + not hidden by admin). */
+  onlinePayAvailable?: boolean
   phone: string | null
   email: string | null
   website: string | null
