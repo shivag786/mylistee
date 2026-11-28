@@ -233,6 +233,14 @@ export function BusinessProfilePage() {
 
       {/* Sticky action buttons */}
       <div className="sticky top-16 z-20 -mx-4 flex gap-2 overflow-x-auto border-b border-border bg-background/95 px-4 py-2 backdrop-blur">
+        {business.tableBooking && (
+          <a
+            href={`/b/${business.slug}/book`}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 px-4 py-1.5 text-caption font-bold text-white shadow-md shadow-rose-500/30"
+          >
+            <span aria-hidden>🪑</span> Book a table
+          </a>
+        )}
         {business.phone && (
           <ActionButton icon={<Phone className="size-4" />} label="Call" href={`tel:${business.phone}`} />
         )}

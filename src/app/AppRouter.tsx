@@ -85,6 +85,10 @@ const AdminAiPage = lazyPage(() => import('@/pages/admin/AdminAiPage'), 'AdminAi
 const AdminSubscriptionsPage = lazyPage(() => import('@/pages/admin/AdminSubscriptionsPage'), 'AdminSubscriptionsPage')
 const AdminVendorHealthPage = lazyPage(() => import('@/pages/admin/AdminVendorHealthPage'), 'AdminVendorHealthPage')
 const AdminQrScansPage = lazyPage(() => import('@/pages/admin/AdminQrScansPage'), 'AdminQrScansPage')
+const BookTablePage = lazyPage(() => import('@/pages/customer/BookTablePage'), 'BookTablePage')
+const MyBookingsPage = lazyPage(() => import('@/pages/customer/MyBookingsPage'), 'MyBookingsPage')
+const BookingDetailPage = lazyPage(() => import('@/pages/customer/MyBookingsPage'), 'BookingDetailPage')
+const OwnerBookingsPage = lazyPage(() => import('@/pages/owner/OwnerBookingsPage'), 'OwnerBookingsPage')
 const JoinPage = lazyPage(() => import('@/pages/marketing/JoinPage'), 'JoinPage')
 const GuideHubPage = lazyPage(() => import('@/pages/marketing/GuidePages'), 'GuideHubPage')
 const GuidePage = lazyPage(() => import('@/pages/marketing/GuidePages'), 'GuidePage')
@@ -221,6 +225,16 @@ export function AppRouter() {
         />
       </Route>
 
+      {/* Book a table: full screen, its own header and sticky summary. */}
+      <Route
+        path={ROUTES.bookTable()}
+        element={
+          <SuspenseOutlet>
+            <BookTablePage />
+          </SuspenseOutlet>
+        }
+      />
+
       {/* Public marketing site: join page, guides, city and shop-type pages, contact.
           Pre-rendered to static HTML at build time (scripts/prerender.tsx). */}
       {(
@@ -261,6 +275,8 @@ export function AppRouter() {
         {/* Requires an authenticated customer */}
         <Route element={<RequireAuth />}>
           <Route path={ROUTES.orders} element={<OrdersHistoryPage />} />
+          <Route path={ROUTES.bookings} element={<MyBookingsPage />} />
+          <Route path={ROUTES.booking()} element={<BookingDetailPage />} />
           <Route path={ROUTES.wallet} element={<WalletPage />} />
           <Route path={ROUTES.notifications} element={<NotificationsPage />} />
           <Route path={ROUTES.profile} element={<ProfilePage />} />
@@ -279,6 +295,7 @@ export function AppRouter() {
             <Route path={ROUTES.owner.pos} element={<OwnerModuleGuard module="orders"><PosPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.products} element={<OwnerModuleGuard module="products"><ProductsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.tables} element={<OwnerModuleGuard module="tables"><TablesPage /></OwnerModuleGuard>} />
+            <Route path={ROUTES.owner.bookings} element={<OwnerModuleGuard module="tables"><OwnerBookingsPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.combos} element={<OwnerModuleGuard module="combos"><CombosPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.growSales} element={<OwnerModuleGuard module="grow_sales"><GrowSalesPage /></OwnerModuleGuard>} />
             <Route path={ROUTES.owner.aiAdvisor} element={<AiAdvisorPage />} />

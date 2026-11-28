@@ -1,4 +1,5 @@
 import {
+  CalendarCheck,
   LayoutDashboard,
   Tag,
   BarChart3,
@@ -81,6 +82,7 @@ export const OWNER_NAV: OwnerNavItem[] = [
 
   { to: ROUTES.owner.orders, label: 'Orders', shortLabel: 'Order', icon: ClipboardList, bottomNav: true, module: 'orders', group: 'Orders' },
   { to: ROUTES.owner.pos, label: 'POS · New bill', shortLabel: 'POS', icon: Printer, module: 'orders', group: 'Orders' },
+  { to: ROUTES.owner.bookings, label: 'Table bookings', shortLabel: 'Bookings', icon: CalendarCheck, module: 'tables', group: 'Orders' },
   { to: ROUTES.owner.tables, label: 'Tables & service', shortLabel: 'Tables', icon: Armchair, module: 'tables', group: 'Orders' },
 
   { to: ROUTES.owner.products, label: 'Products', shortLabel: 'Product', icon: Package, bottomNav: true, module: 'products', group: 'Menu' },

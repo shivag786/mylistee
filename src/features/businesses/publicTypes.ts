@@ -134,6 +134,8 @@ export interface PublicBusiness {
   ordersPaused?: boolean
   /** Premium: arriving by link/QR keeps the customer inside this shop. */
   storeMode?: boolean
+  /** The shop takes table bookings from home. */
+  tableBooking?: boolean
   phone: string | null
   website: string | null
   facebook: string | null

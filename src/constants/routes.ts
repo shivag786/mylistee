@@ -28,6 +28,11 @@ export const ROUTES = {
   ownerSignup: '/get-started',
   /** Business profile opened from a QR scan. */
   businessProfile: (slug = ':slug') => `/b/${slug}`,
+  /** Book a table at a shop (floor plan, time, extras). */
+  bookTable: (slug = ':slug') => `/b/${slug}/book`,
+  /** The customer's table bookings. */
+  bookings: '/bookings',
+  booking: (id = ':id') => `/bookings/${id}`,
   /** A shop's public review link — shared by the owner, no sign-in needed. */
   reviewLink: (slug = ':slug') => `/review/${slug}`,
 
@@ -52,6 +57,8 @@ export const ROUTES = {
     pos: '/business/pos',
     products: '/business/products',
     tables: '/business/tables',
+    /** Table bookings: day view, floor plan editor, booking rules. */
+    bookings: '/business/bookings',
     combos: '/business/combos',
     growSales: '/business/grow-sales',
     aiAdvisor: '/business/ai-advisor',
