@@ -7,6 +7,7 @@ import { PageTransition } from '@/components/motion/PageTransition'
 import { SuspenseOutlet } from '@/app/PageLoader'
 import { GlobalCartBar } from '@/features/orders/GlobalCartBar'
 import { LegalFooter } from '@/components/navigation/LegalFooter'
+import { GetAppBar } from '@/features/pwa/GetAppBar'
 import { LocationProvider } from '@/features/location/LocationProvider'
 import { isAllowedInStore, useStoreScope } from '@/features/store/storeScope'
 import { StoreAppBar, StoreBottomNav } from '@/features/store/StoreChrome'
@@ -41,6 +42,7 @@ export function CustomerLayout() {
         </main>
         <LegalFooter />
         <GlobalCartBar />
+        <GetAppBar />
         {store ? <StoreBottomNav scope={store} /> : <BottomNav />}
       </div>
     </LocationProvider>

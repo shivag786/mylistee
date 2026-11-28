@@ -45,6 +45,8 @@ export interface OwnerBusiness {
   closedNote?: string | null
   /** Open, but not taking new orders right now. */
   ordersPaused?: boolean
+  /** Ordering on Listee is on (false = new shop, menu only until the Listee team switches it on). */
+  orderingApproved?: boolean
   /** Premium store mode — the shop's QR/link shows only this shop. */
   storeMode?: boolean
   /** Customers can pay this shop online (plan + gateway + not hidden by admin). */

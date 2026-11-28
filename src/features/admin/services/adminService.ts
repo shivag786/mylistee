@@ -119,6 +119,7 @@ export const adminService = {
   verifyBusiness: (id: string) => apiClient.patch<AdminBusiness>(`admin/businesses/${id}/verify`),
   featureBusiness: (id: string) => apiClient.patch<AdminBusiness>(`admin/businesses/${id}/feature`),
   toggleOnlinePay: (id: string) => apiClient.patch<AdminBusiness>(`admin/businesses/${id}/online-pay`),
+  toggleOrdering: (id: string) => apiClient.patch<AdminBusiness>(`admin/businesses/${id}/ordering`),
 
   // ---- Business Import Engine (SPEC-011) ----
   importPreview: (url: string, source = 'google') =>

@@ -18,7 +18,7 @@ import { MetricCard } from '@/components/data/MetricCard'
 import { Reveal } from '@/components/motion/Reveal'
 import { ROUTES } from '@/constants/routes'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useDashboard } from '@/features/owner/hooks/useOwner'
+import { useDashboard, useOwnerBusiness } from '@/features/owner/hooks/useOwner'
 import { OnboardingChecklist } from '@/features/owner/components/OnboardingChecklist'
 import { PersonalLinkCard } from '@/features/owner/components/PersonalLinkCard'
 import { OrderAlertsBanner } from '@/features/owner/components/OrderAlertsBanner'
@@ -67,6 +67,8 @@ export function OwnerDashboardPage() {
       </div>
 
       <OrderAlertsBanner />
+
+      <MenuOnlyBanner />
 
       <OnboardingChecklist items={data.onboarding} />
 
@@ -159,3 +161,22 @@ function QuickAction({ icon: Icon, label, to, soon }: QuickActionProps) {
     </Link>
   )
 }
+
+/** A new shop is menu-only on Listee until the team switches ordering on. */
+function MenuOnlyBanner() {
+  const { data: shop } = useOwnerBusiness()
+  if (!shop || shop.orderingApproved !== false) return null
+  return (
+    <Card padding="md" className="flex items-start gap-3 border-sky-200 bg-sky-50">
+      <span className="text-2xl" aria-hidden>📋</span>
+      <div>
+        <p className="font-semibold text-foreground">Your menu is live on Listee</p>
+        <p className="text-small text-text-secondary">
+          Customers can see your shop, menu and prices. Online ordering will be switched on by the Listee team after a quick check — you’ll get a notification.
+          Meanwhile, add your products and photos, and bill at the counter with POS.
+        </p>
+      </div>
+    </Card>
+  )
+}
+

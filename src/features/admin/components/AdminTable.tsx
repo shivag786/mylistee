@@ -17,11 +17,15 @@ interface AdminTableProps<T> {
   emptyMessage?: string
 }
 
+/** First column stays put while the table scrolls sideways, with a soft edge. */
+const STICKY = 'sticky left-0 z-10 bg-surface shadow-[6px_0_8px_-6px_rgba(0,0,0,0.18)]'
+
 /**
  * Generic admin data table. On a phone every row becomes a card — the first
  * column is its title, unlabelled columns (actions) sit top-right, the rest
  * are label/value lines — so nothing scrolls sideways. From `md` up it is a
- * normal table. The page owns the column definitions and cell rendering.
+ * normal table whose first column stays in view while scrolling sideways.
+ * The page owns the column definitions and cell rendering.
  */
 export function AdminTable<T>({
   columns,
@@ -80,8 +84,8 @@ export function AdminTable<T>({
         <table className="w-full min-w-[640px] border-collapse text-caption">
           <thead>
             <tr className="border-b border-border text-left text-text-secondary">
-              {columns.map((c) => (
-                <th key={c.key} className={cn('px-4 py-3 font-medium', c.className)}>
+              {columns.map((c, i) => (
+                <th key={c.key} className={cn('px-4 py-3 font-medium', i === 0 && STICKY, c.className)}>
                   {c.label}
                 </th>
               ))}
@@ -89,9 +93,9 @@ export function AdminTable<T>({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={getRowKey(row)} className="border-b border-border/60 last:border-0 hover:bg-surface-muted/50">
-                {columns.map((c) => (
-                  <td key={c.key} className={cn('px-4 py-3 align-middle text-foreground', c.className)}>
+              <tr key={getRowKey(row)} className="group border-b border-border/60 last:border-0 hover:bg-surface-muted/50">
+                {columns.map((c, i) => (
+                  <td key={c.key} className={cn('px-4 py-3 align-middle text-foreground', i === 0 && STICKY, c.className)}>
                     {c.cell(row)}
                   </td>
                 ))}

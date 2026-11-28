@@ -203,6 +203,13 @@ export function BusinessProfilePage() {
             {business.closedNote ? ` · ${business.closedNote}` : ''}. You can browse the menu, but orders open after that.
           </span>
         </div>
+      ) : business.menuOnly ? (
+        <div className="flex items-start gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2.5 text-caption text-foreground">
+          <span aria-hidden>📋</span>
+          <span>
+            <b>Menu only for now.</b> See what {business.name} has and the prices — order at the shop{business.phone ? ' or call them' : ''}. Online ordering opens soon.
+          </span>
+        </div>
       ) : business.ordersPaused ? (
         <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning-soft px-3 py-2.5 text-caption text-foreground">
           <Clock className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />

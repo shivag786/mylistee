@@ -136,6 +136,8 @@ export interface PublicBusiness {
   storeMode?: boolean
   /** The shop takes table bookings from home. */
   tableBooking?: boolean
+  /** New shop on Listee: the menu is shown, ordering is not open yet. */
+  menuOnly?: boolean
   phone: string | null
   website: string | null
   facebook: string | null

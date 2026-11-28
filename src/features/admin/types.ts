@@ -61,6 +61,8 @@ export interface AdminBusiness {
   featured: boolean
   /** The admin hid "Pay online" for this shop: pay at the counter only. */
   onlinePayHidden?: boolean
+  /** Customers can order on Listee (false = menu only, a new shop). */
+  orderingApproved?: boolean
   averageRating: number
   totalReviews: number
   totalVisits: number

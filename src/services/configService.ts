@@ -22,6 +22,8 @@ export interface AppConfig {
   apps?: { customerPlayStore: string; vendorPlayStore: string }
   /** How the public reaches the Listee team. */
   support?: { email: string; phone: string }
+  /** Coins a new customer gets on sign-up (shown on the "get the app" prompt). */
+  welcomeCoins?: number
   /**
    * Whether a live payment gateway is configured on the server — a boolean only,
    * never a key. False in local development without Razorpay credentials, where

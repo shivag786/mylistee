@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
+import { isAndroid } from './GetAppBar'
 import { Download, X } from 'lucide-react'
 import { Logo } from '@/components/icons/Logo'
 import { Button } from '@/components/ui/button'
@@ -20,7 +21,7 @@ export function InstallBanner() {
   // than a banner that appears a moment late.
   // Not inside a premium shop's store mode: installing opens the full marketplace.
   const store = useStoreScope()
-  const show = canInstall && pwaEnabled === true && !store
+  const show = canInstall && pwaEnabled === true && !store && !isAndroid()
 
   return (
     <AnimatePresence>

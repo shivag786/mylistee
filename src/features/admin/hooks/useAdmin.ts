@@ -56,6 +56,7 @@ export function useBusinessActions() {
     verify: useMutation({ mutationFn: (id: string) => adminService.verifyBusiness(id), onSuccess: done }),
     feature: useMutation({ mutationFn: (id: string) => adminService.featureBusiness(id), onSuccess: done }),
     onlinePay: useMutation({ mutationFn: (id: string) => adminService.toggleOnlinePay(id), onSuccess: done }),
+    ordering: useMutation({ mutationFn: (id: string) => adminService.toggleOrdering(id), onSuccess: done }),
     update: useMutation({
       mutationFn: (v: { id: string; input: BusinessUpdateInput }) => adminService.updateBusiness(v.id, v.input),
       onSuccess: done,

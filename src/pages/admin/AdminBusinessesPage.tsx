@@ -45,7 +45,7 @@ export function AdminBusinessesPage() {
   const [filters, setFilters] = useState<ListFilters>({ page: 1 })
   const [editing, setEditing] = useState<AdminBusiness | null>(null)
   const { data, isLoading, isFetching } = useAdminBusinesses(filters)
-  const { setStatus, verify, feature, onlinePay, uploadImage } = useBusinessActions()
+  const { setStatus, verify, feature, onlinePay, ordering, uploadImage } = useBusinessActions()
 
   function handleUpload(id: string, type: 'logo' | 'cover', file: File) {
     act(uploadImage.mutateAsync({ id, type, image: file }), `${type === 'logo' ? 'Logo' : 'Banner'} updated`)
@@ -142,7 +142,40 @@ export function AdminBusinessesPage() {
           <StatusPill status={b.status} />
           {b.verified && <Badge tone="info" size="sm">Verified</Badge>}
           {b.featured && <Badge tone="premium" size="sm">Featured</Badge>}
-          {b.onlinePayHidden && <Badge tone="warning" size="sm">Counter pay only</Badge>}
+          {b.orderingApproved === false && <Badge tone="warning" size="sm">Menu only</Badge>}
+        </div>
+      ),
+    },
+    {
+      key: 'customers',
+      label: 'Customers can',
+      className: 'whitespace-nowrap',
+      cell: (b) => (
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-2 text-small">
+            <Switch
+              checked={b.orderingApproved !== false}
+              disabled={ordering.isPending}
+              onCheckedChange={() =>
+                act(ordering.mutateAsync(b.id), b.orderingApproved !== false ? 'Menu only — ordering off' : 'Ordering is on — owner notified')
+              }
+              aria-label={`Ordering for ${b.name}`}
+            />
+            <span className={b.orderingApproved !== false ? 'text-foreground' : 'font-semibold text-warning'}>
+              {b.orderingApproved !== false ? 'Order' : 'Menu only'}
+            </span>
+          </label>
+          <label className="flex items-center gap-2 text-small">
+            <Switch
+              checked={!b.onlinePayHidden}
+              disabled={onlinePay.isPending}
+              onCheckedChange={() =>
+                act(onlinePay.mutateAsync(b.id), b.onlinePayHidden ? 'Pay online is on' : 'Pay online hidden: counter pay only')
+              }
+              aria-label={`Pay online for ${b.name}`}
+            />
+            <span className={b.onlinePayHidden ? 'text-text-muted' : 'text-foreground'}>{b.onlinePayHidden ? 'Counter pay' : 'Pay online'}</span>
+          </label>
         </div>
       ),
     },
